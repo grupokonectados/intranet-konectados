@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\ClientController;
+use App\Http\Controllers\EstrategiaController;
+use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -14,9 +17,34 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('auth.login');
 });
 
 Auth::routes();
 
-Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+Route::get('/home', [HomeController::class, 'index'])->name('home');
+
+Route::group(['middleware' => ['auth']], function () {
+
+    Route::get('/', [HomeController::class, 'index'])->name('home');
+
+
+    /**
+     * Clients
+     */
+        
+     Route::resource('/clients', ClientController::class);
+     
+
+     Route::post('/clients/search-client', [ClientController::class, 'searchCliente'])->name('clients.searchCliente');
+
+
+
+
+     Route::resource('/estrategia', EstrategiaController::class);
+
+     Route::post('/estrategia/save-estrategia', [EstrategiaController::class, 'saveEstrategia'])->name('estrategia.save-estrategia');
+
+
+     
+});
