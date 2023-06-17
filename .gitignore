@@ -18,3 +18,4 @@ yarn-error.log
 /.idea
 /.vscode
 {path where you want to save logs}
+/public/{path where you want to save logs}
