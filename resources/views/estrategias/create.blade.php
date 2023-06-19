@@ -47,44 +47,46 @@
             </div>
         </div>
 
-                <div class="card mt-3 bg-white">
-                    <div class="card-body">
-                        <div>
-                            <button type="button" class="btn btn-success mb-3" onclick="showQuery()">Show</button>
-                        </div>
-                        {!! Form::open([
-                            'route' => 'estrategia.save-estrategia',
-                            'method' => 'POST',
-                            'novalidate',
-                            'id' => 'myForm',
-                        ]) !!}
-                            <div>
-                                <textarea class="form-control" id="showQue" name="showQue" disabled></textarea>
-                                <input type="hidden" name='query_text' id='query_text'>
-                                <input type="hidden" name='prefix' id='prefix'>
-                            </div>
-                            <div class="my-3">
-                                <label for="">Canales</label>
-                                <select class="form-control" name="channels" id="">
-                                    <option value="">Seleccione</option>
-                                    <option value="1">SMS</option>
-                                    <option value="2">Llamada</option>
-                                    <option value="3">Email</option>
-                                </select>
-                            </div>
-                            <div class="">
-                                <label for="">Descripcion</label>
-                                <textarea class="form-control" name='query_description'></textarea>
-                            </div>
-
-                            <div class="mt-3">
-                                <button type="submit">Guardar</button>
-                            </div>
-                            
-                            {!! Form::close() !!}
-                        
-                    </div>
+        <div class="card mt-3 bg-white">
+            <div class="card-body">
+                <div>
+                    <button type="button" class="btn btn-success mb-3" onclick="showQuery()">Show</button>
                 </div>
+                {!! Form::open([
+                    'route' => 'estrategia.save-estrategia',
+                    'method' => 'POST',
+                    'novalidate',
+                    'id' => 'myForm',
+                ]) !!}
+                <div>
+                    <textarea class="form-control" id="showQue" name="showQue" disabled></textarea>
+                    <input type="hidden" name='query_text' id='query_text'>
+                    <input type="hidden" name='prefix' id='prefix'>
+                    <input type="hidden" name='onlyWhere' id='onlyWhere'>
+                    <input type="hidden" name='table_name' id='table_name2'>
+                </div>
+                <div class="my-3">
+                    <label for="">Canales</label>
+                    <select class="form-control" name="channels" id="">
+                        <option value="">Seleccione</option>
+                        <option value="1">SMS</option>
+                        <option value="2">Llamada</option>
+                        <option value="3">Email</option>
+                    </select>
+                </div>
+                <div class="">
+                    <label for="">Descripcion</label>
+                    <textarea class="form-control" name='query_description'></textarea>
+                </div>
+
+                <div class="mt-3">
+                    <button type="submit">Guardar</button>
+                </div>
+
+                {!! Form::close() !!}
+
+            </div>
+        </div>
     </div>
 @endsection
 
@@ -92,6 +94,15 @@
     <script>
         const csrfToken = "{{ csrf_token() }}";
         var i = 0;
+
+        const objComunas = {
+            1: 'Cerro Navia', 2: 'Conchalí', 3: 'El Bosque', 4: 'Estación Central',
+            5: 'Huechuraba', 6: 'Independencia', 7: 'La Cisterna', 8: 'La Granja', 9: 'La Florida',
+            10: 'La Pintana', 11: 'La Reina', 12: 'Las Condes', 13: 'Lo Barnechea', 14: 'Lo Espejo',
+            15: 'Lo Prado', 16: 'Macul', 17: 'Maipú', 18: 'Ñuñoa', 19: 'Pedro Aguirre Cerda',
+            20: 'Peñalolén', 21: 'Providencia', 22: 'Pudahuel', 23: 'Quilicura', 24: 'Quinta Normal',
+            25: 'Recoleta', 26: 'Renca', 27: 'San Miguel', 28: 'San Joaquín', 29: 'San Ramón', 30: 'Santiago', 31: 'Vitacura'
+        }
 
         function addRow(prefix) {
             selectClient(prefix)
@@ -125,7 +136,8 @@
                     <select id="my-select" class='form-select' onchange="selectInputType(this.value, ${i}, event)">
                     <option>Seleccione</option>`
                     for (let d in data) {
-                        lines += `<option value='${data[d].COLUMN_TYPE}-${data[d].TABLE_NAME}'>${data[d].COLUMN_NAME}</option>`
+                        lines +=
+                            `<option value='${data[d].COLUMN_TYPE}-${data[d].TABLE_NAME}'>${data[d].COLUMN_NAME}</option>`
                     }
                     lines += `</select>`
                     cell3.innerHTML = lines
@@ -141,10 +153,9 @@
         }
 
         function borrarRow(x) {
-
-var i = x.parentNode.parentNode.rowIndex;
-document.getElementById("myTable").deleteRow(i);
-}
+            var i = x.parentNode.parentNode.rowIndex;
+            document.getElementById("myTable").deleteRow(i);
+        }
 
         function showQuery() {
             var query = "";
@@ -152,14 +163,14 @@ document.getElementById("myTable").deleteRow(i);
             const valoresElements = document.querySelectorAll('.valores');
             const name_table = document.querySelector('#name_table');
             const valoresObj = {};
-            
 
             valoresElements.forEach((element) => {
                 if (element.name === 'monto_min' && element.value !== '') { //Verificamos el campo monto
                     const montoMin = parseFloat(element.value);
                     const montoMax = parseFloat(document.querySelector('[name="monto_max"]').value);
                     if (!isNaN(montoMin) && !isNaN(montoMax)) {
-                        const betweenClause = `monto BETWEEN ${montoMin} AND ${montoMax}`; //crearmos la linea del between
+                        const betweenClause =
+                        `monto BETWEEN ${montoMin} AND ${montoMax}`; //crearmos la linea del between
                         if (!queryParts.includes(betweenClause)) {
                             queryParts.push(betweenClause); // lo metemos en el objeto
                         }
@@ -174,15 +185,19 @@ document.getElementById("myTable").deleteRow(i);
                         }
                     }
                 } else {
-                    queryParts.push(`${element.name} = '${element.value}'`); // 
+                    queryParts.push(`${element.name} like '%${element.value}%'`); // 
                 }
             });
 
             query = queryParts.join(' and '); //añadimos los and a la consulta
+            var query2 = 'select * from ' + name_table.value + ' where ' + queryParts.join(' and ');
             document.getElementById('showQue').value = query; // muestro en el textarea el codigo
-
-            document.getElementById('query_text').value = query; // asigno a un hidden en el form el valor de la query para poder guardarlo
-            document.getElementById('prefix').value = document.getElementById('cli').value; // asigno a un hidden en el form el valor de la del prefix para poder guardarlo
+            document.getElementById('onlyWhere').value = query; // muestro en el textarea el codigo
+            document.getElementById('table_name2').value = name_table.value; // muestro en el textarea el codigo
+            document.getElementById('query_text').value =
+            query2; // asigno a un hidden en el form el valor de la query para poder guardarlo
+            document.getElementById('prefix').value = document.getElementById('cli')
+            .value; // asigno a un hidden en el form el valor de la del prefix para poder guardarlo
         }
 
         function selectInputType(value, i, e) {
@@ -198,17 +213,9 @@ document.getElementById("myTable").deleteRow(i);
                 text = value
             }
 
-
-
             const openingParenIndex2 = value.indexOf("-");
-            const text2 = value.slice(openingParenIndex2+1);
-
-            
+            const text2 = value.slice(openingParenIndex2 + 1);
             document.getElementById("name_table").value = text2;
-
-           
-
-
             var table = document.getElementById("myTable");
             nuevoTd = document.createElement("td");
             const ultimaFila = table.rows[table.rows.length - 1];
@@ -220,13 +227,11 @@ document.getElementById("myTable").deleteRow(i);
                     break;
                 case 'int':
                     nuevoInput.type = "number";
-
                     break;
                 case 'date':
                     nuevoInput.type = "date";
                     break;
             }
-
 
             if (e.target.selectedOptions[0].text === 'monto') {
                 nuevoInput.name = e.target.selectedOptions[0].text + '_min'
@@ -234,7 +239,6 @@ document.getElementById("myTable").deleteRow(i);
                 nuevoInput.setAttribute("maxlength", matches[1]);
                 nuevoTd.appendChild(nuevoInput);
                 ultimaFila.appendChild(nuevoTd);
-                
 
                 const nuevoInput2 = document.createElement("input");
                 nuevoInput2.type = "number";
@@ -243,8 +247,16 @@ document.getElementById("myTable").deleteRow(i);
                 nuevoInput2.setAttribute("maxlength", matches[1]);
                 nuevoTd.appendChild(nuevoInput2);
                 ultimaFila.appendChild(nuevoTd);
-                
 
+            } else if (e.target.selectedOptions[0].text === 'comuna') {
+                let selectComuna =
+                    `<select class="form-select valores" name="${e.target.selectedOptions[0].text}" ><option>Seleccione la comuna</option>`
+                for (let i in objComunas) {
+                    selectComuna += `<option value="${objComunas[i]}">${objComunas[i]}</option>`
+                }
+                selectComuna += `</select>`
+                nuevoTd.innerHTML = selectComuna;
+                ultimaFila.appendChild(nuevoTd);
             } else {
                 nuevoInput.name = e.target.selectedOptions[0].text
                 nuevoInput.className = 'form-control form-control-sm valores'
@@ -252,11 +264,6 @@ document.getElementById("myTable").deleteRow(i);
                 nuevoTd.appendChild(nuevoInput);
                 ultimaFila.appendChild(nuevoTd);
             }
-
-
-
-
-
         }
     </script>
 @endsection

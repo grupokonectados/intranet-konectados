@@ -22,7 +22,7 @@
                     </thead>
                     <tbody>
                         @foreach ($data as $d)
-                            <tr>
+                            <tr onclick="window.location='/estrategia/{{ $d->id }}';">
                                 <td class="text-center">
                                     @switch($d->channels)
                                         @case(1)
@@ -38,7 +38,7 @@
                                         @endswitch
                                     </td>
                                     <td class="text-center">{{ $d->query_description }}</td>
-                                    <td>{{ $d->showQue }}</td>
+                                    <td>{{ $d->onlyWhere }}</td>
                                     <td class="text-center"><a href="{{ route('clients.show',  $d->client_id) }}">{{ $d->name }}</a></td>
                                 </tr>
                             @endforeach

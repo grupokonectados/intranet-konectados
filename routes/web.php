@@ -1,7 +1,10 @@
 <?php
 
-use App\Http\Controllers\ClientController;
-use App\Http\Controllers\EstrategiaController;
+use App\Http\Controllers\{
+    ClientController,
+    EstrategiaController
+};
+//use App\Http\Controllers\EstrategiaController;
 use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Route;
 
@@ -34,16 +37,14 @@ Route::group(['middleware' => ['auth']], function () {
      */
         
      Route::resource('/clients', ClientController::class);
-     
-
      Route::post('/clients/search-client', [ClientController::class, 'searchCliente'])->name('clients.searchCliente');
 
 
 
 
      Route::resource('/estrategia', EstrategiaController::class);
-
      Route::post('/estrategia/save-estrategia', [EstrategiaController::class, 'saveEstrategia'])->name('estrategia.save-estrategia');
+     Route::post('/estrategia/run-query', [EstrategiaController::class, 'runQuery'])->name('estrategia.run-query');
 
 
      
