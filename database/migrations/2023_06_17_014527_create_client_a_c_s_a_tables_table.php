@@ -54,6 +54,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('client_a_c_s_a_tables');
+        Schema::dropIfExists('cartera_primer_dia');
     }
 };

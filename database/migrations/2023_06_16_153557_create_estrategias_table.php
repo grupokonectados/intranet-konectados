@@ -19,6 +19,7 @@ return new class extends Migration
             $table->text('table_name')->nullable();
             $table->text('query_description')->nullable();
             $table->string('prefix_client')->nullable();
+            $table->tinyInteger('isActive')->default(0);
             $table->timestamps();
         });
     }

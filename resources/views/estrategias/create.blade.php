@@ -109,6 +109,7 @@
         }
 
         function selectClient(prefix) {
+            console.log(prefix)
             var lineas = "";
             var lines = ''
 
@@ -235,18 +236,29 @@
 
             if (e.target.selectedOptions[0].text === 'monto') {
                 nuevoInput.name = e.target.selectedOptions[0].text + '_min'
-                nuevoInput.className = 'form-control form-control-sm valores'
-                nuevoInput.setAttribute("maxlength", matches[1]);
+                nuevoInput.className = 'form-control form-control-sm valores limite-input'
+                nuevoInput.setAttribute("data-limite", matches[1]);
                 nuevoTd.appendChild(nuevoInput);
                 ultimaFila.appendChild(nuevoTd);
 
                 const nuevoInput2 = document.createElement("input");
                 nuevoInput2.type = "number";
                 nuevoInput2.name = e.target.selectedOptions[0].text + '_max'
-                nuevoInput2.className = 'form-control form-control-sm valores'
-                nuevoInput2.setAttribute("maxlength", matches[1]);
+                nuevoInput2.className = 'form-control form-control-sm valores limite-input'
+                nuevoInput2.setAttribute("data-limite", matches[1]);
                 nuevoTd.appendChild(nuevoInput2);
                 ultimaFila.appendChild(nuevoTd);
+
+                const campos = document.querySelectorAll(".limite-input");
+            campos.forEach(function(campo) {
+  const limite = campo.dataset.limite;
+
+  campo.addEventListener("input", function() {
+    if (this.value.length > limite) {
+      this.value = this.value.slice(0, limite);
+    }
+  });
+});
 
             } else if (e.target.selectedOptions[0].text === 'comuna') {
                 let selectComuna =
@@ -259,11 +271,23 @@
                 ultimaFila.appendChild(nuevoTd);
             } else {
                 nuevoInput.name = e.target.selectedOptions[0].text
-                nuevoInput.className = 'form-control form-control-sm valores'
-                nuevoInput.setAttribute("maxlength", matches[1]);
+                nuevoInput.className = 'form-control form-control-sm valores limite-input'
+                nuevoInput.setAttribute("data-limite", matches[1]);
                 nuevoTd.appendChild(nuevoInput);
                 ultimaFila.appendChild(nuevoTd);
+
+                const campos = document.querySelectorAll(".limite-input");
+            campos.forEach(function(campo) {
+  const limite = campo.dataset.limite;
+
+  campo.addEventListener("input", function() {
+    if (this.value.length > limite) {
+      this.value = this.value.slice(0, limite);
+    }
+  });
+});
             }
+            
         }
     </script>
 @endsection

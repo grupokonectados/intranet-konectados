@@ -47,5 +47,8 @@ Route::group(['middleware' => ['auth']], function () {
      Route::post('/estrategia/run-query', [EstrategiaController::class, 'runQuery'])->name('estrategia.run-query');
 
 
+     Route::post('/estrategia/is-active', [EstrategiaController::class, 'isActive'])->name('estrategia.is-active');
+
+
      
 });

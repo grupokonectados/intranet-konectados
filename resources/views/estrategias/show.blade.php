@@ -59,7 +59,7 @@
                     <div class="col-12 my-4">
                         <span id="estadisticas"></span>
                     </div>
-                    <div class="col-12" style="height: auto; overflow: scroll; max-height: 500px;">
+                    <div class="col-12">
                         <div id="tabla"></div>
                     </div>
                 </div>
@@ -107,25 +107,9 @@
                     document.getElementById('divsito').style.display = 'block' // colocamos visible el div
                     document.getElementById('contador').innerHTML = `Total de registros: ${data.contador}` // mostramos un mensaje con el contador
                     // mostramos un mensaje con las estadisticas.
-                    document.getElementById('estadisticas').innerHTML = `<p>Total de ${canal} alcanzados: ${data.resto}</p>
-                    <p>En base al total de registros, Si utilizamos el canal ${canal} tendremos un alcance de: ${data.porcentaje}%</p>`
+                    document.getElementById('estadisticas').innerHTML = `<p>Porcentaje de cobertura: ${data.porcentaje}%</p>`
 
-                    head_table += `<table class='table table-sm table-bordered mb-0'><thead><tr>` //Comenzamos a armar la tabla con los resultado, aqui mostramos los nombres de la columna
-                    for (let th in data.table) {
-                        //data = obj con los datos | table = arreglo con los datos 
-                        head_table += `<th>${data.table[th].COLUMN_NAME}</th>`
-                    }
-                    head_table += `</tr></thead>`
-                    body_table += `<tbody>`
-                    for (let td in data.result) {
-                        body_table += ` <tr>`
-                        for (let i in data.table) {
-                            body_table += `<td>${data.result[td][data.table[i].COLUMN_NAME]}</td>`
-                        }
-                        body_table += `</tr>`
-                    }
-                    body_table += `</tbody></table>`
-                    document.getElementById('tabla').innerHTML = head_table + body_table
+                    
 
                 }else{
                     document.getElementById('divsito').style.display = 'block' // colocamos visible el div

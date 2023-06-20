@@ -18,11 +18,24 @@
                             <th>Prefix</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    {{-- PARA METODOS LARAVEL --}}
+                    {{-- <tbody>
                         @foreach ($data as $d)
                             <tr onclick="window.location='/clients/{{ $d->id }}';">
                                 <td>{{ $d->name }}</td>
                                 <td>{{ $d->prefix }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody> --}}
+
+
+
+                    {{-- PARA METODOS API --}}
+                    <tbody>
+                        @foreach ($data as $d)
+                            <tr onclick="window.location='/clients/{{ $d['id'] }}';">
+                                <td>{{ $d['name'] }}</td>
+                                <td>{{ $d['prefix'] }}</td>
                             </tr>
                         @endforeach
                     </tbody>

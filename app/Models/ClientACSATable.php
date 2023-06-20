@@ -8,4 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 class ClientACSATable extends Model
 {
     use HasFactory;
+
+    protected $table = 'cartera_primer_dia'
 }
