@@ -148,6 +148,7 @@
                         <th>Criterio</th>
 
                         <th>Fecha</th>
+                        <th>Avance</th>
                         
                     </thead>
                     <tbody>
@@ -182,7 +183,13 @@
                                     <td>{{ $data->onlyWhere }}</td>
                                     <td>
                                         {{ date("d-m-Y", strtotime($data->activation_date)) }} / {{ date("G:i:m", strtotime($data->activation_time)) }}
-
+                                    </td>
+                                    <td>
+                                        <div class="progress" role="progressbar" aria-label="Animated striped example"
+                                        aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">
+                                        <div class="progress-bar progress-bar-striped progress-bar-animated" id="progres"
+                                            style="width: 100%"><span id="texto_progress"></span></div>
+                                    </div>
                                     </td>
                                     
 

@@ -190,12 +190,12 @@ class ClientController extends Controller
 
             $contador = (new EstrategiaController)->queryResults($data);
 
-            // return $contador;
+            // return ($contador);
             $total_cartera = \DB::select("select count(*) as total_cartera from " . $data[0]->table_name)[0]->total_cartera;
 
             $pos = 0;
 
-            if (count($contador) != 0) {
+            if (count($contador['results_querys']) > 0) {
                 for ($o = 0; $o < count($contador['results_querys']); $o++) {
                     switch ($data[$o]->channels) {
                         case 1:
@@ -220,7 +220,7 @@ class ClientController extends Controller
 
                 //    return $contador['diff_query'];
 
-                    if ($data[$o]->repeatUsers == 0) {
+                    if ($data[$o]->repeatUsers == 0 && count($contador['diff_query']) > 0) {
                         if (count($contador['diff_query'][$o + 1]) > 0) {
                             $dataChart[$pos] = [
                                 'title' => $title,

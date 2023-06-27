@@ -520,7 +520,7 @@
 
             } else if (e.target.selectedOptions[0].text === 'comuna') {
                 var selectComuna =
-                    `<select class="form-select valores" onkeyup="showQuery()" name="${e.target.selectedOptions[0].text}" ><option>Seleccione la comuna</option>`
+                    `<select class="form-select valores" onchange="showQuery()" name="${e.target.selectedOptions[0].text}" ><option>Seleccione la comuna</option>`
                 for (let i in objComunas) {
                     selectComuna += `<option value="${objComunas[i]}">${objComunas[i]}</option>`
                 }
