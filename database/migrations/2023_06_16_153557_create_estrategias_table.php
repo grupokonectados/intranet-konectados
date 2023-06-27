@@ -19,7 +19,12 @@ return new class extends Migration
             $table->text('table_name')->nullable();
             $table->text('query_description')->nullable();
             $table->string('prefix_client')->nullable();
+            $table->tinyInteger('repeatUsers')->default(0);
             $table->tinyInteger('isActive')->default(0);
+            $table->tinyInteger('isDelete')->default(0);
+            $table->time('activation_time')->nullable();
+            $table->date('activation_date')->nullable();
+            $table->tinyInteger('type')->default(0);
             $table->timestamps();
         });
     }

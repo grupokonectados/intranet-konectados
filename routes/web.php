@@ -38,7 +38,12 @@ Route::group(['middleware' => ['auth']], function () {
         
      Route::resource('/clients', ClientController::class);
      Route::post('/clients/search-client', [ClientController::class, 'searchCliente'])->name('clients.searchCliente');
+     Route::get('/clients/diseno/{id}', [ClientController::class, 'disenoEstrategia'])->name('clients.diseno');
 
+     Route::post('/clients/probar-consulta', [ClientController::class, 'probarConsulta'])->name('clients.probar-consulta');
+
+
+     
 
 
 
@@ -48,6 +53,12 @@ Route::group(['middleware' => ['auth']], function () {
 
 
      Route::post('/estrategia/is-active', [EstrategiaController::class, 'isActive'])->name('estrategia.is-active');
+
+     route::get('/estrategia/delete-strategy/{id}', [EstrategiaController::class, 'deleteStrategy'])->name('estrategia.delete-strategy');
+     route::post('/estrategia/accepted-strategy', [EstrategiaController::class, 'acceptedStrategy'])->name('estrategia.accepted-strategy');
+     route::get('/estrategia/stop-strategy/{id}', [EstrategiaController::class, 'stopStrategy'])->name('estrategia.stop-strategy');
+     
+     
 
 
      

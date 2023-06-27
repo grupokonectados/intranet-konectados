@@ -1,5 +1,19 @@
 @extends('layouts.app')
 
+@section('title-section', $config_layout['title-section'])
+@section('breads', $config_layout['breads'])
+
+@section('btn-back')
+
+    <a href="{{ route($config_layout["btn-back"]) }}" class="btn btn-dark btn-sm">
+        <i class="fas fa-chevron-circle-left"></i>
+        Regresar
+    </a>
+
+@endsection
+
+
+
 @section('content')
     <div class="col-12">
         <div class="card bg-white">
@@ -7,9 +21,10 @@
                 <table class="table table-sm table-bordered mb-0">
                     <thead class="text-white bg-gray-900">
                         <tr>
-                            <th class="text-uppercase" scope="col">Cliente</th>
+                            <th class="text-uppercase text-center align-middle" scope="col">Cliente</th>
                             <th scope="col">
-                                <select class="form-select" onchange="selectClient(this.value)" name="" id="cli">
+                                <select class="form-select" onchange="selectClient(this.value)" name=""
+                                    id="cli">
                                     <option value="">Seleccione</option>
                                     @foreach ($data as $d)
                                         <option value='{{ $d->prefix }}'>{{ $d->name }}</option>
@@ -27,8 +42,17 @@
         <div class="card bg-white">
             <div class="card-body">
                 <div class="row">
-                    <div class="col-12 mb-4">
-                        <button class="btn btn-success" onclick="addRow(document.querySelector('#cli').value)">Add</button>
+                    <div class="col-6 mb-4">
+                        <button class="btn btn-success btn-sm" onclick="addRow(document.querySelector('#cli').value)">
+                            <i class="fas fa-plus-circle"></i>
+                            Agregar nuevo campo
+                        </button>
+                    </div>
+                    <div class="col-6 mb-4">
+                        <div class="form-check form-switch p-0">
+                            <input class="form-check-input" id="check" type="checkbox">
+                            <label for="form-check-label">¿Desea que para la estrategia se repitan los usuarios?</label>
+                        </div>
                     </div>
                 </div>
                 <div class="row">
@@ -36,9 +60,9 @@
                         <table id="myTable" class="table-sm table table-bordered">
                             <thead>
                                 <tr>
-                                    <th width='5%'>Eliminar</th>
-                                    <th width='20%'>Campo</th>
-                                    <th>Valor</th>
+                                    <th class="align-middle text-center" width='5%'>Eliminar</th>
+                                    <th class="align-middle text-center" width='20%'>Campo</th>
+                                    <th class="align-middle text-center">Valor</th>
                                 </tr>
                             </thead>
                         </table>
@@ -50,7 +74,9 @@
         <div class="card mt-3 bg-white">
             <div class="card-body">
                 <div>
-                    <button type="button" class="btn btn-success mb-3" onclick="showQuery()">Show</button>
+                    <button type="button" class="btn btn-success mb-3 btn-sm" onclick="showQuery()">
+                        <i class="fas fa-search"></i>
+                        Mostrar consulta </button>
                 </div>
                 {!! Form::open([
                     'route' => 'estrategia.save-estrategia',
@@ -64,13 +90,15 @@
                     <input type="hidden" name='prefix' id='prefix'>
                     <input type="hidden" name='onlyWhere' id='onlyWhere'>
                     <input type="hidden" name='table_name' id='table_name2'>
+                    <input type="hidden" name='repeatUsers' id='repeatUsers'>
+                    <input type="hidden" name='location' value='create'>
                 </div>
                 <div class="my-3">
                     <label for="">Canales</label>
                     <select class="form-control" name="channels" id="">
                         <option value="">Seleccione</option>
                         <option value="1">SMS</option>
-                        <option value="2">Llamada</option>
+                        <option value="2">Agentes</option>
                         <option value="3">Email</option>
                     </select>
                 </div>
@@ -80,7 +108,9 @@
                 </div>
 
                 <div class="mt-3">
-                    <button type="submit">Guardar</button>
+                    <button class="btn btn-success btn-sm mb-0" type="submit">
+                        <i class="fas fa-save"></i>
+                        Guardar</button>
                 </div>
 
                 {!! Form::close() !!}
@@ -96,12 +126,37 @@
         var i = 0;
 
         const objComunas = {
-            1: 'Cerro Navia', 2: 'Conchalí', 3: 'El Bosque', 4: 'Estación Central',
-            5: 'Huechuraba', 6: 'Independencia', 7: 'La Cisterna', 8: 'La Granja', 9: 'La Florida',
-            10: 'La Pintana', 11: 'La Reina', 12: 'Las Condes', 13: 'Lo Barnechea', 14: 'Lo Espejo',
-            15: 'Lo Prado', 16: 'Macul', 17: 'Maipú', 18: 'Ñuñoa', 19: 'Pedro Aguirre Cerda',
-            20: 'Peñalolén', 21: 'Providencia', 22: 'Pudahuel', 23: 'Quilicura', 24: 'Quinta Normal',
-            25: 'Recoleta', 26: 'Renca', 27: 'San Miguel', 28: 'San Joaquín', 29: 'San Ramón', 30: 'Santiago', 31: 'Vitacura'
+            1: 'Cerro Navia',
+            2: 'Conchalí',
+            3: 'El Bosque',
+            4: 'Estación Central',
+            5: 'Huechuraba',
+            6: 'Independencia',
+            7: 'La Cisterna',
+            8: 'La Granja',
+            9: 'La Florida',
+            10: 'La Pintana',
+            11: 'La Reina',
+            12: 'Las Condes',
+            13: 'Lo Barnechea',
+            14: 'Lo Espejo',
+            15: 'Lo Prado',
+            16: 'Macul',
+            17: 'Maipú',
+            18: 'Ñuñoa',
+            19: 'Pedro Aguirre Cerda',
+            20: 'Peñalolén',
+            21: 'Providencia',
+            22: 'Pudahuel',
+            23: 'Quilicura',
+            24: 'Quinta Normal',
+            25: 'Recoleta',
+            26: 'Renca',
+            27: 'San Miguel',
+            28: 'San Joaquín',
+            29: 'San Ramón',
+            30: 'Santiago',
+            31: 'Vitacura'
         }
 
         function addRow(prefix) {
@@ -171,7 +226,7 @@
                     const montoMax = parseFloat(document.querySelector('[name="monto_max"]').value);
                     if (!isNaN(montoMin) && !isNaN(montoMax)) {
                         const betweenClause =
-                        `monto BETWEEN ${montoMin} AND ${montoMax}`; //crearmos la linea del between
+                            `monto BETWEEN ${montoMin} AND ${montoMax}`; //crearmos la linea del between
                         if (!queryParts.includes(betweenClause)) {
                             queryParts.push(betweenClause); // lo metemos en el objeto
                         }
@@ -190,15 +245,18 @@
                 }
             });
 
+
+            
+            document.getElementById('check').checked === true ? document.getElementById('repeatUsers').value = 1 : document.getElementById('repeatUsers').value = 0
             query = queryParts.join(' and '); //añadimos los and a la consulta
             var query2 = 'select * from ' + name_table.value + ' where ' + queryParts.join(' and ');
             document.getElementById('showQue').value = query; // muestro en el textarea el codigo
             document.getElementById('onlyWhere').value = query; // muestro en el textarea el codigo
             document.getElementById('table_name2').value = name_table.value; // muestro en el textarea el codigo
             document.getElementById('query_text').value =
-            query2; // asigno a un hidden en el form el valor de la query para poder guardarlo
+                query2; // asigno a un hidden en el form el valor de la query para poder guardarlo
             document.getElementById('prefix').value = document.getElementById('cli')
-            .value; // asigno a un hidden en el form el valor de la del prefix para poder guardarlo
+                .value; // asigno a un hidden en el form el valor de la del prefix para poder guardarlo
         }
 
         function selectInputType(value, i, e) {
@@ -250,15 +308,15 @@
                 ultimaFila.appendChild(nuevoTd);
 
                 const campos = document.querySelectorAll(".limite-input");
-            campos.forEach(function(campo) {
-  const limite = campo.dataset.limite;
+                campos.forEach(function(campo) {
+                    const limite = campo.dataset.limite;
 
-  campo.addEventListener("input", function() {
-    if (this.value.length > limite) {
-      this.value = this.value.slice(0, limite);
-    }
-  });
-});
+                    campo.addEventListener("input", function() {
+                        if (this.value.length > limite) {
+                            this.value = this.value.slice(0, limite);
+                        }
+                    });
+                });
 
             } else if (e.target.selectedOptions[0].text === 'comuna') {
                 let selectComuna =
@@ -277,17 +335,17 @@
                 ultimaFila.appendChild(nuevoTd);
 
                 const campos = document.querySelectorAll(".limite-input");
-            campos.forEach(function(campo) {
-  const limite = campo.dataset.limite;
+                campos.forEach(function(campo) {
+                    const limite = campo.dataset.limite;
 
-  campo.addEventListener("input", function() {
-    if (this.value.length > limite) {
-      this.value = this.value.slice(0, limite);
-    }
-  });
-});
+                    campo.addEventListener("input", function() {
+                        if (this.value.length > limite) {
+                            this.value = this.value.slice(0, limite);
+                        }
+                    });
+                });
             }
-            
+
         }
     </script>
 @endsection

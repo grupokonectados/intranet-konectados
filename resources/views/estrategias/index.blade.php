@@ -1,5 +1,17 @@
 @extends('layouts.app')
 
+@section('title-section', $config_layout['title-section'])
+@section('breads', $config_layout['breads'])
+
+@section('btn-create')
+
+    <a href="{{ route($config_layout["btn-create"]) }}" class="btn btn-success btn-sm">
+        <i class="fas fa-plus-circle"></i>
+        Crear
+    </a>
+
+@endsection
+
 @section('content')
 {{-- <div class="col-12 mb-3 ">
     <div class="card bg-white">
@@ -55,13 +67,6 @@
 
 
 
-        <div class="col-12 mb-3 ">
-            <div class="card bg-white">
-                <div class="card-body">
-                    <a href='{{ route("estrategia.create") }}' class="btn btn-success btn-sm">Crear</a>
-                </div>
-            </div>
-        </div>
             <div class="col-6">
                 <div class="card bg-white">
                     <div class="card-header">

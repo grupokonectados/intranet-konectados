@@ -20,7 +20,8 @@ return new class extends Migration
             $table->string('lists')->nullable();
             $table->tinyInteger('gestion_ejecutivo')->nullable();
             $table->string('destinatarios')->nullable();
-            $table->tinyInteger('active')->nullable();
+            $table->json('active_channels')->nullable();
+            $table->integer('active')->nullable();
             $table->tinyInteger('idempresa')->nullable();
             $table->tinyInteger('stat')->nullable();
             $table->timestamps();

@@ -7,6 +7,7 @@ use App\Models\Estrategia;
 use App\Models\Estructura;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use SebastianBergmann\Diff\Diff;
 
 class EstrategiaController extends Controller
 {
@@ -16,6 +17,12 @@ class EstrategiaController extends Controller
 
     public function index()
     {
+
+        $config_layout = [
+            'title-section' => 'Estrategias',
+            'breads' => 'Estrategias',
+            'btn-create' => 'estrategia.create'
+        ];
 
         /**
          * Metodo laravel
@@ -41,22 +48,29 @@ class EstrategiaController extends Controller
         //return $data;
 
 
-        return view('estrategias/index', compact('data'));
+        return view('estrategias/index', compact('data', 'config_layout'));
     }
 
 
     public function create()
     {
 
+        $config_layout = [
+            'title-section' => 'Crear Estrategia',
+            'breads' => 'Estrategias > Crear Estrategia',
+            'btn-back' => 'estrategia.index'
+        ];
+
+
         $data = Client::all();
-        return view('estrategias/create', compact('data'));
+        return view('estrategias/create', compact('config_layout', 'data'));
     }
 
 
     public function saveEstrategia(Request $request)
     {
 
-        //return $request;
+        // return $request;
 
         $saveQuery = new Estrategia();
         $saveQuery->query = $request->query_text;
@@ -65,23 +79,42 @@ class EstrategiaController extends Controller
         $saveQuery->table_name = $request->table_name;
         $saveQuery->query_description = $request->query_description;
         $saveQuery->prefix_client = $request->prefix;
+        $saveQuery->repeatUsers = $request->repeatUsers;
+
+        // return $saveQuery;
+
+
         $saveQuery->save();
 
-        return redirect()->route('estrategia.index');
+
+        if ($request->location == 'create') {
+            return redirect()->route('estrategia.index');
+        } else {
+            return back();
+        }
     }
 
     public function show($id)
     {
 
         $data = Estrategia::find($id);
-        return view('estrategias/show', compact('data'));
+
+        $config_layout = [
+            'title-section' => 'Estrategia: ' . $data->query_description,
+            'breads' => 'Estrategias > Estrategia: ' . $data->query_description,
+            'btn-back' => 'estrategia.index'
+        ];
+
+
+        return view('estrategias/show', compact('data', 'config_layout'));
 
 
         // $response = Http::get(env('API_URL').self::PATH_API.'/'.$id);
         // $data = $response->json();
 
         // return view('estrategias/show', compact('data'));
-        return $data;
+
+        //return $data;
     }
 
 
@@ -140,21 +173,12 @@ class EstrategiaController extends Controller
     }
 
 
-    public function isActive(Request $request){
+    public function isActive(Request $request)
+    {
 
         $dataCompare = Estrategia::where('isActive', '=', 1)->get();
-
-        // return count($dataCompare);
-
-        if (count($dataCompare) <= 1 && $request->value == 0) {
-            $data = ['error' => 'Debe existir al menos de una estrategia activa'];
-            return $data;
-        }else{
-            $data = Estrategia::where('id', '=', $request->id)->update(['isActive' => $request->value]);
-            return $data;
-        }
-
-        
+        $data = Estrategia::where('id', '=', $request->id)->update(['isActive' => 1, 'type' => 2]);
+        return $data;
     }
 
 
@@ -162,97 +186,151 @@ class EstrategiaController extends Controller
     {
 
         $query_ruts = [];
-        
 
-        foreach ($strings_query as $k => $v) {
-            $query_ruts[$k] = \DB::select("select rut from " . $v['table_name'] . " where " . $v['where']);
+        foreach ($strings_query as $k => $v) { //extraemos los resultados encontrados en las consultas.
+            $query_ruts[$k] = \DB::select("select rut from " . $v['table_name'] . " where " . $v['onlyWhere']);
         }
 
-        if (count($strings_query) == 3) {
-            
-            for ($i = 0; $i < count($query_ruts[0]); $i++) {
-                $arr1[$i] = $query_ruts[0][$i]->rut;
+        $arr_count = count($query_ruts); // contador de resultados
+
+        if ($arr_count > 0) {
+            for ($i = 0; $i < $arr_count; $i++) {
+
+                if (count($query_ruts[$i]) > 0) {
+                    for ($o = 0; $o < count($query_ruts[$i]); $o++)
+                        $arr[$i][$o] = $query_ruts[$i][$o]->rut;
+                } else {
+                    $arr[$i] = [];
+                }
             }
+            $final = array(); // Crear un arreglo vacío para almacenar los resultados finales
 
-            for ($o = 0; $o < count($query_ruts[1]); $o++) {
-                $arr2[$o] = $query_ruts[1][$o]->rut;
+            for ($i = 0; $i < $arr_count - 1; $i++) {
+                if (isset($arr[$i]) && isset($arr[$i + 1])) {
+                    $diff1 = array_diff($arr[$i], $arr[$i + 1]);
+                    $diff2 = array_diff($arr[$i + 1], $arr[$i]);
+                    $final[($i + 1)] = $diff1;
+                    $final[($i + 2)] = $diff2;
+                }
             }
+        }
 
-            for ($u = 0; $u < count($query_ruts[2]); $u++) {
-                $arr3[$u] = $query_ruts[2][$u]->rut;
+        $arr_send = [
+            'results_querys' => $arr,
+            'diff_query' => $final,
+
+        ];
+        return $arr_send;
+    }
+
+
+    public function deleteStrategy($id)
+    {
+
+        $estrategia = Estrategia::find($id)->delete();
+        return back();
+    }
+
+    public function acceptedStrategy(Request $request)
+    {
+
+
+
+
+
+        /** 
+         * CASO PARA SI SOLO ES UNO Y YAAAAA
+         */
+
+        //  $getStrategys = Estrategia::select('channels')
+        // ->where('isActive', '=', 1)
+        // ->where('type', '=', 2)
+        // ->get();
+
+        // $estrategia = Estrategia::find($request->id);
+
+        // $a = [];
+        // foreach( $getStrategys as  $v){
+        //     $a[] = $v->channels;
+
+        // }
+
+        // if(in_array($estrategia->channels, $a)){
+        //     return [
+        //         'message' => 'No se puede registrar, para ese canal ya existe una estrategia y no se pueden activar mas',
+        //         'result' => 0
+        //     ];
+        //  }else{
+        //      $estrategia->type = 2;
+        //      $estrategia->isActive = 1;
+
+        //      $estrategia->activation_date = date('Y-m-d');
+        //      $estrategia->activation_time = date('G:i:s');
+
+        //      $estrategia->save();
+        //      return ['message' => 'Puesto en produccion', 'result' => 1];
+        //  }
+
+
+        /** 
+         * CASO PARA SI SOLO LOS MULTIPLES
+         */
+
+        $getStrategys = Estrategia::select('channels')
+            ->where('isActive', '=', 1)
+            ->where('type', '=', 2)
+            ->get();
+
+        $estrategia = Estrategia::find($request->id); // obtengo los dato de la estrategia segun el identificador
+
+        //Obtengo la configuracion de los permisos de los canales del cliente.
+        $client = Client::select('active_channels')->where('prefix', '=', $estrategia->prefix_client)->get()[0];
+
+        //guardo en un array los permisos del cliente 
+        $permitidos_client = json_decode($client['active_channels'], true);
+
+        $arr_key_permitidos = [];
+        foreach ($permitidos_client as $k => $v) {
+            if (isset($permitidos_client[$k]['multiple'])) { // Verifico y almaceno la posicion de los canales en los cuales se permite usar varias veces el mismo canal
+                $arr_key_permitidos[] = $k;
             }
+        }
 
-            $unico1 = array_diff($arr1, $arr2, $arr3);
-            $unico2 = array_diff($arr2, $arr1, $arr3);
-            $unico3 = array_diff($arr3, $arr1, $arr2);
+        $arr = [];
+        foreach ($getStrategys as  $v) { // Almaceno los canales que existen actualmente para el cliente
+            $arr[] = $v->channels;
+        }
 
-            if (count($unico1) <= 0) {
-                $unico1 = $arr1;
-            }
-
-            if (count($unico2) <= 0) {
-                $unico2 = $arr2;
-            }
-
-            if (count($unico3) <= 0) {
-                $unico3 = $arr3;
-            }
-
-
-            return [
-                
-                $unico1,
-                $unico2,
-                $unico3,
-                'sub1' =>count($unico1),
-                'sub2' =>count($unico2),
-                'sub3' =>count($unico3),
-                'total' => count($unico1)+count($unico2)+count($unico3),
-                
-            ];
-        }elseif(count($strings_query) == 2){
-
-            for ($i = 0; $i < count($query_ruts[0]); $i++) {
-                $arr1[$i] = $query_ruts[0][$i]->rut;
-            }
-
-            for ($o = 0; $o < count($query_ruts[1]); $o++) {
-                $arr2[$o] = $query_ruts[1][$o]->rut;
-            }
-
-            $unico1 = array_diff($arr1, $arr2);
-            $unico2 = array_diff($arr2, $arr1);
-
-            if (count($unico1) <= 0) {
-                $unico1 = $arr1;
-            }
-
-            if (count($unico2) <= 0) {
-                $unico2 = $arr2;
-            }
-
-            return [
-                $unico1,
-                $unico2,
-                'sub1' =>count($unico1),
-                'sub2' =>count($unico2),
-                'total' => count($unico1)+count($unico2),
-            ];
-
-        }else{
-            
-            for ($i = 0; $i < count($query_ruts[0]); $i++) {
-                $arr1[$i] = $query_ruts[0][$i]->rut;
-            }
-            
-            if (count($arr1) > 0) {
+        if (in_array($estrategia->channels, $arr)) { // Verifico si existe ese canal dentro de los registros que existen
+            if (in_array($estrategia->channels, $arr_key_permitidos)) { // Verifico si ese canal se puede usar multiple veces para el caso positivo, lo paso a prodccion
+                $estrategia->type = 2;
+                $estrategia->isActive = 1;
+                $estrategia->activation_date = date('Y-m-d');
+                $estrategia->activation_time = date('G:i:s');
+                $estrategia->save();
+                return ['message' => 'Puesto en produccion', 'result' => 1];
+            } else { // Para el caso negativo donde no se puedan registrar multiples mensajes, le aviso al usuario
                 return [
-                    $arr1,
-                    'total' => count($arr1),
-                    'sub1' =>count($arr1),
+                    'message' => 'No se puede registrar, para ese canal ya existe una estrategia y no se pueden activar mas',
+                    'result' => 0
                 ];
             }
-            
+        } else { // El caso negativo d que el canal no se encuentre dentro de los registros actuales 
+            $estrategia->type = 2;
+            $estrategia->isActive = 1;
+            $estrategia->activation_date = date('Y-m-d');
+            $estrategia->activation_time = date('G:i:s');
+            $estrategia->save();
+            return ['message' => 'Puesto en produccion', 'result' => 1];
         }
+    }
+
+    public function stopStrategy($id)
+    {
+        $estrategia = Estrategia::find($id);
+        $estrategia->isDelete = 1;
+        $estrategia->isActive = 0;
+        $estrategia->save();
+        return back();
     }
 }
