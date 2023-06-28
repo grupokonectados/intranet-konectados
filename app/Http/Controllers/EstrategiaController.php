@@ -193,6 +193,8 @@ class EstrategiaController extends Controller
 
         $arr_count = count($query_ruts); // contador de resultados
 
+        // return $query_ruts;
+
         if ($arr_count > 0) {
             for ($i = 0; $i < $arr_count; $i++) {
 

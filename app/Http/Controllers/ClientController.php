@@ -31,7 +31,13 @@ class ClientController extends Controller
         // $response = Http::get(env('API_URL').self::PATH_API);
         // $data = $response->json();
 
-        return view('clients/index', compact('data'));
+
+        $config_layout = [
+            'title-section' => 'Clientes',
+            'breads' => 'Clientes',
+        ];
+
+        return view('clients/index', compact('data', 'config_layout'));
     }
 
 
@@ -40,13 +46,13 @@ class ClientController extends Controller
 
         $client = Client::find($id);
 
-        $channels = [
-            1 => 'Agente',
-            2 => 'ivr',
-            3 => 'voice_bot',
-            4 => 'sms',
-            5 => 'Email',
-            6 => 'whatsapp',
+        $channels = [ // Canales. 
+            1 => 'AGENTE',
+            2 => 'EMAIL',
+            3 => 'IVR',
+            4 => 'SMS',
+            5 => 'VOICE BOT',
+            6 => 'WHATSAPP',
         ];
 
         $client->active_channels = json_decode($client->active_channels, true);
@@ -109,23 +115,23 @@ class ClientController extends Controller
         $client = Client::find($id); //Traigo los datos del cliente
 
         // convierto en un array los canales permitidos del cliente
-        $client->active_channels = json_decode($client->active_channels, true); 
+        $client->active_channels = json_decode($client->active_channels, true);
 
         // Obtengo todos las estrategias que el cliente tiene que no estan activas
-        $datas = Estrategia::where('prefix_client', '=', $client->prefix) 
+        $datas = Estrategia::where('prefix_client', '=', $client->prefix)
             ->where('isActive', '=', 0)
             ->where('type', '=', 0)
             ->get();
 
+
         $channels = [ // Canales. 
             1 => 'AGENTE',
-            2 => 'IVR',
-            3 => 'VOICE BOT',
+            2 => 'EMAIL',
+            3 => 'IVR',
             4 => 'SMS',
-            5 => 'EMAIL',
+            5 => 'VOICE BOT',
             6 => 'WHATSAPP',
         ];
-
 
 
 
@@ -170,7 +176,7 @@ class ClientController extends Controller
         $calculoEstrategias = $this->calculoEstrategias($datas);
 
 
-        // return $datas;
+        // return $calculoEstrategias;
 
         $estructura = Estructura::select('COLUMN_NAME', 'COLUMN_TYPE', 'DATA_TYPE', 'TABLE_NAME')->where("PREFIX", '=', $client->prefix)->get();
 
@@ -186,7 +192,6 @@ class ClientController extends Controller
             }
         }
 
-        // return count($x);
 
         $total_resta = 0;
 
@@ -203,7 +208,6 @@ class ClientController extends Controller
         } else {
             $total_resta = 0;
         }
-        //return $estructura;
 
         $config_layout = [
             'title-section' => 'Diseño de estrategia para: ' . $client->name,
@@ -237,16 +241,16 @@ class ClientController extends Controller
                             $title = 'AGENTE';
                             break;
                         case 2:
-                            $title = 'IVR';
+                            $title = 'EMAIL';
                             break;
                         case 3:
-                            $title = 'VOICE BOT';
+                            $title = 'IVR';
                             break;
                         case 4:
                             $title = 'SMS';
                             break;
                         case 5:
-                            $title = 'EMAIL';
+                            $title = 'VOICE BOT';
                             break;
                         case 6:
                             $title = 'WHATSAPP';
@@ -326,8 +330,10 @@ class ClientController extends Controller
         ];
     }
 
-    public function show($id)
+    public function show($id, Request $request)
     {
+
+        // return $request;
 
         /**
          * Metodo laravel
@@ -337,22 +343,67 @@ class ClientController extends Controller
 
         $channels = [ // Canales. 
             1 => 'AGENTE',
-            2 => 'IVR',
-            3 => 'VOICE BOT',
+            2 => 'EMAIL',
+            3 => 'IVR',
             4 => 'SMS',
-            5 => 'EMAIL',
+            5 => 'VOICE BOT',
             6 => 'WHATSAPP',
         ];
 
-        $dataEstrategias = Estrategia::where('prefix_client', '=', $client->prefix)
-            ->where('type', '=', 2)
-            ->where('isActive', '=', 1)
-            ->get();
 
-        $dataEstrategiasNot = Estrategia::where('prefix_client', '=', $client->prefix)
+        if ($request) {
+            if($request->channelorder){
+                $dataEstrategias = Estrategia::where('prefix_client', '=', $client->prefix)
+                ->where('type', '=', 2)
+                ->where('isActive', '=', 1)
+                ->orderBy('channels', $request->channelorder)
+                ->get();
+            }elseif($request->dateorder){
+                $dataEstrategias = Estrategia::where('prefix_client', '=', $client->prefix)
+                ->where('type', '=', 2)
+                ->where('isActive', '=', 1)
+                ->orderBy('activation_time', $request->dateorder)
+                ->get();
+            }else{
+                $dataEstrategias = Estrategia::where('prefix_client', '=', $client->prefix)
+                ->where('type', '=', 2)
+                ->where('isActive', '=', 1)
+                ->get();
+            }
+        } else {
+            
+        }
+
+
+        
+
+        if ($request) {
+            if($request->channelnotorder){
+                $dataEstrategiasNot = Estrategia::where('prefix_client', '=', $client->prefix)
+                ->where('type', '=', 2)
+                ->where('isDelete', '=', 1)
+                ->orderBy('channels', $request->channelnotorder)
+                ->get();
+            }elseif($request->datenotorder){
+                $dataEstrategiasNot = Estrategia::where('prefix_client', '=', $client->prefix)
+                ->where('type', '=', 2)
+                ->where('isDelete', '=', 1)
+                ->orderBy('activation_time', $request->datenotorder)
+                ->get();
+            }else{
+                $dataEstrategiasNot = Estrategia::where('prefix_client', '=', $client->prefix)
+                ->where('type', '=', 2)
+                ->where('isDelete', '=', 1)
+                ->get();
+            }
+        }else{
+            $dataEstrategiasNot = Estrategia::where('prefix_client', '=', $client->prefix)
             ->where('type', '=', 2)
             ->where('isDelete', '=', 1)
             ->get();
+        }
+
+        
 
 
 
@@ -373,7 +424,7 @@ class ClientController extends Controller
             }
         }
 
-        if (count($dataEstrategias) > 1) {
+        if (count($dataEstrategias) > 1 && count($x) > 0) {
 
             rsort($x);
             $total_resta =  $x[0];

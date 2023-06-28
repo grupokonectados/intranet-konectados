@@ -4,224 +4,195 @@
 @section('breads', $config_layout['breads'])
 
 @section('btn-back')
-    <a href="{{ route($config_layout['btn-back'], $client->id) }}" class="btn btn-dark btn-sm">
-        <i class="fas fa-chevron-circle-left"></i>
-        Regresar
-    </a>
+    <x-btn-standar type='a' name='Regresar' title='Regresar' color="dark" sm='sm' icon='chevron-circle-left'
+        href="{{ route($config_layout['btn-back'], $client->id) }}" />
 @endsection
 
 
 @section('content')
-    <div class="col-8 mb-3">
-        <div class="card ">
-            <div class="card-header">
+    <x-cards size='8' xtrasclass='mb-3' header="Datos del cliente" titlecolor='primary'>
+        <div class="d-flex justify-content-between">
+            <div class="col-6">
+                <label class="form-label col-6">Nombre: {{ $client->name }}</label>
 
-                <h5 class="mb-0">Datos del cliente</h5>
-            </div>
-            <div class="card-body ">
-                <div class="d-flex justify-content-between">
-                    <div class="col-6">
-                        <label class="form-label col-6">Nombre: {{ $client->name }}</label>
-
-                        <label class="form-label form-label col-6">Prefix: {{ $client->prefix }}</label>
-                    </div>
-                </div>
+                <label class="form-label form-label col-6">Prefix: {{ $client->prefix }}</label>
             </div>
         </div>
-    </div>
 
-    <div class="col-4 mb-3">
-        <div class="card ">
-            <div class="card-header">
+    </x-cards>
 
-                <h5 class="mb-0">Canales Permitidos</h5>
-            </div>
-            <div class="card-body ">
-                <div class="row">
+    <x-cards size='4' xtrasclass='mb-3' header="Canales Permitidos" titlecolor='primary'>
+        <div class="row text-center">
 
-                    @foreach ($channels as $key => $val)
-                        @if (isset($client->active_channels[$key]))
-                            <div class="col-4">{{ $val }}</div>
-                        @endif
-                    @endforeach
+            @foreach ($channels as $key => $val)
+                @if (isset($client->active_channels[$key]))
+                    <div class="col-4">{{ $val }}</div>
+                @endif
+            @endforeach
 
-                </div>
-            </div>
         </div>
-    </div>
+    </x-cards>
 
-    <div class="col-12 my-3">
-        <div class="card ">
-            <div class="card-header">
-                <h5 class="mb-0">Estrategias</h5>
+    <x-cards xtrasclass='my-3' header="Estrategias" titlecolor='primary'>
+        <table class="table table-sm table-bordered mb-0">
+            <thead class="bg-dark">
+                <th width='7%' class="align-middle text-white text-center text-uppercase">Canal</th>
+                <th class="align-middle text-white text-uppercase" width='3%'>Cobertura</th>
+                <th class="align-middle text-white text-uppercase" width='3%'>Registros</th>
+                <th width='7%' class="text-center text-white text-uppercase">¿Acepta repetidos?</th>
+                <th class="align-middle text-white text-uppercase" width='3%'>Repetidos</th>
+                <th class="align-middle text-white text-uppercase text-center">Criterio</th>
+                <th width='3%' class="align-middle text-uppercase text-center text-white">Acciones</th>
+            </thead>
+            <tbody class="align-middle">
+                @foreach ($datas as $k => $data)
+                    <tr>
+                        <td class="text-center align-middle">
+                            @if (isset($channels[$data->channels]))
+                                {{ $channels[$data->channels] }}
+                            @endif
+                        </td>
+                        <td class="text-center align-middle">{{ $dataChart[$k]['porcentaje'] }}%</td>
+                        <td class="text-center align-middle">{{ $dataChart[$k]['datos'] }}</td>
+                        <td class="text-center align-middle">
+                            @if ($data->repeatUsers == 1)
+                                <div class="form-check form-switch align-items-stretch">
+                                    <label for="form-check-label">Si</label>
+                                    <input class="form-check-input ml-0" disabled checked type="checkbox">
+                                </div>
+                            @else
+                                <div class="form-check form-switch align-items-stretch">
+                                    <label for="form-check-label">No</label>
+                                    <input class="form-check-input ml-0" disabled type="checkbox">
+                                </div>
+                            @endif
+                        </td>
+                        <td class="text-center align-middle">
+                            @if ($data->repeatUsers == 1)
+                                {{ $total_resta }}
+                            @else
+                                0
+                            @endif
+                        </td>
+                        <td class="align-middle">{{ $data->onlyWhere }}</td>
+                        <td class="text-center align-middle">
+                            <div class="btn-group" role="group" aria-label="Basic example">
+
+                                <x-btn-standar type='a' title='Aceptar' color="success" sm='sm'
+                                    icon='check-circle' onclick="acceptedStrategy({{ $data->id }})" />
+
+                                {{-- <a class="btn btn-warning btn-sm">
+                            <i class="fas fa-edit"></i>
+                        </a> --}}
+
+                                <x-btn-standar type='a' title='Eliminar' color="danger" sm='sm'
+                                    icon='times-circle' extraclass='eliminar-estrategia'
+                                    href="{{ route('estrategia.delete-strategy', $data->id) }}" />
+
+
+                            </div>
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </x-cards>
+
+    <x-cards xtrasclass='mt-3' header="Nueva estrategia" titlecolor='success'>
+        <div class="row">
+            <div class="col-5">
+                <table class="table table-bordered">
+                    <tr>
+                        <th width=45% class="text-uppercase  align-middle" scope="col">Cliente</th>
+                        <th class="text-uppercase align-middle" scope="col">{{ $client->name }}
+                        </th>
+                    </tr>
+                    {!! Form::open([
+                        'route' => 'estrategia.save-estrategia',
+                        'method' => 'POST',
+                        'id' => 'myForm',
+                    ]) !!}
+                    <tr>
+                        <th class="text-uppercase  align-middle" scope="col">¿Desea que para la estrategia se
+                            repitan los usuarios?</th>
+                        <th class="text-uppercase text-center align-middle" scope="col">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" id="check" type="checkbox">
+                            </div>
+                        </th>
+                    </tr>
+
+                    <tr>
+                        <th class="text-uppercase align-middle" scope="col">Canales</th>
+                        <th>
+                            <select class="form-select" name="channels" id="canalsito">
+                                <option value="">Seleccione</option>
+                                @foreach ($channels as $key => $val)
+                                    @if (in_array($key, $multiples))
+                                        <option value="{{ $key }}">{{ $val }}</option>
+                                    @endif
+                                @endforeach
+                            </select>
+
+                        </th>
+                    </tr>
+                    <tr>
+                        <th class="text-uppercase align-middle" scope="col">
+                            Descripcion
+                        </th>
+                        <th>
+                            <textarea class="form-control" id='query_description' name='query_description'></textarea>
+                        </th>
+                    </tr>
+                    <tr>
+                        <th colspan="2" class="text-uppercase align-middle" scope="col">
+                            <textarea class="form-control" id="showQue" name="showQue" disabled></textarea>
+                            <input type="hidden" name='query_text' id='query_text'>
+                            <input type="hidden" name='prefix' id='prefix' value={{ $client->prefix }}>
+                            <input type="hidden" name='onlyWhere' id='onlyWhere'>
+                            <input type="hidden" name='table_name' id='table_name2'>
+                            <input type="hidden" name='repeatUsers' id='repeatUsers'>
+                            <input type="hidden" name='location' value='diseno'>
+                        </th>
+                    </tr>
+                    <tr>
+                        <th colspan="2" class="text-uppercase align-middle" scope="col">
+                            <button class="btn btn-success btn-sm mb-0" type="submit">
+                                <i class="fas fa-save"></i>
+                                Guardar</button>
+                        </th>
+                    </tr>
+                    {!! Form::close() !!}
+                </table>
             </div>
-            <div class="card-body ">
-                <table class="table table-sm table-bordered mb-0">
+            <div class="col-7">
+                <table class="table table-bordered">
+                    <tr>
+                        <th class="text-uppercase align-middle" scope="col">
+                            <button class="btn btn-success btn-sm" id='btnNuevo'
+                                onclick="addRow('{{ $client->prefix }}')">
+                                <i class="fas fa-plus-circle"></i>
+                                Agregar nuevo campo
+                            </button>
+                        </th>
+                    </tr>
+                </table>
+
+                <table id="myTable" class="table-sm table table-bordered">
                     <thead>
-                        <th width='7%' class="align-middle text-center">Canal</th>
-                        <th class="align-middle" width='3%'>Cobertura</th>
-                        <th class="align-middle" width='3%'>Registros</th>
-                        <th width='7%' class="text-center">¿Acepta repetidos?</th>
-                        <th class="align-middle" width='3%'>Repetidos</th>
-                        <th class="align-middle text-center">Criterio</th>
-                        <th width='3%' class="align-middle text-center">Acciones</th>
+                        <tr>
+                            <th class="align-middle text-center" width='3%'>Eliminar</th>
+                            <th class="align-middle text-center" width='20%'>Operador</th>
+                            <th class="align-middle text-center" width='15%'>Campo</th>
+                            <th class="align-middle text-center">Valor</th>
+                        </tr>
                     </thead>
-                    <tbody>
-                        @foreach ($datas as $k => $data)
-                            <tr>
-                                <td>
-                                    @if (isset($channels[$data->channels]))
-                                        {{ $channels[$data->channels] }}
-                                    @endif
-                                </td>
-                                <td>{{ $dataChart[$k]['porcentaje'] }}%</td>
-                                <td>{{ $dataChart[$k]['datos'] }}</td>
-                                <td>
-                                    @if ($data->repeatUsers == 1)
-                                        <div class="form-check form-switch align-items-stretch">
-                                            <label for="form-check-label">Si</label>
-                                            <input class="form-check-input ml-0" disabled checked 
-                                                type="checkbox">
-                                        </div>
-                                    @else
-                                        <div class="form-check form-switch align-items-stretch">
-                                            <label for="form-check-label">No</label>
-                                            <input class="form-check-input ml-0" disabled type="checkbox">
-                                        </div>
-                                    @endif
-                                </td>
-                                <td>
-                                    @if ($data->repeatUsers == 1)
-                                        {{ $total_resta}}
-                                    @else
-                                        0
-                                    @endif
-                                </td>
-                                <td>{{ $data->onlyWhere }}</td>
-                                <td class="text-center">
-                                    <div class="btn-group" role="group" aria-label="Basic example">
-                                        <a title="Aceptar" onclick="acceptedStrategy({{ $data->id }})"
-                                            class="btn btn-success btn-sm">
-                                            <i class="fas fa-check-circle"></i>
-                                        </a>
-                                        {{-- <a class="btn btn-warning btn-sm">
-                                        <i class="fas fa-edit"></i>
-                                    </a> --}}
-                                        <a title="Eliminar" href="{{ route('estrategia.delete-strategy', $data->id) }}"
-                                            class="btn btn-danger btn-sm">
-                                            <i class="fas fa-times-circle"></i>
-
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
                 </table>
             </div>
         </div>
-    </div>
-
-    <div class="col-12 mt-3">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Nueva estrategia</h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-6">
-                        <table class="table table-bordered">
-                            <tr>
-                                <th width=45% class="text-uppercase  align-middle" scope="col">Cliente</th>
-                                <th class="text-uppercase align-middle" scope="col">{{ $client->name }}
-                                </th>
-                            </tr>
-                            {!! Form::open([
-                                'route' => 'estrategia.save-estrategia',
-                                'method' => 'POST',
-                                'novalidate',
-                                'id' => 'myForm',
-                            ]) !!}
-                            <tr>
-                                <th class="text-uppercase  align-middle" scope="col">¿Desea que para la estrategia se
-                                    repitan los usuarios?</th>
-                                <th class="text-uppercase text-center align-middle" scope="col">
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input" id="check" type="checkbox">
-                                    </div>
-                                </th>
-                            </tr>
-                            
-                            <tr>
-                                <th><label for="">Canales</label></th>
-                                <th>
-                                    <select class="form-select" name="channels" id="">
-                                        <option value="">Seleccione</option>
-                                        @foreach ($channels as $key => $val)
-                                            @if (in_array($key, $multiples))
-                                                <option value="{{ $key }}">{{ $val }}</option>
-                                            @endif
-                                        @endforeach
+    </x-cards>
 
 
-                                    </select>
-                                </th>
-                            </tr>
-                            <tr>
-                                <th>
-                                    <label for="">Descripcion</label>
-                                </th>
-                                <th>
-                                    <textarea class="form-control" name='query_description'></textarea>
-                                </th>
-                            </tr>
-                            <tr>
-                                <th colspan="2" class="text-uppercase align-middle" scope="col">
-                                    <textarea class="form-control" id="showQue" name="showQue" disabled></textarea>
-                                    <input type="hidden" name='query_text' id='query_text'>
-                                    <input type="hidden" name='prefix' id='prefix' value={{ $client->prefix }}>
-                                    <input type="hidden" name='onlyWhere' id='onlyWhere'>
-                                    <input type="hidden" name='table_name' id='table_name2'>
-                                    <input type="hidden" name='repeatUsers' id='repeatUsers'>
-                                    <input type="hidden" name='location' value='diseno'>
-                                </th>
-                            </tr>
-                            <tr>
-                                <th colspan="2" class="text-uppercase align-middle" scope="col">
-                                    <button class="btn btn-success btn-sm mb-0" type="submit">
-                                        <i class="fas fa-save"></i>
-                                        Guardar</button>
-                                </th>
-                            </tr>
-                            {!! Form::close() !!}
-                        </table>
-                    </div>
-                    <div class="col-6">
-                        <table class="table table-bordered">
-                            <tr>
-                                <th class="text-uppercase align-middle" scope="col">
-                                    <button class="btn btn-success btn-sm" onclick="addRow('{{ $client->prefix }}')">
-                                        <i class="fas fa-plus-circle"></i>
-                                        Agregar nuevo campo
-                                    </button>
-                                </th>
-                            </tr>
-                        </table>
-
-                        <table id="myTable" class="table-sm table table-bordered">
-                            <thead>
-                                <tr>
-                                    <th class="align-middle text-center" width='5%'>Eliminar</th>
-                                    <th class="align-middle text-center" width='20%'>Campo</th>
-                                    <th class="align-middle text-center">Valor</th>
-                                </tr>
-                            </thead>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 @endsection
 
 
@@ -229,6 +200,22 @@
     <script>
         const csrfToken = "{{ csrf_token() }}";
         var i = 0;
+        document.getElementById("myForm").addEventListener('submit', validar);
+
+
+        const enlacesElement = document.querySelectorAll('.eliminar-estrategia');
+
+
+        if (enlacesElement !== null) {
+            enlacesElement.forEach((enlaceElement) => {
+                enlaceElement.addEventListener('click', (event) => {
+                    const confirmacion = confirm('¿Desea eliminar la estrategia?');
+                    if (!confirmacion) {
+                        event.preventDefault();
+                    }
+                });
+            });
+        }
 
         const objComunas = {
             1: 'Cerro Navia',
@@ -264,10 +251,31 @@
             31: 'Vitacura'
         }
 
-        function acceptedStrategy(id){
-            
+        function validar(e) {
+            const valoresElements = document.querySelectorAll('.valores');
+            if (document.getElementById("canalsito").value === '') {
+                alert('Debe selccionar el canal para la estrategia.');
+                document.getElementById("canalsito").focus()
+                e.preventDefault();
+                return false
+            } else if (document.getElementById("query_description").value === '') {
+                alert('Debe ingresar una descripcion para la estrategia.');
+                document.getElementById("query_description").focus()
+                e.preventDefault();
+                return false
+            } else if (valoresElements.length === 0) {
+                alert('debe haber al menos una consultar para generar la estrategia.');
+                document.getElementById("btnNuevo").focus()
+                e.preventDefault();
+                return false;
+            } else {
+                return true
+            }
+        }
 
-            fetch('{{ route("estrategia.accepted-strategy") }}', {
+        function acceptedStrategy(id) {
+
+            fetch('{{ route('estrategia.accepted-strategy') }}', {
                 method: 'POST',
                 body: JSON.stringify({
                     id: id
@@ -282,138 +290,75 @@
                 // Recargar la página actual
 
                 console.log(data)
-                if(data.result === 1){
+                if (data.result === 1) {
                     alert(data.message)
                     location.reload()
-                }else{
+                } else {
                     alert(data.message)
                 }
             });
 
         }
 
-        function probar(prefix) {
-            var tabla = ''
-            fetch('/clients/probar-consulta', {
-                method: 'POST',
-                body: JSON.stringify({
-                    prefix: prefix
-                }),
-                headers: {
-                    'content-type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken
-                }
-            }).then(response => {
-                return response.json();
-            }).then(data => {
-                var dat1 = data.data4.results_querys
-                var testt = []
-
-                var repetidos = 0
-                for (let r in dat1) {
-                    testt[r] = dat1[r].length
-                }
-
-
-                repetidos = testt.reduce((acc, curr) => acc - curr);
-
-
-                tabla += `<table class="table table-sm table-bordered mb-0">
-                            <thead>
-                            <th class="align-middle text-center">Canal</th>
-                            <th class="align-middle" width='3%'>Cobertura</th>
-                            <th class="align-middle" width='3%'>Registros</th>
-                            <th width='7%'>¿Acepta repetidos?</th>
-                            <th class="align-middle" width='3%'>Repetidos</th>
-                            <th class="align-middle text-center">Descripcion</th>
-                            </thead><tbody>`
-                for (d in data.data1) {
-                    tabla += `<tr>
-                            <td class="text-center">${data.data1[d].title}</td>
-                            <td class="text-center">${data.data1[d].porcentaje}%</td>
-                            <td class="text-center">${data.data1[d].datos}<td>`
-                    if (data.data3[d].repeatUsers === 1) {
-                        tabla += `<div class="form-check form-switch align-items-stretch">
-                                    <label for="form-check-label">Si</label>
-                                    <input class="form-check-input ml-0" disabled checked 
-                                    type="checkbox">
-                                    </div>
-                                    </td>
-                                    <td>${repetidos}</td>`
-                    } else {
-                        tabla += ` <div class="form-check form-switch align-items-stretch">
-                                    <label for="form-check-label">No</label>
-                                    <input class="form-check-input ml-0" disabled  type="checkbox">
-                                    </div>
-                                    <td>0</td>`
-                    }
-                    tabla += `
-                                
-                                <td>${data.data3[d].onlyWhere}</td></tr>`
-                }
-                tabla += `<tr>
-                            <td></td>
-                            <td class="text-center">${data.data2.porcentual}%</td>
-                            <td class="text-center">${data.data2.total}</td>
-                            <td colspan="6"></td>
-                            </tbody>
-                            </table>`
-
-                document.querySelector('#divv').style.display = 'block'
-                document.querySelector('#div-p').innerHTML = tabla
-            });
-
-        }
 
         function addRow() {
 
-            var estructura = @json($estructura)
+            var estructura = @json($estructura);
 
             var table = document.getElementById("myTable");
             var row = table.insertRow(-1);
-
             row.id = 'tr_' + i
-
 
             if (estructura.length > 0) {
                 var cell2 = row.insertCell(-1);
                 var cell3 = row.insertCell(-1);
+                var cell4 = row.insertCell(-1);
 
                 lines = `
-                    <select id="my-select" class='form-select' onchange="selectInputType(this.value, ${i}, event)">
+                    <select id="my-select" class='form-select form-select-sm' onchange="selectInputType(this.value, ${i}, event, getElementById('operator').value)">
                     <option>Seleccione</option>`
                 for (let d in estructura) {
                     lines +=
                         `<option value='${estructura[d].COLUMN_TYPE}-${estructura[d].TABLE_NAME}'>${estructura[d].COLUMN_NAME}</option>`
                 }
                 lines += `</select>`
-                cell3.innerHTML = lines
-                cell3.id = "td_" + i
-
-                var celdaExistente = document.getElementById("td2_" + i);
-
 
                 cell2.innerHTML =
-                    '<input type="hidden" id="name_table" /><a onclick="borrarRow(this)" class="btn btn-block mb-0 btn-danger mb-0"><i class="fas fa-minus-circle"></i></a>';
-                cell2.className = "text-center align-middle bg-danger"
+                    `<input type="hidden" id="name_table" />
+                    <a onclick="borrarRow(this)" class="btn btn-sm btn-block mb-0 btn-danger mb-0"><i class="fas fa-minus-circle"></i></a>`;
+                cell2.className = "text-center align-middle bg-danger p-0"
 
+                cell4.innerHTML = lines
+                cell4.id = "td_" + i
+
+                cell3.innerHTML = `
+                    <select class='form-select form-select-sm' id='operator'>
+                        <option>Seleccione</option>
+                        <option value="=" > = </option>
+                        <option value=">=" > >= </option>
+                        <option value="<=" > <= </option>
+                        <option value=">" > > </option>
+                        <option value="<" > < </option>
+                        <option value="!=" > != </option>
+                        <option value="dh" > Desde-Hasta</option>
+                        <option value="like" > Like </option>
+                        </select>`
             }
-
             i++
         }
-
-
 
         function borrarRow(x) {
             var i = x.parentNode.parentNode.rowIndex;
             document.getElementById("myTable").deleteRow(i);
         }
 
+
         function showQuery() {
             var query = "";
             var queryParts = [];
             const valoresElements = document.querySelectorAll('.valores');
             const name_table = document.querySelector('#name_table');
+            const op = document.querySelector('#operator').value;
             const valoresObj = {};
 
             valoresElements.forEach((element) => {
@@ -437,7 +382,14 @@
                         }
                     }
                 } else {
-                    queryParts.push(`${element.name} like '%${element.value}%'`); // 
+                    if (element.type === 'text' && op === 'like') {
+                        queryParts.push(`${element.name} like '%${element.value}%'`); // 
+                    } else if (element.type === 'date' || element.type === 'text') {
+                        queryParts.push(`${element.name} ${op} '${element.value}'`); // 
+                    } else {
+                        queryParts.push(`${element.name} ${op} ${element.value}`); // 
+                    }
+
                 }
             });
 
@@ -452,7 +404,7 @@
                 query2; // asigno a un hidden en el form el valor de la query para poder guardarlo
         }
 
-        function selectInputType(value, i, e) {
+        function selectInputType(value, i, e, op = '') {
 
             const pattern = /\((\d+)\)/;
             const matches = value.match(pattern);
@@ -472,9 +424,7 @@
             nuevoTd = document.createElement("td");
             var nuevoDiv = document.createElement("div");
             nuevoDiv.className = 'input-group'
-
             nuevoTd.id = 'td2_' + i
-
 
             const ultimaFila = table.rows[table.rows.length - 1];
             const nuevoInput = document.createElement("input");
@@ -492,42 +442,56 @@
             }
 
             if (e.target.selectedOptions[0].text === 'monto') {
-                nuevoInput.name = e.target.selectedOptions[0].text + '_min'
-                nuevoInput.className = 'form-control form-control-sm valores limite-input'
-                nuevoInput.setAttribute("data-limite", matches[1]);
-                nuevoInput.setAttribute("onkeyup", 'showQuery()');
-                
+                if (op === 'dh') {
+                    nuevoInput.name = e.target.selectedOptions[0].text + '_min'
+                    nuevoInput.className = 'form-control form-control-sm valores limite-input'
+                    nuevoInput.setAttribute("data-limite", matches[1]);
+                    nuevoInput.setAttribute("onkeyup", 'showQuery()');
 
+                    const nuevoInput2 = document.createElement("input");
+                    nuevoInput2.type = "number";
+                    nuevoInput2.name = e.target.selectedOptions[0].text + '_max'
+                    nuevoInput2.className = 'form-control form-control-sm valores limite-input'
+                    nuevoInput2.setAttribute("data-limite", matches[1]);
+                    nuevoInput.setAttribute("placeholder", 'minimo');
+                    nuevoInput2.setAttribute("placeholder", 'maximo');
+                    nuevoInput2.setAttribute("onkeyup", 'showQuery()');
+                    if (document.getElementById('td2_' + i)) {
+                        document.getElementById('td2_' + i).innerHTML = ''
+                        nuevoDiv.appendChild(nuevoInput)
+                        nuevoDiv.appendChild(nuevoInput2)
+                        document.getElementById('td2_' + i).appendChild(nuevoDiv)
+                    } else {
+                        nuevoDiv.appendChild(nuevoInput)
+                        nuevoDiv.appendChild(nuevoInput2)
+                        ultimaFila.appendChild(nuevoDiv);
+                    }
 
-                const nuevoInput2 = document.createElement("input");
-                nuevoInput2.type = "number";
-                nuevoInput2.name = e.target.selectedOptions[0].text + '_max'
-                nuevoInput2.className = 'form-control form-control-sm valores limite-input'
-                nuevoInput2.setAttribute("data-limite", matches[1]);
-                nuevoInput.setAttribute("placeholder", 'minimo');
-                nuevoInput2.setAttribute("placeholder", 'maximo');
-                nuevoInput2.setAttribute("onkeyup", 'showQuery()');
-                if (document.getElementById('td2_' + i)) {
-                    document.getElementById('td2_' + i).innerHTML = ''
-                    nuevoDiv.appendChild(nuevoInput)
-                    nuevoDiv.appendChild(nuevoInput2)
-                    document.getElementById('td2_' + i).appendChild(nuevoDiv)
-                } else {
-                    nuevoDiv.appendChild(nuevoInput)
-                    nuevoDiv.appendChild(nuevoInput2)
-                    ultimaFila.appendChild(nuevoDiv);
-                }
-
-                const campos = document.querySelectorAll(".limite-input");
-                campos.forEach(function(campo) {
-                    const limite = campo.dataset.limite;
-
-                    campo.addEventListener("input", function() {
-                        if (this.value.length > limite) {
-                            this.value = this.value.slice(0, limite);
-                        }
+                    const campos = document.querySelectorAll(".limite-input");
+                    campos.forEach(function(campo) {
+                        const limite = campo.dataset.limite;
+                        campo.addEventListener("input", function() {
+                            if (this.value.length > limite) {
+                                this.value = this.value.slice(0, limite);
+                            }
+                        });
                     });
-                });
+                } else {
+                    nuevoInput.name = e.target.selectedOptions[0].text
+                    nuevoInput.className = 'form-control form-control-sm valores limite-input'
+                    nuevoInput.setAttribute("data-limite", matches[1]);
+                    nuevoInput.setAttribute("onkeyup", 'showQuery()');
+
+                    if (document.getElementById('td2_' + i)) {
+                        document.getElementById('td2_' + i).innerHTML = ''
+                        nuevoDiv.appendChild(nuevoInput)
+                        document.getElementById('td2_' + i).appendChild(nuevoDiv)
+                    } else {
+                        nuevoDiv.appendChild(nuevoInput)
+                        ultimaFila.appendChild(nuevoDiv);
+                    }
+
+                }
 
             } else if (e.target.selectedOptions[0].text === 'comuna') {
                 var selectComuna =
@@ -570,7 +534,6 @@
                     });
                 });
             }
-
         }
     </script>
 @endsection
