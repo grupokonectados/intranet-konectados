@@ -58,16 +58,43 @@
             <div class="card-body ">
                 <table class="table table-sm table-bordered mb-0">
                     <thead>
-                        <th class="align-middle text-center">Canal</th>
-                        <th class="align-middle text-center">Descripcion</th>
+                        <th width='7%' class="align-middle text-center">Canal</th>
+                        <th class="align-middle" width='3%'>Cobertura</th>
+                        <th class="align-middle" width='3%'>Registros</th>
+                        <th width='7%' class="text-center">¿Acepta repetidos?</th>
+                        <th class="align-middle" width='3%'>Repetidos</th>
+                        <th class="align-middle text-center">Criterio</th>
                         <th width='3%' class="align-middle text-center">Acciones</th>
                     </thead>
                     <tbody>
-                        @foreach ($datas as $data)
+                        @foreach ($datas as $k => $data)
                             <tr>
                                 <td>
                                     @if (isset($channels[$data->channels]))
                                         {{ $channels[$data->channels] }}
+                                    @endif
+                                </td>
+                                <td>{{ $dataChart[$k]['porcentaje'] }}%</td>
+                                <td>{{ $dataChart[$k]['datos'] }}</td>
+                                <td>
+                                    @if ($data->repeatUsers == 1)
+                                        <div class="form-check form-switch align-items-stretch">
+                                            <label for="form-check-label">Si</label>
+                                            <input class="form-check-input ml-0" disabled checked 
+                                                type="checkbox">
+                                        </div>
+                                    @else
+                                        <div class="form-check form-switch align-items-stretch">
+                                            <label for="form-check-label">No</label>
+                                            <input class="form-check-input ml-0" disabled type="checkbox">
+                                        </div>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if ($data->repeatUsers == 1)
+                                        {{ $total_resta}}
+                                    @else
+                                        0
                                     @endif
                                 </td>
                                 <td>{{ $data->onlyWhere }}</td>
@@ -91,28 +118,11 @@
                         @endforeach
                     </tbody>
                 </table>
-                @if (count($datas) > 0)
-                    <button type="button" onclick="probar('{{ $client->prefix }}')" class="btn btn-sm btn-info mt-3">Probar
-                        estrategias</button>
-                @endif
-
             </div>
         </div>
     </div>
 
-    <div id="divv" style="display: none;" class="col-12 my-3">
-        <div class="card ">
-            <div class="card-header">
-                <h5 class="mb-0">Estrategias de prueba</h5>
-            </div>
-            <div class="card-body" id="div-p">
-            </div>
-        </div>
-    </div>
-
-
-
-    <div class="col-12">
+    <div class="col-12 mt-3">
         <div class="card">
             <div class="card-header">
                 <h5 class="mb-0">Nueva estrategia</h5>
@@ -126,6 +136,12 @@
                                 <th class="text-uppercase align-middle" scope="col">{{ $client->name }}
                                 </th>
                             </tr>
+                            {!! Form::open([
+                                'route' => 'estrategia.save-estrategia',
+                                'method' => 'POST',
+                                'novalidate',
+                                'id' => 'myForm',
+                            ]) !!}
                             <tr>
                                 <th class="text-uppercase  align-middle" scope="col">¿Desea que para la estrategia se
                                     repitan los usuarios?</th>
@@ -135,16 +151,11 @@
                                     </div>
                                 </th>
                             </tr>
-                            {!! Form::open([
-                                'route' => 'estrategia.save-estrategia',
-                                'method' => 'POST',
-                                'novalidate',
-                                'id' => 'myForm',
-                            ]) !!}
+                            
                             <tr>
                                 <th><label for="">Canales</label></th>
                                 <th>
-                                    <select class="form-control" name="channels" id="">
+                                    <select class="form-select" name="channels" id="">
                                         <option value="">Seleccione</option>
                                         @foreach ($channels as $key => $val)
                                             @if (in_array($key, $multiples))
@@ -324,7 +335,7 @@
                     if (data.data3[d].repeatUsers === 1) {
                         tabla += `<div class="form-check form-switch align-items-stretch">
                                     <label for="form-check-label">Si</label>
-                                    <input class="form-check-input ml-0" disabled checked id="check"
+                                    <input class="form-check-input ml-0" disabled checked 
                                     type="checkbox">
                                     </div>
                                     </td>
@@ -332,7 +343,7 @@
                     } else {
                         tabla += ` <div class="form-check form-switch align-items-stretch">
                                     <label for="form-check-label">No</label>
-                                    <input class="form-check-input ml-0" disabled id="check" type="checkbox">
+                                    <input class="form-check-input ml-0" disabled  type="checkbox">
                                     </div>
                                     <td>0</td>`
                     }

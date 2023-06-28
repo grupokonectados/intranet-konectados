@@ -11,7 +11,7 @@
     <div class="col-12">
         <div class="card bg-white">
             <div class="card-body bg-white">
-                <table class="table table-sm mb-0 table-bordered">
+                <table class="table table-sm mb-0 table-bordered table-hover">
                     <thead>
                         <tr >
                             <th>Nombre</th>
@@ -33,7 +33,7 @@
                     {{-- PARA METODOS API --}}
                     <tbody>
                         @foreach ($data as $d)
-                            <tr onclick="window.location='/clients/{{ $d['id'] }}';">
+                            <tr style="cursor: pointer" onclick="window.location='/clients/{{ $d['id'] }}';">
                                 <td>{{ $d['name'] }}</td>
                                 <td>{{ $d['prefix'] }}</td>
                             </tr>

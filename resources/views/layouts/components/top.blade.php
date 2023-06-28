@@ -6,12 +6,16 @@
         </ol>
     </div>
     <div class="">
-
-        <div class="btn-group" role="group" aria-label="Basic example">
-            @yield('btn-back')
-            @yield('btn-create')
-          </div>
-        
-       
+        <div class="mb-3">
+            <div class="btn-group" role="group" aria-label="Basic example">
+                @yield('btn-back')
+                @yield('btn-create')
+            </div>
+        </div>
+        <div class="">
+            <div class="btn-group" role="group" aria-label="Basic example">
+                @yield('others-btn')
+            </div>
+        </div>
     </div>
 </div>

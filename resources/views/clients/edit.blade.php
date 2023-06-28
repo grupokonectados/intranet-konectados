@@ -3,7 +3,7 @@
 @section('title-section', $config_layout['title-section'])
 @section('breads', $config_layout['breads'])
 
-@section('btn-back')
+
 
 @section('btn-back')
     <a href="{{ route($config_layout['btn-back'], $client->id) }}" class="btn btn-dark btn-sm">
@@ -28,11 +28,7 @@
                         <label class="form-label mb-0">Nombre:</label>
                     </div>
                     <div class="col-4 pl-0">
-                        {!! Form::text('name', null, [
-                            'autocomplete' => 'off',
-                            'placeholder' => 'Nombre de usuario',
-                            'class' => 'form-control',
-                        ]) !!}
+                        <input type="text" value="{{ $client->name }}" disabled class="form-control">
 
                     </div>
 
@@ -40,11 +36,7 @@
                         <label class="form-label mb-0">Prefijos:</label>
                     </div>
                     <div class="col-4 pl-0">
-                        {!! Form::text('prefix', null, [
-                            'autocomplete' => 'off',
-                            'placeholder' => 'Nombre de usuario',
-                            'class' => 'form-control',
-                        ]) !!}
+                        <input type="text" value="{{ $client->prefix }}" disabled class="form-control">
                     </div>
                 </div>
 

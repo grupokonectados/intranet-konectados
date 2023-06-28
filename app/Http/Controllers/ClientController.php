@@ -108,9 +108,11 @@ class ClientController extends Controller
 
         $client = Client::find($id); //Traigo los datos del cliente
 
-        $client->active_channels = json_decode($client->active_channels, true); // convierto en un array los canales permitidos del cliente
+        // convierto en un array los canales permitidos del cliente
+        $client->active_channels = json_decode($client->active_channels, true); 
 
-        $datas = Estrategia::where('prefix_client', '=', $client->prefix) // Obtengo todos las estrategias que el cliente tiene que no estan activas
+        // Obtengo todos las estrategias que el cliente tiene que no estan activas
+        $datas = Estrategia::where('prefix_client', '=', $client->prefix) 
             ->where('isActive', '=', 0)
             ->where('type', '=', 0)
             ->get();
@@ -124,7 +126,6 @@ class ClientController extends Controller
             6 => 'WHATSAPP',
         ];
 
-        // return $channels;
 
 
 
@@ -165,9 +166,43 @@ class ClientController extends Controller
             }
         }
 
-        
+
+        $calculoEstrategias = $this->calculoEstrategias($datas);
+
+
+        // return $datas;
+
         $estructura = Estructura::select('COLUMN_NAME', 'COLUMN_TYPE', 'DATA_TYPE', 'TABLE_NAME')->where("PREFIX", '=', $client->prefix)->get();
 
+        $contador = $calculoEstrategias['contador'];
+        $dataChart = $calculoEstrategias['dataChart'];
+        $cuenta_total = $calculoEstrategias['cuenta_total'];
+
+        $x = [];
+
+        foreach ($datas as $key => $value) {
+            if ($value->repeatUsers === 1) {
+                $x[] = count($contador['results_querys'][$key]);
+            }
+        }
+
+        // return count($x);
+
+        $total_resta = 0;
+
+        if (count($datas) > 1 && count($x) > 0) {
+
+            rsort($x);
+
+            // return $x;
+            $total_resta =  $x[0];
+
+            for ($i = 1; $i < count($x); $i++) {
+                $total_resta -= $x[$i];
+            }
+        } else {
+            $total_resta = 0;
+        }
         //return $estructura;
 
         $config_layout = [
@@ -176,7 +211,7 @@ class ClientController extends Controller
             'btn-back' => 'clients.show'
         ];
 
-        return view('clients/diseno', compact('client', 'datas', 'config_layout', 'estructura', 'multiples', 'channels', 'arr_c'));
+        return view('clients/diseno', compact('total_resta', 'client', 'datas', 'config_layout', 'estructura', 'multiples', 'channels', 'arr_c', 'contador', 'dataChart', 'cuenta_total'));
     }
 
     function calculoEstrategias($data)
@@ -218,7 +253,7 @@ class ClientController extends Controller
                             break;
                     }
 
-                //    return $contador['diff_query'];
+                    //    return $contador['diff_query'];
 
                     if ($data[$o]->repeatUsers == 0 && count($contador['diff_query']) > 0) {
                         if (count($contador['diff_query'][$o + 1]) > 0) {
@@ -282,8 +317,6 @@ class ClientController extends Controller
 
         $calculoEstrategias = $this->calculoEstrategias($data);
 
-        //  return $calculoEstrategias;
-        // return count($calculoEstrategias['contador']['results_querys'][0])-count($calculoEstrategias['contador']['results_querys'][1]);
 
         return [
             'data1' => $calculoEstrategias['dataChart'],
@@ -321,7 +354,7 @@ class ClientController extends Controller
             ->where('isDelete', '=', 1)
             ->get();
 
-    
+
 
         $calculoEstrategias = $this->calculoEstrategias($dataEstrategias);
 
@@ -333,23 +366,36 @@ class ClientController extends Controller
         $cuenta_total = $calculoEstrategias['cuenta_total'];
 
         $x = [];
-        
+
         foreach ($dataEstrategias as $key => $value) {
-            if($value->repeatUsers === 1){
+            if ($value->repeatUsers === 1) {
                 $x[] = count($contador['results_querys'][$key]);
             }
         }
 
-        if(count($dataEstrategias) > 1){
+        if (count($dataEstrategias) > 1) {
 
-        rsort($x);
-        $total_resta =  $x[0];
+            rsort($x);
+            $total_resta =  $x[0];
 
-        for ($i = 1; $i < count($x); $i++) {
-            $total_resta -= $x[$i];
-        }}else{ $total_resta = 0; }
+            for ($i = 1; $i < count($x); $i++) {
+                $total_resta -= $x[$i];
+            }
+        } else {
+            $total_resta = 0;
+        }
         // return $total_resta;
 
-        return view('clients/show', compact('total_resta', 'client', 'dataEstrategias', 'contador', 'dataEstrategiasNot', 'dataChart', 'cuenta_total', 'channels'));
+
+
+
+
+        $config_layout = [
+            'title-section' => 'Cliente: ' . $client->name,
+            'breads' => 'Clientes > ' . $client->name,
+            'btn-back' => 'clients.index'
+        ];
+
+        return view('clients/show', compact('config_layout', 'total_resta', 'client', 'dataEstrategias', 'contador', 'dataEstrategiasNot', 'dataChart', 'cuenta_total', 'channels'));
     }
 }
