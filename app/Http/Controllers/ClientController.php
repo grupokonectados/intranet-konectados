@@ -121,14 +121,51 @@ class ClientController extends Controller
             ->where('type', '=', 0)
             ->get();
 
+        //Extraigo los canales activos
+        $channels = \DB::table('canales')->where('isActive', '=', 1)->pluck('name')->toArray();
 
-        
+        if (count($datas) > 0) {
+            foreach ($datas as $key => $val) { // los canales que se estan usando
+                $arr_c[$key] = $val->channels;
+            }
+        } else {
+            $arr_c = [];
+        }
+
+        $arr = [];
+        $multiples = [];
+        $unSoloUso = [];
+        $in = 0;
+
+        foreach ($channels as $k => $v) { // del global de canales, estos son los que el usuario puede usar 
+            if (isset($client->active_channels[$k])) {
+                $arr[$k] = $client->active_channels[$k];
+            }
+        }
+
+        // return $arr;
+
+        // Obtener solo las keys de $arr
+        $arr_keys = array_keys($arr);
+
+
+        foreach ($arr_keys as $val) { // en este bucle verifico si los canales que puede usar el cliente, hay alguno que sea multiple
+            if (in_array($val, $arr_c)) {
+                if (isset($client->active_channels[$val]['multiple'])) {
+                    $multiples[] = $val;
+                } else {
+                    $unSoloUso[] = $val;
+                }
+            } else {
+                $multiples[] = $val;
+            }
+        }
 
 
         $calculoEstrategias = $this->calculoEstrategias($datas);
 
 
-        return $calculoEstrategias;
+        // return $calculoEstrategias;
 
         $estructura = Estructura::select('COLUMN_NAME', 'COLUMN_TYPE', 'DATA_TYPE', 'TABLE_NAME')->where("PREFIX", '=', $client->prefix)->get();
 
@@ -184,7 +221,7 @@ class ClientController extends Controller
 
             $contador = (new EstrategiaController)->queryResults($data);
 
-            return ($contador);
+            // return ($contador);
             $total_cartera = \DB::select("select count(*) as total_cartera from " . $data[0]->table_name)[0]->total_cartera;
 
             $pos = 0;
