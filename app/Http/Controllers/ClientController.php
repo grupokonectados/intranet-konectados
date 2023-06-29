@@ -5,18 +5,24 @@ namespace App\Http\Controllers;
 use App\Models\Client;
 use App\Models\Estrategia;
 use App\Models\Estructura;
-use Illuminate\Contracts\Filesystem\Cloud;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
-use Laravel\Ui\Presets\React;
 
 class ClientController extends Controller
 {
 
+    function __construct()
+    {
+        $this->middleware('permission:root-list|clients-list', ['only' => ['index']]);
+        $this->middleware('permission:root-create|clients-create', ['only' => ['create', 'store', 'disenoEstrategia']]);
+        $this->middleware('permission:root-edit', ['only' => ['edit', 'update']]);
+        $this->middleware('permission:root-delete|clients-delete', ['only' => ['destroy']]);
+    }
+
+
     const PATH_API = '/clients';
 
-    public function index()
-    {
+    public function index() {
         /**
          * Metodo laravel
          */
@@ -41,8 +47,7 @@ class ClientController extends Controller
     }
 
 
-    public function edit($id)
-    {
+    public function edit($id) {
 
         $client = Client::find($id);
 
@@ -67,14 +72,10 @@ class ClientController extends Controller
     }
 
 
-    public function update(Request $request, $id)
-    {
+    public function update(Request $request, $id) {
 
         //return $request;
         $client = Client::find($id);
-
-        $client->name = $request['name'];
-        $client->prefix = $request['prefix'];
         $client->active_channels = json_encode($request['channels']);
         $client->save();
 
@@ -82,8 +83,7 @@ class ClientController extends Controller
     }
 
 
-    public function searchCliente(Request $request)
-    {
+    public function searchCliente(Request $request) {
 
         /**
          * Metodo laravel
@@ -117,11 +117,15 @@ class ClientController extends Controller
         // convierto en un array los canales permitidos del cliente
         $client->active_channels = json_decode($client->active_channels, true);
 
+        // return $client;
+
         // Obtengo todos las estrategias que el cliente tiene que no estan activas
         $datas = Estrategia::where('prefix_client', '=', $client->prefix)
             ->where('isActive', '=', 0)
             ->where('type', '=', 0)
             ->get();
+
+            
 
 
         $channels = [ // Canales. 
@@ -179,6 +183,9 @@ class ClientController extends Controller
         // return $calculoEstrategias;
 
         $estructura = Estructura::select('COLUMN_NAME', 'COLUMN_TYPE', 'DATA_TYPE', 'TABLE_NAME')->where("PREFIX", '=', $client->prefix)->get();
+
+
+        // return $estructura;
 
         $contador = $calculoEstrategias['contador'];
         $dataChart = $calculoEstrategias['dataChart'];

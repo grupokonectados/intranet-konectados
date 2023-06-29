@@ -16,17 +16,8 @@ class DatabaseSeeder extends Seeder
     {
 
         $this->call(DataSeeder::class);
-        // \App\Models\User::factory(10)->create();
-
-        // \App\Models\User::factory()->create([
-        //     'name' => 'Test User',
-        //     'email' => 'test@example.com',
-        // ]);
-
-        User::create([
-            'name' => 'Admin', 
-            'email' => 'admin@1.com',
-            'password' => bcrypt('123')
-        ]);
+        $this->call(PermissionTableSeeder::class);
+        $this->call(CreateAdminUserSeeder::class);
+        
     }
 }

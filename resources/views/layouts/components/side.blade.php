@@ -6,11 +6,16 @@
                     <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
                     Dashboard
                 </a>
+                @can('clients-list')
                 <div class="sb-sidenav-menu-heading">Clientes</div>
+                
+                    
+                
                 <a class="nav-link" href="{{ route('clients.index') }}">
                     <div class="sb-nav-link-icon"><i class="fas fa-users"></i></div>
                     Clientes
                 </a>
+                @endcan
                 {{-- <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseLayouts" aria-expanded="false" aria-controls="collapseLayouts">
                     <div class="sb-nav-link-icon"><i class="fas fa-columns"></i></div>
                     Layouts
@@ -53,11 +58,13 @@
                         </div>
                     </nav>
                 </div> --}}
+                @can('root-list')
                 <div class="sb-sidenav-menu-heading">Estrategias</div>
                 <a class="nav-link" href="{{ route('estrategia.index') }}">
                     <div class="sb-nav-link-icon"><i class="fas fa-chart-area"></i></div>
                     Estrategias
                 </a>
+                @endcan
             </div>
         </div>
         <div class="sb-sidenav-footer">

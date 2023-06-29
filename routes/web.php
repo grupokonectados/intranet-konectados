@@ -35,31 +35,26 @@ Route::group(['middleware' => ['auth']], function () {
     /**
      * Clients
      */
-        
-     Route::resource('/clients', ClientController::class);
-     Route::post('/clients/search-client', [ClientController::class, 'searchCliente'])->name('clients.searchCliente');
-     Route::get('/clients/diseno/{id}', [ClientController::class, 'disenoEstrategia'])->name('clients.diseno');
 
-     Route::post('/clients/probar-consulta', [ClientController::class, 'probarConsulta'])->name('clients.probar-consulta');
+    Route::resource('/clients', ClientController::class);
+    Route::post('/clients/search-client', [ClientController::class, 'searchCliente'])->name('clients.searchCliente');
+    Route::get('/clients/diseno/{id}', [ClientController::class, 'disenoEstrategia'])->name('clients.diseno');
 
-
-     
+    Route::post('/clients/probar-consulta', [ClientController::class, 'probarConsulta'])->name('clients.probar-consulta');
 
 
 
-     Route::resource('/estrategia', EstrategiaController::class);
-     Route::post('/estrategia/save-estrategia', [EstrategiaController::class, 'saveEstrategia'])->name('estrategia.save-estrategia');
-     Route::post('/estrategia/run-query', [EstrategiaController::class, 'runQuery'])->name('estrategia.run-query');
 
 
-     Route::post('/estrategia/is-active', [EstrategiaController::class, 'isActive'])->name('estrategia.is-active');
 
-     route::get('/estrategia/delete-strategy/{id}', [EstrategiaController::class, 'deleteStrategy'])->name('estrategia.delete-strategy');
-     route::post('/estrategia/accepted-strategy', [EstrategiaController::class, 'acceptedStrategy'])->name('estrategia.accepted-strategy');
-     route::get('/estrategia/stop-strategy/{id}', [EstrategiaController::class, 'stopStrategy'])->name('estrategia.stop-strategy');
-     
-     
+    Route::resource('/estrategia', EstrategiaController::class);
+    Route::post('/estrategia/save-estrategia', [EstrategiaController::class, 'saveEstrategia'])->name('estrategia.save-estrategia');
+    Route::post('/estrategia/run-query', [EstrategiaController::class, 'runQuery'])->name('estrategia.run-query');
 
 
-     
+    Route::post('/estrategia/is-active', [EstrategiaController::class, 'isActive'])->name('estrategia.is-active');
+
+    route::get('/estrategia/delete-strategy/{id}', [EstrategiaController::class, 'deleteStrategy'])->name('estrategia.delete-strategy');
+    route::post('/estrategia/accepted-strategy', [EstrategiaController::class, 'acceptedStrategy'])->name('estrategia.accepted-strategy');
+    route::get('/estrategia/stop-strategy/{id}', [EstrategiaController::class, 'stopStrategy'])->name('estrategia.stop-strategy');
 });

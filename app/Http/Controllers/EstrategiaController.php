@@ -12,11 +12,19 @@ use SebastianBergmann\Diff\Diff;
 class EstrategiaController extends Controller
 {
 
+
+    function __construct()
+    {
+        $this->middleware('permission:root-list|strategy-list', ['only' => ['index', 'show', 'queryResults']]);
+        $this->middleware('permission:root-create|strategy-create', ['only' => ['create', 'store', 'saveEstrategia']]);
+        $this->middleware('permission:root-edit', ['only' => ['edit', 'update', 'isActive', 'acceptedStrategy']]);
+        $this->middleware('permission:root-delete|strategy-delete', ['only' => ['destroy', 'deleteStrategy', 'stopStrategy']]);
+    }
+
     const PATH_API = '/estrategias';
 
 
-    public function index()
-    {
+    public function index(){
 
         $config_layout = [
             'title-section' => 'Estrategias',
@@ -52,8 +60,7 @@ class EstrategiaController extends Controller
     }
 
 
-    public function create()
-    {
+    public function create(){
 
         $config_layout = [
             'title-section' => 'Crear Estrategia',
@@ -67,8 +74,7 @@ class EstrategiaController extends Controller
     }
 
 
-    public function saveEstrategia(Request $request)
-    {
+    public function saveEstrategia(Request $request){
 
         // return $request;
 
@@ -94,8 +100,7 @@ class EstrategiaController extends Controller
         }
     }
 
-    public function show($id)
-    {
+    public function show($id){
 
         $data = Estrategia::find($id);
 
@@ -118,8 +123,7 @@ class EstrategiaController extends Controller
     }
 
 
-    public function runQuery(Request $request)
-    {
+    public function runQuery(Request $request){
 
         // return $request; //Verificar que datos llegan. 
 
@@ -173,8 +177,7 @@ class EstrategiaController extends Controller
     }
 
 
-    public function isActive(Request $request)
-    {
+    public function isActive(Request $request){
 
         $dataCompare = Estrategia::where('isActive', '=', 1)->get();
         $data = Estrategia::where('id', '=', $request->id)->update(['isActive' => 1, 'type' => 2]);
@@ -182,8 +185,7 @@ class EstrategiaController extends Controller
     }
 
 
-    public function queryResults($strings_query)
-    {
+    public function queryResults($strings_query){
 
         $query_ruts = [];
 
