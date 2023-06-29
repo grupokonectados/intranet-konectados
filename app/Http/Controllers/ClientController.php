@@ -5,23 +5,15 @@ namespace App\Http\Controllers;
 use App\Models\Client;
 use App\Models\Estrategia;
 use App\Models\Estructura;
+use Illuminate\Contracts\Filesystem\Cloud;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Laravel\Ui\Presets\React;
 
 class ClientController extends Controller
 {
 
-    function __construct()
-    {
-        $this->middleware('permission:root-list|clients-list', ['only' => ['index']]);
-        $this->middleware('permission:root-create|clients-create', ['only' => ['create', 'store', 'disenoEstrategia']]);
-        $this->middleware('permission:root-edit', ['only' => ['edit', 'update']]);
-        $this->middleware('permission:root-delete|clients-delete', ['only' => ['destroy']]);
-    }
-
-
     const PATH_API = '/clients';
-
 
     public function index()
     {
@@ -54,7 +46,14 @@ class ClientController extends Controller
 
         $client = Client::find($id);
 
-        $channels = \DB::table('canales')->pluck('name')->toArray();
+        $channels = [ // Canales. 
+            1 => 'AGENTE',
+            2 => 'EMAIL',
+            3 => 'IVR',
+            4 => 'SMS',
+            5 => 'VOICE BOT',
+            6 => 'WHATSAPP',
+        ];
 
         $client->active_channels = json_decode($client->active_channels, true);
 
@@ -73,6 +72,9 @@ class ClientController extends Controller
 
         //return $request;
         $client = Client::find($id);
+
+        $client->name = $request['name'];
+        $client->prefix = $request['prefix'];
         $client->active_channels = json_encode($request['channels']);
         $client->save();
 
@@ -121,8 +123,17 @@ class ClientController extends Controller
             ->where('type', '=', 0)
             ->get();
 
-        //Extraigo los canales activos
-        $channels = \DB::table('canales')->where('isActive', '=', 1)->pluck('name')->toArray();
+
+        $channels = [ // Canales. 
+            1 => 'AGENTE',
+            2 => 'EMAIL',
+            3 => 'IVR',
+            4 => 'SMS',
+            5 => 'VOICE BOT',
+            6 => 'WHATSAPP',
+        ];
+
+
 
         if (count($datas) > 0) {
             foreach ($datas as $key => $val) { // los canales que se estan usando
@@ -169,9 +180,6 @@ class ClientController extends Controller
 
         $estructura = Estructura::select('COLUMN_NAME', 'COLUMN_TYPE', 'DATA_TYPE', 'TABLE_NAME')->where("PREFIX", '=', $client->prefix)->get();
 
-
-        // return $estructura;
-
         $contador = $calculoEstrategias['contador'];
         $dataChart = $calculoEstrategias['dataChart'];
         $cuenta_total = $calculoEstrategias['cuenta_total'];
@@ -213,11 +221,13 @@ class ClientController extends Controller
     function calculoEstrategias($data)
     {
 
+        // return count($data);
+
         $contador = [];
         $dataChart = [];
         $suma_total_results = 0;
         $suma_total_diff = 0;
-        if (count($data) > 0) {
+        if (count($data) > 0 ) {
 
             $contador = (new EstrategiaController)->queryResults($data);
 
@@ -251,10 +261,10 @@ class ClientController extends Controller
 
                     //    return $contador['diff_query'];
 
-                    if ($data[$o]->repeatUsers == 0 && count($contador['diff_query']) > 0) {
+                    if ($data[$o]->repeatUsers == 0 && count($contador['diff_query']) > 1) {
                         if (count($contador['diff_query'][$o + 1]) > 0) {
                             $dataChart[$pos] = [
-                                'title' => $title,
+                                'title' => 'oooo',
                                 'datos' => number_format(count($contador['diff_query'][$o + 1]), 0, ',', '.'),
                                 'porcentaje' => number_format((count($contador['diff_query'][$o + 1]) / $total_cartera) * 100, 2)
                             ];
@@ -269,7 +279,7 @@ class ClientController extends Controller
                         }
                     } else {
                         $dataChart[$pos] = [
-                            'title' => $title,
+                            'title' => 'sadasd',
                             'datos' => number_format(count($contador['results_querys'][$o]), 0, ',', '.'),
                             'porcentaje' => number_format((count($contador['results_querys'][$o]) / $total_cartera) * 100, 2)
                         ];
@@ -333,61 +343,69 @@ class ClientController extends Controller
 
         $client = Client::find($id);
 
-        $channels = \DB::table('canales')->pluck('name')->toArray();
+        $channels = [ // Canales. 
+            1 => 'AGENTE',
+            2 => 'EMAIL',
+            3 => 'IVR',
+            4 => 'SMS',
+            5 => 'VOICE BOT',
+            6 => 'WHATSAPP',
+        ];
 
 
         if ($request) {
-            if ($request->channelorder) {
+            if($request->channelorder){
                 $dataEstrategias = Estrategia::where('prefix_client', '=', $client->prefix)
-                    ->where('type', '=', 2)
-                    ->where('isActive', '=', 1)
-                    ->orderBy('channels', $request->channelorder)
-                    ->get();
-            } elseif ($request->dateorder) {
+                ->where('type', '=', 2)
+                ->where('isActive', '=', 1)
+                ->orderBy('channels', $request->channelorder)
+                ->get();
+            }elseif($request->dateorder){
                 $dataEstrategias = Estrategia::where('prefix_client', '=', $client->prefix)
-                    ->where('type', '=', 2)
-                    ->where('isActive', '=', 1)
-                    ->orderBy('activation_time', $request->dateorder)
-                    ->get();
-            } else {
+                ->where('type', '=', 2)
+                ->where('isActive', '=', 1)
+                ->orderBy('activation_time', $request->dateorder)
+                ->get();
+            }else{
                 $dataEstrategias = Estrategia::where('prefix_client', '=', $client->prefix)
-                    ->where('type', '=', 2)
-                    ->where('isActive', '=', 1)
-                    ->get();
+                ->where('type', '=', 2)
+                ->where('isActive', '=', 1)
+                ->get();
             }
         } else {
+            
         }
 
 
-
+        
 
         if ($request) {
-            if ($request->channelnotorder) {
+            if($request->channelnotorder){
                 $dataEstrategiasNot = Estrategia::where('prefix_client', '=', $client->prefix)
-                    ->where('type', '=', 2)
-                    ->where('isDelete', '=', 1)
-                    ->orderBy('channels', $request->channelnotorder)
-                    ->get();
-            } elseif ($request->datenotorder) {
+                ->where('type', '=', 2)
+                ->where('isDelete', '=', 1)
+                ->orderBy('channels', $request->channelnotorder)
+                ->get();
+            }elseif($request->datenotorder){
                 $dataEstrategiasNot = Estrategia::where('prefix_client', '=', $client->prefix)
-                    ->where('type', '=', 2)
-                    ->where('isDelete', '=', 1)
-                    ->orderBy('activation_time', $request->datenotorder)
-                    ->get();
-            } else {
+                ->where('type', '=', 2)
+                ->where('isDelete', '=', 1)
+                ->orderBy('activation_time', $request->datenotorder)
+                ->get();
+            }else{
                 $dataEstrategiasNot = Estrategia::where('prefix_client', '=', $client->prefix)
-                    ->where('type', '=', 2)
-                    ->where('isDelete', '=', 1)
-                    ->get();
-            }
-        } else {
-            $dataEstrategiasNot = Estrategia::where('prefix_client', '=', $client->prefix)
                 ->where('type', '=', 2)
                 ->where('isDelete', '=', 1)
                 ->get();
+            }
+        }else{
+            $dataEstrategiasNot = Estrategia::where('prefix_client', '=', $client->prefix)
+            ->where('type', '=', 2)
+            ->where('isDelete', '=', 1)
+            ->get();
         }
 
-
+        
 
 
 
