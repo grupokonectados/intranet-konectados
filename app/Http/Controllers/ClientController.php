@@ -22,7 +22,9 @@ class ClientController extends Controller
 
     const PATH_API = '/clients';
 
-    public function index() {
+
+    public function index()
+    {
         /**
          * Metodo laravel
          */
@@ -47,18 +49,12 @@ class ClientController extends Controller
     }
 
 
-    public function edit($id) {
+    public function edit($id)
+    {
 
         $client = Client::find($id);
 
-        $channels = [ // Canales. 
-            1 => 'AGENTE',
-            2 => 'EMAIL',
-            3 => 'IVR',
-            4 => 'SMS',
-            5 => 'VOICE BOT',
-            6 => 'WHATSAPP',
-        ];
+        $channels = \DB::table('canales')->pluck('name')->toArray();
 
         $client->active_channels = json_decode($client->active_channels, true);
 
@@ -72,7 +68,8 @@ class ClientController extends Controller
     }
 
 
-    public function update(Request $request, $id) {
+    public function update(Request $request, $id)
+    {
 
         //return $request;
         $client = Client::find($id);
@@ -83,7 +80,8 @@ class ClientController extends Controller
     }
 
 
-    public function searchCliente(Request $request) {
+    public function searchCliente(Request $request)
+    {
 
         /**
          * Metodo laravel
@@ -117,70 +115,20 @@ class ClientController extends Controller
         // convierto en un array los canales permitidos del cliente
         $client->active_channels = json_decode($client->active_channels, true);
 
-        // return $client;
-
         // Obtengo todos las estrategias que el cliente tiene que no estan activas
         $datas = Estrategia::where('prefix_client', '=', $client->prefix)
             ->where('isActive', '=', 0)
             ->where('type', '=', 0)
             ->get();
 
-            
 
-
-        $channels = [ // Canales. 
-            1 => 'AGENTE',
-            2 => 'EMAIL',
-            3 => 'IVR',
-            4 => 'SMS',
-            5 => 'VOICE BOT',
-            6 => 'WHATSAPP',
-        ];
-
-
-
-        if (count($datas) > 0) {
-            foreach ($datas as $key => $val) { // los canales que se estan usando
-                $arr_c[$key] = $val->channels;
-            }
-        } else {
-            $arr_c = [];
-        }
-
-        $arr = [];
-        $multiples = [];
-        $unSoloUso = [];
-        $in = 0;
-
-        foreach ($channels as $k => $v) { // del global de canales, estos son los que el usuario puede usar 
-            if (isset($client->active_channels[$k])) {
-                $arr[$k] = $client->active_channels[$k];
-            }
-        }
-
-        // return $arr;
-
-        // Obtener solo las keys de $arr
-        $arr_keys = array_keys($arr);
-
-
-        foreach ($arr_keys as $val) { // en este bucle verifico si los canales que puede usar el cliente, hay alguno que sea multiple
-            if (in_array($val, $arr_c)) {
-                if (isset($client->active_channels[$val]['multiple'])) {
-                    $multiples[] = $val;
-                } else {
-                    $unSoloUso[] = $val;
-                }
-            } else {
-                $multiples[] = $val;
-            }
-        }
+        
 
 
         $calculoEstrategias = $this->calculoEstrategias($datas);
 
 
-        // return $calculoEstrategias;
+        return $calculoEstrategias;
 
         $estructura = Estructura::select('COLUMN_NAME', 'COLUMN_TYPE', 'DATA_TYPE', 'TABLE_NAME')->where("PREFIX", '=', $client->prefix)->get();
 
@@ -236,7 +184,7 @@ class ClientController extends Controller
 
             $contador = (new EstrategiaController)->queryResults($data);
 
-            // return ($contador);
+            return ($contador);
             $total_cartera = \DB::select("select count(*) as total_cartera from " . $data[0]->table_name)[0]->total_cartera;
 
             $pos = 0;
@@ -348,69 +296,61 @@ class ClientController extends Controller
 
         $client = Client::find($id);
 
-        $channels = [ // Canales. 
-            1 => 'AGENTE',
-            2 => 'EMAIL',
-            3 => 'IVR',
-            4 => 'SMS',
-            5 => 'VOICE BOT',
-            6 => 'WHATSAPP',
-        ];
+        $channels = \DB::table('canales')->pluck('name')->toArray();
 
 
         if ($request) {
-            if($request->channelorder){
+            if ($request->channelorder) {
                 $dataEstrategias = Estrategia::where('prefix_client', '=', $client->prefix)
-                ->where('type', '=', 2)
-                ->where('isActive', '=', 1)
-                ->orderBy('channels', $request->channelorder)
-                ->get();
-            }elseif($request->dateorder){
+                    ->where('type', '=', 2)
+                    ->where('isActive', '=', 1)
+                    ->orderBy('channels', $request->channelorder)
+                    ->get();
+            } elseif ($request->dateorder) {
                 $dataEstrategias = Estrategia::where('prefix_client', '=', $client->prefix)
-                ->where('type', '=', 2)
-                ->where('isActive', '=', 1)
-                ->orderBy('activation_time', $request->dateorder)
-                ->get();
-            }else{
+                    ->where('type', '=', 2)
+                    ->where('isActive', '=', 1)
+                    ->orderBy('activation_time', $request->dateorder)
+                    ->get();
+            } else {
                 $dataEstrategias = Estrategia::where('prefix_client', '=', $client->prefix)
-                ->where('type', '=', 2)
-                ->where('isActive', '=', 1)
-                ->get();
+                    ->where('type', '=', 2)
+                    ->where('isActive', '=', 1)
+                    ->get();
             }
         } else {
-            
         }
 
 
-        
+
 
         if ($request) {
-            if($request->channelnotorder){
+            if ($request->channelnotorder) {
                 $dataEstrategiasNot = Estrategia::where('prefix_client', '=', $client->prefix)
-                ->where('type', '=', 2)
-                ->where('isDelete', '=', 1)
-                ->orderBy('channels', $request->channelnotorder)
-                ->get();
-            }elseif($request->datenotorder){
+                    ->where('type', '=', 2)
+                    ->where('isDelete', '=', 1)
+                    ->orderBy('channels', $request->channelnotorder)
+                    ->get();
+            } elseif ($request->datenotorder) {
                 $dataEstrategiasNot = Estrategia::where('prefix_client', '=', $client->prefix)
-                ->where('type', '=', 2)
-                ->where('isDelete', '=', 1)
-                ->orderBy('activation_time', $request->datenotorder)
-                ->get();
-            }else{
+                    ->where('type', '=', 2)
+                    ->where('isDelete', '=', 1)
+                    ->orderBy('activation_time', $request->datenotorder)
+                    ->get();
+            } else {
                 $dataEstrategiasNot = Estrategia::where('prefix_client', '=', $client->prefix)
-                ->where('type', '=', 2)
-                ->where('isDelete', '=', 1)
-                ->get();
+                    ->where('type', '=', 2)
+                    ->where('isDelete', '=', 1)
+                    ->get();
             }
-        }else{
+        } else {
             $dataEstrategiasNot = Estrategia::where('prefix_client', '=', $client->prefix)
-            ->where('type', '=', 2)
-            ->where('isDelete', '=', 1)
-            ->get();
+                ->where('type', '=', 2)
+                ->where('isDelete', '=', 1)
+                ->get();
         }
 
-        
+
 
 
 
