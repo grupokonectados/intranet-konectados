@@ -48,12 +48,10 @@
                 @foreach ($datas as $k => $data)
                     <tr>
                         <td class="text-center align-middle">
-                            @if (isset($channels[$data->channels]))
-                                {{ $channels[$data->channels] }}
-                            @endif
+                            {{ $data->canal }}
                         </td>
-                        <td class="text-center align-middle">{{ $dataChart[$k]['porcentaje'] }}%</td>
-                        <td class="text-center align-middle">{{ $dataChart[$k]['datos'] }}</td>
+                        <td class="text-center align-middle">{{ $data->porcentaje_registros_unicos }}%</td>
+                        <td class="text-center align-middle">{{ $data->total_registros_unicos }}</td>
                         <td class="text-center align-middle">
                             @if ($data->repeatUsers == 1)
                                 <div class="form-check form-switch align-items-stretch">
@@ -69,7 +67,7 @@
                         </td>
                         <td class="text-center align-middle">
                             @if ($data->repeatUsers == 1)
-                                {{ $total_resta }}
+                                1 {{-- {{ count($calculoEstrategias[$k]['unicos'])-count($calculoEstrategias[0]['unicos']) }} --}}
                             @else
                                 0
                             @endif
@@ -126,12 +124,13 @@
                         <th class="text-uppercase align-middle" scope="col">Canales</th>
                         <th>
                             <select class="form-select" name="channels" id="canalsito">
-                                <option value="">Seleccione</option>
+                                <option value="">Seleccione
                                 @foreach ($channels as $key => $val)
-                                    @if (in_array($key, $multiples))
-                                        <option value="{{ $key }}">{{ $val }}</option>
-                                    @endif
-                                @endforeach
+                                @if (isset($client->active_channels[$key]))
+                                    <option value="{{ $key }}">{{ $val }}</option>
+                                @endif
+                            @endforeach
+                               
                             </select>
 
                         </th>

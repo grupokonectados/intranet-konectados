@@ -6,6 +6,7 @@ use App\Models\Client;
 use App\Models\Estrategia;
 use App\Models\Estructura;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use SebastianBergmann\Diff\Diff;
 
@@ -24,7 +25,8 @@ class EstrategiaController extends Controller
     const PATH_API = '/estrategias';
 
 
-    public function index(){
+    public function index()
+    {
 
         $config_layout = [
             'title-section' => 'Estrategias',
@@ -60,7 +62,8 @@ class EstrategiaController extends Controller
     }
 
 
-    public function create(){
+    public function create()
+    {
 
         $config_layout = [
             'title-section' => 'Crear Estrategia',
@@ -74,7 +77,8 @@ class EstrategiaController extends Controller
     }
 
 
-    public function saveEstrategia(Request $request){
+    public function saveEstrategia(Request $request)
+    {
 
         // return $request;
 
@@ -100,7 +104,8 @@ class EstrategiaController extends Controller
         }
     }
 
-    public function show($id){
+    public function show($id)
+    {
 
         $data = Estrategia::find($id);
 
@@ -123,7 +128,8 @@ class EstrategiaController extends Controller
     }
 
 
-    public function runQuery(Request $request){
+    public function runQuery(Request $request)
+    {
 
         // return $request; //Verificar que datos llegan. 
 
@@ -177,54 +183,38 @@ class EstrategiaController extends Controller
     }
 
 
-    public function isActive(Request $request){
+    public function isActive(Request $request)
+    {
 
         $dataCompare = Estrategia::where('isActive', '=', 1)->get();
         $data = Estrategia::where('id', '=', $request->id)->update(['isActive' => 1, 'type' => 2]);
         return $data;
     }
 
-
-    public function queryResults($strings_query){
+    public function queryResults($strings_query)
+    {
 
         $query_ruts = [];
 
-        foreach ($strings_query as $k => $v) { //extraemos los resultados encontrados en las consultas.
-            $query_ruts[$k] = \DB::select("select rut from " . $v['table_name'] . " where " . $v['onlyWhere']);
+        foreach ($strings_query as $v) {
+            $query_ruts[] = \DB::table($v[0])->whereRaw($v[1])->pluck('rut')->toArray();
         }
 
-        $arr_count = count($query_ruts); // contador de resultados
+        $results = [];
 
-        // return $query_ruts;
+        for ($i = 0; $i < count($query_ruts); $i++) {
+            $arr_compare = $query_ruts[$i];
+            $arrs = array_slice($query_ruts, 0, $i);
+            $diff = array_diff($arr_compare, ...$arrs );
 
-        if ($arr_count > 0) {
-            for ($i = 0; $i < $arr_count; $i++) {
-
-                if (count($query_ruts[$i]) > 0) {
-                    for ($o = 0; $o < count($query_ruts[$i]); $o++)
-                        $arr[$i][$o] = $query_ruts[$i][$o]->rut;
-                } else {
-                    $arr[$i] = [];
-                }
-            }
-            $final = array(); // Crear un arreglo vacío para almacenar los resultados finales
-
-            for ($i = 0; $i < $arr_count - 1; $i++) {
-                if (isset($arr[$i]) && isset($arr[$i + 1])) {
-                    $diff1 = array_diff($arr[$i], $arr[$i + 1]);
-                    $diff2 = array_diff($arr[$i + 1], $arr[$i]);
-                    $final[($i + 1)] = $diff1;
-                    $final[($i + 2)] = $diff2;
-                }
-            }
+            $results[] = [
+                //'arr' => $i,
+                $diff,
+                //'total_r' => count($query_ruts[$i]),
+            ];
         }
 
-        $arr_send = [
-            'results_querys' => $arr,
-            'diff_query' => $final,
-
-        ];
-        return $arr_send;
+        return $results;
     }
 
 

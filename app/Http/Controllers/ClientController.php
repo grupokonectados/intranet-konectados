@@ -7,6 +7,8 @@ use App\Models\Estrategia;
 use App\Models\Estructura;
 use Illuminate\Contracts\Filesystem\Cloud;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Laravel\Ui\Presets\React;
 
@@ -112,102 +114,10 @@ class ClientController extends Controller
     public function disenoEstrategia($id)
     {
 
-        $client = Client::find($id); //Traigo los datos del cliente
+        $client = Client::select('id', 'name', 'prefix', 'active_channels')->find($id); //Traigo los datos del cliente
 
         // convierto en un array los canales permitidos del cliente
         $client->active_channels = json_decode($client->active_channels, true);
-
-        // Obtengo todos las estrategias que el cliente tiene que no estan activas
-        $datas = Estrategia::where('prefix_client', '=', $client->prefix)
-            ->where('isActive', '=', 0)
-            ->where('type', '=', 0)
-            ->get();
-
-
-        $channels = [ // Canales. 
-            1 => 'AGENTE',
-            2 => 'EMAIL',
-            3 => 'IVR',
-            4 => 'SMS',
-            5 => 'VOICE BOT',
-            6 => 'WHATSAPP',
-        ];
-
-
-
-        if (count($datas) > 0) {
-            foreach ($datas as $key => $val) { // los canales que se estan usando
-                $arr_c[$key] = $val->channels;
-            }
-        } else {
-            $arr_c = [];
-        }
-
-        $arr = [];
-        $multiples = [];
-        $unSoloUso = [];
-        $in = 0;
-
-        foreach ($channels as $k => $v) { // del global de canales, estos son los que el usuario puede usar 
-            if (isset($client->active_channels[$k])) {
-                $arr[$k] = $client->active_channels[$k];
-            }
-        }
-
-        // return $arr;
-
-        // Obtener solo las keys de $arr
-        $arr_keys = array_keys($arr);
-
-
-        foreach ($arr_keys as $val) { // en este bucle verifico si los canales que puede usar el cliente, hay alguno que sea multiple
-            if (in_array($val, $arr_c)) {
-                if (isset($client->active_channels[$val]['multiple'])) {
-                    $multiples[] = $val;
-                } else {
-                    $unSoloUso[] = $val;
-                }
-            } else {
-                $multiples[] = $val;
-            }
-        }
-
-
-        $calculoEstrategias = $this->calculoEstrategias($datas);
-
-
-        // return $calculoEstrategias;
-
-        $estructura = Estructura::select('COLUMN_NAME', 'COLUMN_TYPE', 'DATA_TYPE', 'TABLE_NAME')->where("PREFIX", '=', $client->prefix)->get();
-
-        $contador = $calculoEstrategias['contador'];
-        $dataChart = $calculoEstrategias['dataChart'];
-        $cuenta_total = $calculoEstrategias['cuenta_total'];
-
-        $x = [];
-
-        foreach ($datas as $key => $value) {
-            if ($value->repeatUsers === 1) {
-                $x[] = count($contador['results_querys'][$key]);
-            }
-        }
-
-
-        $total_resta = 0;
-
-        if (count($datas) > 1 && count($x) > 0) {
-
-            rsort($x);
-
-            // return $x;
-            $total_resta =  $x[0];
-
-            for ($i = 1; $i < count($x); $i++) {
-                $total_resta -= $x[$i];
-            }
-        } else {
-            $total_resta = 0;
-        }
 
         $config_layout = [
             'title-section' => 'Diseño de estrategia para: ' . $client->name,
@@ -215,122 +125,65 @@ class ClientController extends Controller
             'btn-back' => 'clients.show'
         ];
 
-        return view('clients/diseno', compact('total_resta', 'client', 'datas', 'config_layout', 'estructura', 'multiples', 'channels', 'arr_c', 'contador', 'dataChart', 'cuenta_total'));
-    }
+        $channels = DB::table('canales')->where('isActive', '=', 1)->pluck('name')->toArray();
+        $estructura = Estructura::select('COLUMN_NAME', 'COLUMN_TYPE', 'DATA_TYPE', 'TABLE_NAME')->where("PREFIX", '=', $client->prefix)->get();
 
-    function calculoEstrategias($data)
-    {
 
-        // return count($data);
 
-        $contador = [];
-        $dataChart = [];
-        $suma_total_results = 0;
-        $suma_total_diff = 0;
-        if (count($data) > 0 ) {
-
-            $contador = (new EstrategiaController)->queryResults($data);
-
-            // return ($contador);
-            $total_cartera = \DB::select("select count(*) as total_cartera from " . $data[0]->table_name)[0]->total_cartera;
-
-            $pos = 0;
-
-            if (count($contador['results_querys']) > 0) {
-                for ($o = 0; $o < count($contador['results_querys']); $o++) {
-                    switch ($data[$o]->channels) {
-                        case 1:
-                            $title = 'AGENTE';
-                            break;
-                        case 2:
-                            $title = 'EMAIL';
-                            break;
-                        case 3:
-                            $title = 'IVR';
-                            break;
-                        case 4:
-                            $title = 'SMS';
-                            break;
-                        case 5:
-                            $title = 'VOICE BOT';
-                            break;
-                        case 6:
-                            $title = 'WHATSAPP';
-                            break;
-                    }
-
-                    //    return $contador['diff_query'];
-
-                    if ($data[$o]->repeatUsers == 0 && count($contador['diff_query']) > 1) {
-                        if (count($contador['diff_query'][$o + 1]) > 0) {
-                            $dataChart[$pos] = [
-                                'title' => 'oooo',
-                                'datos' => number_format(count($contador['diff_query'][$o + 1]), 0, ',', '.'),
-                                'porcentaje' => number_format((count($contador['diff_query'][$o + 1]) / $total_cartera) * 100, 2)
-                            ];
-                            $suma_total_diff += count($contador['diff_query'][$o + 1]);
-                        } else {
-                            $dataChart[$pos] = [
-                                'title' => $title,
-                                'datos' => number_format(count($contador['results_querys'][$o]), 0, ',', '.'),
-                                'porcentaje' => number_format((count($contador['results_querys'][$o]) / $total_cartera) * 100, 2)
-                            ];
-                            $suma_total_results += count($contador['results_querys'][$o]);
-                        }
-                    } else {
-                        $dataChart[$pos] = [
-                            'title' => 'sadasd',
-                            'datos' => number_format(count($contador['results_querys'][$o]), 0, ',', '.'),
-                            'porcentaje' => number_format((count($contador['results_querys'][$o]) / $total_cartera) * 100, 2)
-                        ];
-                        $suma_total_results += count($contador['results_querys'][$o]);
-                    }
-                    $pos++;
-                }
-            } else {
-                $contador = ['total' => 0,];
-                $dataChart = [];
-            }
-            $cuenta_total = [
-                'total_results' => $suma_total_results,
-                'total_diff' => $suma_total_diff,
-                'total' => number_format(($suma_total_results + $suma_total_diff), 0, ',', '.'),
-                'porcentual' => number_format((($suma_total_results + $suma_total_diff) / $total_cartera) * 100, 2, ',', '.')
-            ];
-        } else {
-
-            $cuenta_total = [
-                'total_results' => 0,
-                'total_diff' => 0,
-                'total' => 0,
-                'porcentual' => 0
-            ];
-        }
-
-        return [
-            'contador' => $contador,
-            'dataChart' => $dataChart,
-            'cuenta_total' => $cuenta_total,
-        ];
-    }
-
-    public function probarConsulta(Request $request)
-    {
-
-        $data = Estrategia::where('prefix_client', '=', $request->prefix)
+        // Obtengo todos las estrategias que el cliente tiene que no estan activas
+        $datas = DB::table('estrategias')
+            ->select('id', 'onlyWhere', 'table_name', 'channels', 'isActive', 'isDelete', 'type', 'repeatUsers')
+            ->where('prefix_client', '=', $client->prefix)
+            ->where('isActive', '=', 0)
             ->where('type', '=', 0)
+            ->orderBy('created_at', 'ASC')
             ->get();
 
-        $calculoEstrategias = $this->calculoEstrategias($data);
+        $total_cartera = DB::select("SELECT COUNT(*) AS total_cartera FROM " . $datas[0]->table_name)[0]->total_cartera;
+
+        $queries = [];
+        $ch_approve = [];
 
 
-        return [
-            'data1' => $calculoEstrategias['dataChart'],
-            'data2' => $calculoEstrategias['cuenta_total'],
-            'data3' => $data,
-            'data4' => $calculoEstrategias['contador']
-        ];
+
+        if (count($datas) > 0) {
+            foreach ($datas as $key => $val) {
+                $queries[$key][] = $val->table_name;
+                $queries[$key][] = $val->onlyWhere;
+            }
+            $calculoEstrategias = (new EstrategiaController)->queryResults($queries);
+            foreach ($datas as $key => $data) {
+                if (isset($channels[$data->channels])) {
+                    $data->canal = $channels[$data->channels];
+                }
+                $data->registros_unicos = $calculoEstrategias[$key][0];
+                $data->total_registros_unicos = count($calculoEstrategias[$key][0]);
+                $data->porcentaje_registros_unicos = (count($calculoEstrategias[$key][0]) / $total_cartera) * 100;
+            }
+
+            
+            foreach ($client->active_channels as $k => $v) {
+                $ch_approve[] = $v['seleccionado'];
+            }
+            
+            $client->active_channels = $ch_approve;
+
+
+        }
+
+
+
+        // return $client;
+
+
+
+
+
+        return view('clients/diseno', compact('client', 'datas', 'config_layout', 'channels', 'calculoEstrategias', 'estructura'));
     }
+
+
+
 
     public function show($id, Request $request)
     {
@@ -354,58 +207,57 @@ class ClientController extends Controller
 
 
         if ($request) {
-            if($request->channelorder){
+            if ($request->channelorder) {
                 $dataEstrategias = Estrategia::where('prefix_client', '=', $client->prefix)
-                ->where('type', '=', 2)
-                ->where('isActive', '=', 1)
-                ->orderBy('channels', $request->channelorder)
-                ->get();
-            }elseif($request->dateorder){
+                    ->where('type', '=', 2)
+                    ->where('isActive', '=', 1)
+                    ->orderBy('channels', $request->channelorder)
+                    ->get();
+            } elseif ($request->dateorder) {
                 $dataEstrategias = Estrategia::where('prefix_client', '=', $client->prefix)
-                ->where('type', '=', 2)
-                ->where('isActive', '=', 1)
-                ->orderBy('activation_time', $request->dateorder)
-                ->get();
-            }else{
+                    ->where('type', '=', 2)
+                    ->where('isActive', '=', 1)
+                    ->orderBy('activation_time', $request->dateorder)
+                    ->get();
+            } else {
                 $dataEstrategias = Estrategia::where('prefix_client', '=', $client->prefix)
-                ->where('type', '=', 2)
-                ->where('isActive', '=', 1)
-                ->get();
+                    ->where('type', '=', 2)
+                    ->where('isActive', '=', 1)
+                    ->get();
             }
         } else {
-            
         }
 
 
-        
+
 
         if ($request) {
-            if($request->channelnotorder){
+            if ($request->channelnotorder) {
                 $dataEstrategiasNot = Estrategia::where('prefix_client', '=', $client->prefix)
-                ->where('type', '=', 2)
-                ->where('isDelete', '=', 1)
-                ->orderBy('channels', $request->channelnotorder)
-                ->get();
-            }elseif($request->datenotorder){
+                    ->where('type', '=', 2)
+                    ->where('isDelete', '=', 1)
+                    ->orderBy('channels', $request->channelnotorder)
+                    ->get();
+            } elseif ($request->datenotorder) {
                 $dataEstrategiasNot = Estrategia::where('prefix_client', '=', $client->prefix)
-                ->where('type', '=', 2)
-                ->where('isDelete', '=', 1)
-                ->orderBy('activation_time', $request->datenotorder)
-                ->get();
-            }else{
+                    ->where('type', '=', 2)
+                    ->where('isDelete', '=', 1)
+                    ->orderBy('activation_time', $request->datenotorder)
+                    ->get();
+            } else {
                 $dataEstrategiasNot = Estrategia::where('prefix_client', '=', $client->prefix)
-                ->where('type', '=', 2)
-                ->where('isDelete', '=', 1)
-                ->get();
+                    ->where('type', '=', 2)
+                    ->where('isDelete', '=', 1)
+                    ->get();
             }
-        }else{
+        } else {
             $dataEstrategiasNot = Estrategia::where('prefix_client', '=', $client->prefix)
-            ->where('type', '=', 2)
-            ->where('isDelete', '=', 1)
-            ->get();
+                ->where('type', '=', 2)
+                ->where('isDelete', '=', 1)
+                ->get();
         }
 
-        
+
 
 
 
