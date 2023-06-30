@@ -23,15 +23,21 @@
 
     <x-cards size='4' xtrasclass='mb-3' header="Canales Permitidos" titlecolor='primary'>
         <div class="row">
-
+            @if(count($client->active_channels) >0)
             @foreach ($channels as $key => $val)
                 @if (isset($client->active_channels[$key]))
                     <div class="col-4">
-                        <i class="fas fa-check"></i>&nbsp;
+                        <i class="fas fa-check text-success"></i>&nbsp;
                         {{ $val }}
                     </div>
+                
                 @endif
             @endforeach
+            @else
+                <div class="alert alert-danger alert-dismissible show mb-0" role="alert">
+                    No tiene canales Activos.
+                </div>
+                @endif
 
         </div>
     </x-cards>
@@ -41,7 +47,7 @@
         <div class="alert  alert-dismissible fade show d-none" role="alert">
             <span id='messages'></span>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-          </div>
+        </div>
 
 
 
@@ -57,6 +63,7 @@
             </thead>
             <tbody class="align-middle">
                 @foreach ($datas as $k => $data)
+                @if($data->isActive === 0)
                     <tr>
                         <td class="text-center align-middle">
                             {{ $data->canal }}
@@ -78,7 +85,7 @@
                         </td>
                         <td class="text-center align-middle">
                             @if ($data->repeatUsers == 1)
-                                1 {{-- {{ count($calculoEstrategias[$k]['unicos'])-count($calculoEstrategias[0]['unicos']) }} --}}
+                                {{ count($data->repetidos) }}
                             @else
                                 0
                             @endif
@@ -102,12 +109,13 @@
                             </div>
                         </td>
                     </tr>
+                    @endif
                 @endforeach
             </tbody>
         </table>
     </x-cards>
 
-    <x-cards xtrasclass='mt-3' header="Nueva estrategia" titlecolor='success'>
+    <x-cards xtrasclass='mt-3' header="Nueva estrategia" titlecolor='success' >
         <div class="row">
             <div class="col-5">
                 <table class="table table-bordered">
@@ -135,13 +143,13 @@
                         <th class="text-uppercase align-middle" scope="col">Canales</th>
                         <th>
                             <select class="form-select" name="channels" id="canalsito">
-                                <option value="">Seleccione
-                                @foreach ($channels as $key => $val)
-                                @if (isset($client->active_channels[$key]))
-                                    <option value="{{ $key }}">{{ $val }}</option>
-                                @endif
-                            @endforeach
-                               
+                                <option value="">Seleccione</option>
+                                @for ($i = 0; $i < count($channels); $i++)
+                                    @if (in_array($i, $ch_approve))
+                                        <option value="{{ $i }}">{{ $channels[$i] }}</option>
+                                    @endif
+                                @endfor
+
                             </select>
 
                         </th>
@@ -210,6 +218,7 @@
     <script>
         const csrfToken = "{{ csrf_token() }}";
         var i = 0;
+        
         document.getElementById("myForm").addEventListener('submit', validar);
 
 

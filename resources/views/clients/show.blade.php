@@ -66,11 +66,8 @@
                         @endif
                     </td>
                     <td class="text-center align-middle">
-                        @if ($data->repeatUsers == 1)
-                            1
-                        @else
-                            0
-                        @endif
+                        {{ $data->repetidos ?? 0 }}
+                        
                     </td>
                     <td>{{ $data->onlyWhere }}</td>
                     <td class="text-center align-middle">

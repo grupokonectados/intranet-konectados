@@ -191,7 +191,7 @@ class EstrategiaController extends Controller
         return $data;
     }
 
-    public function queryResults($strings_query)
+    public function queryResults($strings_query, $type)
     {
 
         $query_ruts = [];
@@ -201,18 +201,36 @@ class EstrategiaController extends Controller
         }
 
         $results = [];
+        if($type === 0){
 
         for ($i = 0; $i < count($query_ruts); $i++) {
             $arr_compare = $query_ruts[$i];
             $arrs = array_slice($query_ruts, 0, $i);
             $diff = array_diff($arr_compare, ...$arrs );
+            
 
             $results[] = [
-                //'arr' => $i,
-                $diff,
-                //'total_r' => count($query_ruts[$i]),
+                // $iguales
+                'arr' => $i,
+                'unicos' => $diff,
+                'total_r' => ($query_ruts[$i]),
             ];
         }
+    }else{
+        for ($i = 0; $i < count($query_ruts); $i++) {
+            $arr_compare = $query_ruts[$i];
+            $arrs = array_slice($query_ruts, 0, $i);
+            $diff = array_diff($arr_compare, ...$arrs );
+            
+
+            $results[] = [
+                $diff
+                // 'arr' => $i,
+                // 'unicos' => $diff,
+                // 'total_r' => ($query_ruts[$i]),
+            ];
+        }
+    }
 
         return $results;
     }
