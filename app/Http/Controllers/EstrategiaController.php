@@ -275,25 +275,41 @@ class EstrategiaController extends Controller
             ->where('type', '=', 2)
             ->get();
 
+            
+
         $estrategia = Estrategia::find($request->id); // obtengo los dato de la estrategia segun el identificador
 
+
+        // return $estrategia;
+
         //Obtengo la configuracion de los permisos de los canales del cliente.
-        $client = Client::select('active_channels')->where('prefix', '=', $estrategia->prefix_client)->get()[0];
+        $client = DB::table('clients')
+                        ->select('active_channels')
+                        ->where('prefix', '=', $estrategia->prefix_client)->get()[0];
+                    
 
         //guardo en un array los permisos del cliente 
-        $permitidos_client = json_decode($client['active_channels'], true);
+        $permitidos_client = json_decode($client->active_channels, true);
+
+
+        // return $permitidos_client[0]['multiple'];
 
         $arr_key_permitidos = [];
+
         foreach ($permitidos_client as $k => $v) {
             if (isset($permitidos_client[$k]['multiple'])) { // Verifico y almaceno la posicion de los canales en los cuales se permite usar varias veces el mismo canal
                 $arr_key_permitidos[] = $k;
             }
         }
 
+        // return $arr_key_permitidos;
+
         $arr = [];
         foreach ($getStrategys as  $v) { // Almaceno los canales que existen actualmente para el cliente
             $arr[] = $v->channels;
         }
+
+        // return $arr;
 
         if (in_array($estrategia->channels, $arr)) { // Verifico si existe ese canal dentro de los registros que existen
             if (in_array($estrategia->channels, $arr_key_permitidos)) { // Verifico si ese canal se puede usar multiple veces para el caso positivo, lo paso a prodccion

@@ -22,18 +22,29 @@
     </x-cards>
 
     <x-cards size='4' xtrasclass='mb-3' header="Canales Permitidos" titlecolor='primary'>
-        <div class="row text-center">
+        <div class="row">
 
             @foreach ($channels as $key => $val)
                 @if (isset($client->active_channels[$key]))
-                    <div class="col-4">{{ $val }}</div>
+                    <div class="col-4">
+                        <i class="fas fa-check"></i>&nbsp;
+                        {{ $val }}
+                    </div>
                 @endif
             @endforeach
 
         </div>
     </x-cards>
-
     <x-cards xtrasclass='my-3' header="Estrategias" titlecolor='primary'>
+
+
+        <div class="alert  alert-dismissible fade show d-none" role="alert">
+            <span id='messages'></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+
+
+
         <table class="table table-sm table-bordered mb-0">
             <thead class="bg-dark">
                 <th width='7%' class="align-middle text-white text-center text-uppercase">Canal</th>
@@ -288,12 +299,17 @@
             }).then(data => {
                 // Recargar la página actual
 
-                console.log(data)
+                // console.log(data)
                 if (data.result === 1) {
-                    alert(data.message)
+                    document.querySelector('.alert').classList.remove('d-none');
+                    document.querySelector('.alert').classList.add('alert-success')
+                    document.querySelector('#messages').innerHTML = data.message
                     location.reload()
                 } else {
-                    alert(data.message)
+                    document.querySelector('.alert').classList.remove('d-none');
+                    document.querySelector('.alert').classList.remove('alert-success');
+                    document.querySelector('.alert').classList.add('alert-danger')
+                    document.querySelector('#messages').innerHTML = data.message
                 }
             });
 
@@ -314,7 +330,7 @@
                 var cell4 = row.insertCell(-1);
 
                 lines = `
-                    <select id="my-select" class='form-select form-select-sm' onchange="selectInputType(this.value, ${i}, event, getElementById('operator').value)">
+                    <select id="my-select" class='form-select form-select-sm' onchange="selectInputType(this.value, ${i}, event, document.getElementById('operator_${i}'))">
                     <option>Seleccione</option>`
                 for (let d in estructura) {
                     lines +=
@@ -331,7 +347,7 @@
                 cell4.id = "td_" + i
 
                 cell3.innerHTML = `
-                    <select class='form-select form-select-sm' id='operator'>
+                    <select class='form-select form-select-sm operator' id='operator_${i}'>
                         <option>Seleccione</option>
                         <option value="=" > = </option>
                         <option value=">=" > >= </option>
@@ -357,10 +373,12 @@
             var queryParts = [];
             const valoresElements = document.querySelectorAll('.valores');
             const name_table = document.querySelector('#name_table');
-            const op = document.querySelector('#operator').value;
+            const op = document.querySelectorAll('.operator');
             const valoresObj = {};
 
-            valoresElements.forEach((element) => {
+            valoresElements.forEach((element, i) => {
+
+                console.log(element.value)
                 if (element.name === 'monto_min' && element.value !== '') { //Verificamos el campo monto
                     const montoMin = parseFloat(element.value);
                     const montoMax = parseFloat(document.querySelector('[name="monto_max"]').value);
@@ -381,12 +399,12 @@
                         }
                     }
                 } else {
-                    if (element.type === 'text' && op === 'like') {
+                    if (element.type === 'text' || op[i].value === 'like') {
                         queryParts.push(`${element.name} like '%${element.value}%'`); // 
                     } else if (element.type === 'date' || element.type === 'text') {
-                        queryParts.push(`${element.name} ${op} '${element.value}'`); // 
+                        queryParts.push(`${element.name} ${op[i].value} '${element.value}'`); // 
                     } else {
-                        queryParts.push(`${element.name} ${op} ${element.value}`); // 
+                        queryParts.push(`${element.name} ${op[i].value} ${element.value}`); // 
                     }
 
                 }
@@ -441,7 +459,7 @@
             }
 
             if (e.target.selectedOptions[0].text === 'monto') {
-                if (op === 'dh') {
+                if (op.value === 'dh') {
                     nuevoInput.name = e.target.selectedOptions[0].text + '_min'
                     nuevoInput.className = 'form-control form-control-sm valores limite-input'
                     nuevoInput.setAttribute("data-limite", matches[1]);

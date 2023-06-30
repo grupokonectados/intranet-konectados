@@ -48,14 +48,7 @@ class ClientController extends Controller
 
         $client = Client::find($id);
 
-        $channels = [ // Canales. 
-            1 => 'AGENTE',
-            2 => 'EMAIL',
-            3 => 'IVR',
-            4 => 'SMS',
-            5 => 'VOICE BOT',
-            6 => 'WHATSAPP',
-        ];
+        $channels = DB::table('canales')->where('isActive', '=', 1)->pluck('name')->toArray();
 
         $client->active_channels = json_decode($client->active_channels, true);
 
@@ -74,9 +67,6 @@ class ClientController extends Controller
 
         //return $request;
         $client = Client::find($id);
-
-        $client->name = $request['name'];
-        $client->prefix = $request['prefix'];
         $client->active_channels = json_encode($request['channels']);
         $client->save();
 
@@ -139,7 +129,7 @@ class ClientController extends Controller
             ->orderBy('created_at', 'ASC')
             ->get();
 
-        $total_cartera = DB::select("SELECT COUNT(*) AS total_cartera FROM " . $datas[0]->table_name)[0]->total_cartera;
+        $total_cartera = 0;
 
         $queries = [];
         $ch_approve = [];
@@ -147,28 +137,27 @@ class ClientController extends Controller
 
 
         if (count($datas) > 0) {
+            $total_cartera = DB::select("SELECT COUNT(*) AS total_cartera FROM " . $datas[0]->table_name)[0]->total_cartera;
             foreach ($datas as $key => $val) {
                 $queries[$key][] = $val->table_name;
                 $queries[$key][] = $val->onlyWhere;
             }
-            $calculoEstrategias = (new EstrategiaController)->queryResults($queries);
+            $queryResults = (new EstrategiaController)->queryResults($queries);
             foreach ($datas as $key => $data) {
                 if (isset($channels[$data->channels])) {
                     $data->canal = $channels[$data->channels];
                 }
-                $data->registros_unicos = $calculoEstrategias[$key][0];
-                $data->total_registros_unicos = count($calculoEstrategias[$key][0]);
-                $data->porcentaje_registros_unicos = (count($calculoEstrategias[$key][0]) / $total_cartera) * 100;
+                $data->registros_unicos = $queryResults[$key][0];
+                $data->total_registros_unicos = count($queryResults[$key][0]);
+                $data->porcentaje_registros_unicos = (count($queryResults[$key][0]) / $total_cartera) * 100;
             }
 
-            
+
             foreach ($client->active_channels as $k => $v) {
                 $ch_approve[] = $v['seleccionado'];
             }
-            
+
             $client->active_channels = $ch_approve;
-
-
         }
 
 
@@ -179,7 +168,7 @@ class ClientController extends Controller
 
 
 
-        return view('clients/diseno', compact('client', 'datas', 'config_layout', 'channels', 'calculoEstrategias', 'estructura'));
+        return view('clients/diseno', compact('client', 'datas', 'config_layout', 'channels', 'estructura'));
     }
 
 
@@ -194,105 +183,62 @@ class ClientController extends Controller
          * Metodo laravel
          */
 
-        $client = Client::find($id);
+        $client = Client::select('id', 'name', 'prefix', 'active_channels')->find($id); //Traigo los datos del cliente
 
-        $channels = [ // Canales. 
-            1 => 'AGENTE',
-            2 => 'EMAIL',
-            3 => 'IVR',
-            4 => 'SMS',
-            5 => 'VOICE BOT',
-            6 => 'WHATSAPP',
-        ];
+        // convierto en un array los canales permitidos del cliente
+        $client->active_channels = json_decode($client->active_channels, true);
 
 
-        if ($request) {
-            if ($request->channelorder) {
-                $dataEstrategias = Estrategia::where('prefix_client', '=', $client->prefix)
-                    ->where('type', '=', 2)
-                    ->where('isActive', '=', 1)
-                    ->orderBy('channels', $request->channelorder)
-                    ->get();
-            } elseif ($request->dateorder) {
-                $dataEstrategias = Estrategia::where('prefix_client', '=', $client->prefix)
-                    ->where('type', '=', 2)
-                    ->where('isActive', '=', 1)
-                    ->orderBy('activation_time', $request->dateorder)
-                    ->get();
-            } else {
-                $dataEstrategias = Estrategia::where('prefix_client', '=', $client->prefix)
-                    ->where('type', '=', 2)
-                    ->where('isActive', '=', 1)
-                    ->get();
+        $channels = DB::table('canales')->where('isActive', '=', 1)->pluck('name')->toArray();
+
+
+        $datas = DB::table('estrategias')
+            ->select('id', 'onlyWhere', 'table_name', 'channels', 'isActive', 'isDelete', 'type', 'repeatUsers', 'activation_date', 'activation_time')
+            ->where('prefix_client', '=', $client->prefix)
+            ->orderBy('created_at', 'ASC')
+            ->get();
+
+        
+            $total_cartera = 0;
+        $totales = [];
+        $suma_total = 0;
+        $porcentaje_total = 0;
+
+
+        if (count($datas) > 0) {
+            $total_cartera = DB::select("SELECT COUNT(*) AS total_cartera FROM " . $datas[0]->table_name)[0]->total_cartera;
+            foreach ($datas as $key => $val) {
+                $queries[$key][] = $val->table_name;
+                $queries[$key][] = $val->onlyWhere;
             }
-        } else {
-        }
+            $queryResults = (new EstrategiaController)->queryResults($queries);
+            foreach ($datas as $key => $data) {
+                if (isset($channels[$data->channels])) {
+                    $data->canal = $channels[$data->channels];
+                }
+                $data->registros_unicos = $queryResults[$key][0];
+                $data->total_registros_unicos = count($queryResults[$key][0]);
+                $data->porcentaje_registros_unicos = (count($queryResults[$key][0]) / $total_cartera) * 100;
 
-
-
-
-        if ($request) {
-            if ($request->channelnotorder) {
-                $dataEstrategiasNot = Estrategia::where('prefix_client', '=', $client->prefix)
-                    ->where('type', '=', 2)
-                    ->where('isDelete', '=', 1)
-                    ->orderBy('channels', $request->channelnotorder)
-                    ->get();
-            } elseif ($request->datenotorder) {
-                $dataEstrategiasNot = Estrategia::where('prefix_client', '=', $client->prefix)
-                    ->where('type', '=', 2)
-                    ->where('isDelete', '=', 1)
-                    ->orderBy('activation_time', $request->datenotorder)
-                    ->get();
-            } else {
-                $dataEstrategiasNot = Estrategia::where('prefix_client', '=', $client->prefix)
-                    ->where('type', '=', 2)
-                    ->where('isDelete', '=', 1)
-                    ->get();
+                if($data->isActive === 1 && $data->type === 2){
+                    $suma_total += $data->total_registros_unicos;
+                    $porcentaje_total += $data->porcentaje_registros_unicos;
+                }
+                
             }
-        } else {
-            $dataEstrategiasNot = Estrategia::where('prefix_client', '=', $client->prefix)
-                ->where('type', '=', 2)
-                ->where('isDelete', '=', 1)
-                ->get();
-        }
 
 
-
-
-
-        $calculoEstrategias = $this->calculoEstrategias($dataEstrategias);
-
-        // return $calculoEstrategias;
-
-
-        $contador = $calculoEstrategias['contador'];
-        $dataChart = $calculoEstrategias['dataChart'];
-        $cuenta_total = $calculoEstrategias['cuenta_total'];
-
-        $x = [];
-
-        foreach ($dataEstrategias as $key => $value) {
-            if ($value->repeatUsers === 1) {
-                $x[] = count($contador['results_querys'][$key]);
+            foreach ($client->active_channels as $k => $v) {
+                $ch_approve[] = $v['seleccionado'];
             }
+
+            $client->active_channels = $ch_approve;
         }
+        
 
-        if (count($dataEstrategias) > 1 && count($x) > 0) {
+        
 
-            rsort($x);
-            $total_resta =  $x[0];
-
-            for ($i = 1; $i < count($x); $i++) {
-                $total_resta -= $x[$i];
-            }
-        } else {
-            $total_resta = 0;
-        }
-        // return $total_resta;
-
-
-
+        // return $datas;
 
 
         $config_layout = [
@@ -301,6 +247,6 @@ class ClientController extends Controller
             'btn-back' => 'clients.index'
         ];
 
-        return view('clients/show', compact('config_layout', 'total_resta', 'client', 'dataEstrategias', 'contador', 'dataEstrategiasNot', 'dataChart', 'cuenta_total', 'channels'));
+        return view('clients/show', compact('config_layout', 'client', 'datas', 'channels', 'suma_total', 'porcentaje_total'));
     }
 }
