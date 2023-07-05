@@ -191,46 +191,45 @@ class EstrategiaController extends Controller
         return $data;
     }
 
-    public function queryResults($strings_query, $type)
+    public function queryResults($strings_query)
     {
 
         $query_ruts = [];
 
+        // return $strings_query;
+
         foreach ($strings_query as $v) {
-            $query_ruts[] = \DB::table($v[0])->whereRaw($v[1])->pluck('rut')->toArray();
+            $query_ruts[] = DB::table($v[0])->whereRaw($v[1])->pluck('rut')->toArray();
         }
+
+        // return array_merge($query_ruts);
 
         $results = [];
-        if($type === 0){
+        $merge = [];
+        $unicos_unicos = [];
 
         for ($i = 0; $i < count($query_ruts); $i++) {
-            $arr_compare = $query_ruts[$i];
-            $arrs = array_slice($query_ruts, 0, $i);
-            $diff = array_diff($arr_compare, ...$arrs );
+
+            $results[] =  $query_ruts[$i];
+
             
 
-            $results[] = [
-                // $iguales
-                'arr' => $i,
-                'unicos' => $diff,
-                'total_r' => ($query_ruts[$i]),
-            ];
-        }
-    }else{
-        for ($i = 0; $i < count($query_ruts); $i++) {
-            $arr_compare = $query_ruts[$i];
-            $arrs = array_slice($query_ruts, 0, $i);
-            $diff = array_diff($arr_compare, ...$arrs );
+
             
 
-            $results[] = [
-                $diff
-                // 'arr' => $i,
-                // 'unicos' => $diff,
-                // 'total_r' => ($query_ruts[$i]),
-            ];
+
+            
+
+
+
         }
-    }
+
+
+        
+
+
+            
+       
 
         return $results;
     }

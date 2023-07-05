@@ -138,7 +138,6 @@ class ClientController extends Controller
         $ch_approve = [];
 
 
-
         $total_cartera = 0;
 
         if (count($datas) > 0) { //Verifico que hay datos
@@ -153,9 +152,11 @@ class ClientController extends Controller
             }
 
             //Realizo la consulta
-            $queryResults = (new EstrategiaController)->queryResults($queries, 1);
+            $queryResults = (new EstrategiaController)->queryResults($queries);
 
             // return $queryResults;
+
+            $c = 0;
 
             // con este recorrido, vamos a asignar algunos valores a el arreglo data por cada resultado individual
             foreach ($datas as $key => $data) {
@@ -173,13 +174,31 @@ class ClientController extends Controller
                 }
 
                 //Asignamos los registros encontrados. 
-                $data->registros_unicos = $queryResults[$key][0];
+                // $data->registros_unicos = $queryResults[$key][0];
+                $data->registros_unicos = $queryResults[$c]['unicos'];
+
+                $data->registros_total = $queryResults[$c]['total_r'];
 
                 //Asignamos el conteo total de registros encontrados como unicos
-                $data->total_registros_unicos = count($queryResults[$key][0]);
+                // $data->total_registros_unicos = count($queryResults[$key][0]);
+                $data->total_registros_unicos = count($queryResults[$c]['unicos']);
 
                 //Asignamos el valor del porcentaje en relacion a la cantidad de registros totales. 
-                $data->porcentaje_registros_unicos = (count($queryResults[$key][0]) / $total_cartera) * 100;
+                // $data->porcentaje_registros_unicos = (count($queryResults[$key][0]) / $total_cartera) * 100;
+                $data->porcentaje_registros_unicos = (count($queryResults[$c]['unicos']) / $total_cartera) * 100;
+
+                if ($c < count($queryResults) - 1) {
+                    $data->repetidos = count($queryResults[$c]['total_r']) - count($queryResults[$c + 1]['total_r']);
+                }
+
+                if ($c < count($queryResults) - 1) {
+                    $c++;
+                }
+
+
+
+
+
 
                 //Verificamos que los canales activos para el cliente no sean nulos
 
@@ -220,7 +239,7 @@ class ClientController extends Controller
             }
         }
 
-        // return $canales;
+        // return $datas;
 
         return view('clients/diseno', compact('client', 'datas', 'config_layout', 'channels', 'estructura', 'ch_approve'));
     }
@@ -255,6 +274,7 @@ class ClientController extends Controller
             ->orderBy('created_at', 'ASC')
             ->get();
 
+        // return $datas;
 
 
 
@@ -262,8 +282,13 @@ class ClientController extends Controller
         $suma_total = 0;
         $porcentaje_total = 0;
 
+        $queries = [];
+        $merge = [];
 
-        if (count($datas) > 0) {
+        $data_counter = count($datas);
+
+
+        if ($data_counter > 0) {
             $total_cartera = DB::select("SELECT COUNT(*) AS total_cartera FROM " . $datas[0]->table_name)[0]->total_cartera;
 
             foreach ($datas as $key => $val) {
@@ -273,42 +298,78 @@ class ClientController extends Controller
                 }
             }
 
-            $queryResults = (new EstrategiaController)->queryResults($queries, 0);
+            $queryResults = (new EstrategiaController)->queryResults($queries);
 
             
+            
+            $merge = [];
+            $unicos_unicos = [];
+
+            for ($i = 0; $i < count($queryResults); $i++) {
+                $tempArray = [];
+                
+                for ($j = 0; $j < count($queryResults); $j++) {
+                    if ($i !== $j) {
+                        $tempArray = array_merge($tempArray, $queryResults[$j]);
+                    }
+                }
+                $merge[$i] = array_unique(array_merge($tempArray));
+
+                
+                
+                $unicos[] = array_diff($queryResults[$i], $merge[$i]);
+                $repetidos[] = array_intersect($queryResults[$i], $merge[$i]);
+
+                $total_unicos[] = count(array_diff($queryResults[$i], $merge[$i]));
+                $total_repetidos[] = count(array_intersect($queryResults[$i], $merge[$i]));
+
+                $percent_cober[] = (count(array_diff($queryResults[$i], $merge[$i]))/$total_cartera)*100;
+                $total_r[] = count($queryResults[$i]);
+
+                $result = [
+                    // 'unicos' =>$unicos,
+                    // 'repetidos' => $repetidos,
+                    'total_unicos' =>$total_unicos,
+                    'total_repetidos' =>$total_repetidos,
+                    'percent_cober' =>$percent_cober,
+                    'total_r' => $total_r
+                ];
+                // $repetidos[] = count(array_merge($merge));
+            }
+
+
+                // return $result;
+
+
+
+
             $c = 0;
-
-            // return $queryResults[2]['unicos'];
-
 
             foreach ($datas as $key => $data) {
                 if (isset($channels[$data->channels])) {
                     $data->canal = $channels[$data->channels];
                 }
 
-                
+
                 if ($data->isDelete === 0) {
-                    $data->registros_unicos = $queryResults[$c]['unicos'];
-                    $data->registros_total = $queryResults[$c]['total_r'];
-                    $data->total_registros_unicos = count($queryResults[$c]['unicos']);
-                    $data->porcentaje_registros_unicos = (count($queryResults[$c]['unicos']) / $total_cartera) * 100;
-                    if($c < count($queryResults)-1){
-                        $data->repetidos = count($queryResults[$c]['total_r'])-count($queryResults[$c+1]['total_r']) < 0 ? 0 : count($queryResults[$c]['total_r'])-count($queryResults[$c+1]['total_r']);
-                    }
+                    $data->registros_unicos = $unicos[$c];
                     
-                    
+                    $data->total_registros_unicos = $total_unicos[$c];
+                    $data->porcentaje_registros_unicos = $percent_cober[$c];
+                    $data->repetidos = $total_repetidos[$c];
+                    // if ($c < count($queryResults) - 1) {
+                    //     $data->repetidos = count($queryResults[$c]['total_r']) - count($queryResults[$c + 1]['total_r']);
+                    // }
                 }
-                if($c < count($queryResults)-1){
+                if ($c < count($queryResults) - 1) {
                     $c++;
                 }
 
-                
+
                 if ($data->isActive === 1 && $data->type === 2) {
                     $suma_total += $data->total_registros_unicos;
                     $porcentaje_total += $data->porcentaje_registros_unicos;
                 }
-                
-                
             }
 
 
@@ -324,7 +385,7 @@ class ClientController extends Controller
 
 
 
-// return $datas;
+        // return $datas;
 
 
         $config_layout = [
