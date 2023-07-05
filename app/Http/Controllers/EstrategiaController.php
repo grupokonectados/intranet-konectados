@@ -7,8 +7,6 @@ use App\Models\Estrategia;
 use App\Models\Estructura;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
-use SebastianBergmann\Diff\Diff;
 
 class EstrategiaController extends Controller
 {
@@ -17,8 +15,8 @@ class EstrategiaController extends Controller
     function __construct()
     {
         $this->middleware('permission:root-list|strategy-list', ['only' => ['index', 'show', 'queryResults']]);
-        $this->middleware('permission:root-create|strategy-create', ['only' => ['create', 'store', 'saveEstrategia']]);
-        $this->middleware('permission:root-edit', ['only' => ['edit', 'update', 'isActive', 'acceptedStrategy']]);
+        $this->middleware('permission:root-create|strategy-create', ['only' => ['create', 'store', 'saveEstrategia', 'acceptedStrategy', 'isActive']]);
+        $this->middleware('permission:root-edit', ['only' => ['edit', 'update',]]);
         $this->middleware('permission:root-delete|strategy-delete', ['only' => ['destroy', 'deleteStrategy', 'stopStrategy']]);
     }
 
