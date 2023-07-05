@@ -3,14 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
-use App\Models\Estrategia;
 use App\Models\Estructura;
-use Illuminate\Contracts\Filesystem\Cloud;
 use Illuminate\Http\Request;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
-use Laravel\Ui\Presets\React;
 
 class ClientController extends Controller
 {
@@ -137,7 +132,6 @@ class ClientController extends Controller
         $queries = [];
         $ch_approve = [];
 
-
         $total_cartera = 0;
 
         if (count($datas) > 0) { //Verifico que hay datos
@@ -149,21 +143,18 @@ class ClientController extends Controller
             foreach ($datas as $key => $val) {
                 $queries[$key][] = $val->table_name;
                 $queries[$key][] = $val->onlyWhere;
+                $queries[$key]['total_cartera'] = $total_cartera;
             }
 
             //Realizo la consulta
             $queryResults = (new EstrategiaController)->queryResults($queries);
 
-            // return $queryResults;
-
-            $c = 0;
+            $c = 0; // inicializo un contador.
 
             // con este recorrido, vamos a asignar algunos valores a el arreglo data por cada resultado individual
             foreach ($datas as $key => $data) {
 
                 // almacenamos los canales que se encuentran en uso.
-
-                $a[] = $data->type;
                 if ($data->type === 0) {
                     $canales[] = $data->channels;
                 }
@@ -174,35 +165,20 @@ class ClientController extends Controller
                 }
 
                 //Asignamos los registros encontrados. 
-                // $data->registros_unicos = $queryResults[$key][0];
-                $data->registros_unicos = $queryResults[$c]['unicos'];
-
-                $data->registros_total = $queryResults[$c]['total_r'];
+                $data->registros_unicos = $queryResults['unicos'][$c];
 
                 //Asignamos el conteo total de registros encontrados como unicos
-                // $data->total_registros_unicos = count($queryResults[$key][0]);
-                $data->total_registros_unicos = count($queryResults[$c]['unicos']);
+                $data->total_registros_unicos = $queryResults['total_unicos'][$c];
 
                 //Asignamos el valor del porcentaje en relacion a la cantidad de registros totales. 
-                // $data->porcentaje_registros_unicos = (count($queryResults[$key][0]) / $total_cartera) * 100;
-                $data->porcentaje_registros_unicos = (count($queryResults[$c]['unicos']) / $total_cartera) * 100;
-
-                if ($c < count($queryResults) - 1) {
-                    $data->repetidos = count($queryResults[$c]['total_r']) - count($queryResults[$c + 1]['total_r']);
-                }
+                $data->porcentaje_registros_unicos = $queryResults['percent_cober'][$c];
+                $data->repetidos = $queryResults['total_repetidos'][$c];
 
                 if ($c < count($queryResults) - 1) {
                     $c++;
                 }
 
-
-
-
-
-
                 //Verificamos que los canales activos para el cliente no sean nulos
-
-
                 if ($client->active_channels != null) {
                     if ($data->type === 0) {
                         // creamos un arreglo con las keys de los canales activos del cliente.
@@ -274,19 +250,12 @@ class ClientController extends Controller
             ->orderBy('created_at', 'ASC')
             ->get();
 
-        // return $datas;
-
-
-
         $total_cartera = 0;
         $suma_total = 0;
         $porcentaje_total = 0;
-
-        $queries = [];
-        $merge = [];
-
         $data_counter = count($datas);
 
+        $queries = [];
 
         if ($data_counter > 0) {
             $total_cartera = DB::select("SELECT COUNT(*) AS total_cartera FROM " . $datas[0]->table_name)[0]->total_cartera;
@@ -295,54 +264,13 @@ class ClientController extends Controller
                 if ($val->isDelete !== 1) {
                     $queries[$key][] = $val->table_name;
                     $queries[$key][] = $val->onlyWhere;
+                    $queries[$key]['total_cartera'] = $total_cartera;
                 }
             }
 
             $queryResults = (new EstrategiaController)->queryResults($queries);
 
-            
-            
-            $merge = [];
-            $unicos_unicos = [];
-
-            for ($i = 0; $i < count($queryResults); $i++) {
-                $tempArray = [];
-                
-                for ($j = 0; $j < count($queryResults); $j++) {
-                    if ($i !== $j) {
-                        $tempArray = array_merge($tempArray, $queryResults[$j]);
-                    }
-                }
-                $merge[$i] = array_unique(array_merge($tempArray));
-
-                
-                
-                $unicos[] = array_diff($queryResults[$i], $merge[$i]);
-                $repetidos[] = array_intersect($queryResults[$i], $merge[$i]);
-
-                $total_unicos[] = count(array_diff($queryResults[$i], $merge[$i]));
-                $total_repetidos[] = count(array_intersect($queryResults[$i], $merge[$i]));
-
-                $percent_cober[] = (count(array_diff($queryResults[$i], $merge[$i]))/$total_cartera)*100;
-                $total_r[] = count($queryResults[$i]);
-
-                $result = [
-                    // 'unicos' =>$unicos,
-                    // 'repetidos' => $repetidos,
-                    'total_unicos' =>$total_unicos,
-                    'total_repetidos' =>$total_repetidos,
-                    'percent_cober' =>$percent_cober,
-                    'total_r' => $total_r
-                ];
-                // $repetidos[] = count(array_merge($merge));
-            }
-
-
-                // return $result;
-
-
-
-
+            // inicializo el contador en 0
             $c = 0;
 
             foreach ($datas as $key => $data) {
@@ -352,15 +280,13 @@ class ClientController extends Controller
 
 
                 if ($data->isDelete === 0) {
-                    $data->registros_unicos = $unicos[$c];
-                    
-                    $data->total_registros_unicos = $total_unicos[$c];
-                    $data->porcentaje_registros_unicos = $percent_cober[$c];
-                    $data->repetidos = $total_repetidos[$c];
-                    // if ($c < count($queryResults) - 1) {
-                    //     $data->repetidos = count($queryResults[$c]['total_r']) - count($queryResults[$c + 1]['total_r']);
-                    // }
+                    $data->registros_unicos = $queryResults['unicos'][$c];
+                    $data->total_registros_unicos = $queryResults['total_unicos'][$c];
+                    $data->porcentaje_registros_unicos = $queryResults['percent_cober'][$c];
+                    $data->repetidos = $queryResults['total_repetidos'][$c];
                 }
+
+                // Verifico el contador y le voy agregando mas vueltas.
                 if ($c < count($queryResults) - 1) {
                     $c++;
                 }
@@ -382,11 +308,6 @@ class ClientController extends Controller
                 $client->active_channels = [];
             }
         }
-
-
-
-        // return $datas;
-
 
         $config_layout = [
             'title-section' => 'Cliente: ' . $client->name,
