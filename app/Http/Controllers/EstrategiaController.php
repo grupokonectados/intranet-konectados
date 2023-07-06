@@ -7,6 +7,8 @@ use App\Models\Estrategia;
 use App\Models\Estructura;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use SebastianBergmann\Diff\Diff;
 
 class EstrategiaController extends Controller
 {
@@ -15,8 +17,8 @@ class EstrategiaController extends Controller
     function __construct()
     {
         $this->middleware('permission:root-list|strategy-list', ['only' => ['index', 'show', 'queryResults']]);
-        $this->middleware('permission:root-create|strategy-create', ['only' => ['create', 'store', 'saveEstrategia', 'acceptedStrategy', 'isActive']]);
-        $this->middleware('permission:root-edit', ['only' => ['edit', 'update',]]);
+        $this->middleware('permission:root-create|strategy-create', ['only' => ['create', 'store', 'saveEstrategia', 'isActive', 'acceptedStrategy']]);
+        $this->middleware('permission:root-edit', ['only' => ['edit', 'update']]);
         $this->middleware('permission:root-delete|strategy-delete', ['only' => ['destroy', 'deleteStrategy', 'stopStrategy']]);
     }
 
@@ -42,9 +44,15 @@ class EstrategiaController extends Controller
             ->join('clients as c', 'c.prefix', '=', 'estrategias.prefix_client')
             ->get();
 
+        $channels = DB::table('canales')->where('isActive', '=', 1)->pluck('name')->toArray();
 
+        foreach ($data as  $d) {
+            if (isset($channels[$d->channels])) {
+                $d->canal = $channels[$d->channels];
+            }
+        }
 
-
+        // return $data;
         /**
          * Metodo API
          */
@@ -191,60 +199,27 @@ class EstrategiaController extends Controller
 
     public function queryResults($strings_query)
     {
-        // Declaracion de arreglos vacios para retorno de resultados. 
+
         $query_ruts = [];
+
+        foreach ($strings_query as $v) {
+            $query_ruts[] = \DB::table($v[0])->whereRaw($v[1])->pluck('rut')->toArray();
+        }
+
         $results = [];
 
-        // Primero realizamos la consulta y el retorno lo hacemos un arreglo. 
-        foreach ($strings_query as $value) {
-            $query_ruts[] = DB::table($value[0])->whereRaw($value[1])->pluck('rut')->toArray();
-        }
-     
-        // Luego recorremos los resultados para hacer los calculos correspondientes.
         for ($i = 0; $i < count($query_ruts); $i++) {
-            $tempArr = []; // Declaramos un array temporal
+            $arr_compare = $query_ruts[$i];
+            $arrs = array_slice($query_ruts, 0, $i);
+            $diff = array_diff($arr_compare, ...$arrs);
 
-            for ($j = 0; $j < count($query_ruts); $j++) {
-                // Verificamos que los index no sean iguales
-                if ($i !== $j) { 
-                    // Generamos un arreglo temporal con el resto de arrays menos el index actual de i
-                    $tempArr = array_merge($tempArr, $query_ruts[$j]);
-                }
-            }
-
-            // Quitamos los ruts duplicados en el merge.
-            $merge[$i] = array_unique(array_merge($tempArr));
-
-            // Extraemos los ruts unicos de cada arreglo.
-            $unicos[] = array_diff($query_ruts[$i], $merge[$i]);
-
-            // Tomamos los Repetidos.
-            $repetidos[] = array_intersect($query_ruts[$i], $merge[$i]);
-
-            //Calculamos el total de unicos.
-            $total_unicos[] = count(array_diff($query_ruts[$i], $merge[$i]));
-
-            //Calculamos el total de repetidos.
-            $total_repetidos[] = count(array_intersect($query_ruts[$i], $merge[$i]));
-
-            // Calculamos el porcentaje de cobertura segun los registros unicos y el total de registros de la cartera.
-            $percent_cober[] = (count(array_diff($query_ruts[$i], $merge[$i])) / $strings_query[$i]['total_cartera']) * 100;
-
-            // Obtenemos el total de registros generados por la consulta.
-            $total_r[] = count($query_ruts[$i]);
-
-
-            // Armamos el retorno de los calculos. 
-            $results = [
-                'unicos' => $unicos,
-                'total_unicos' => $total_unicos,
-                'total_repetidos' => $total_repetidos,
-                'percent_cober' => $percent_cober,
-                'total_r' => $total_r
+            $results[] = [
+                //'arr' => $i,
+                $diff,
+                //'total_r' => count($query_ruts[$i]),
             ];
         }
 
-        // Realizamos el retorno.
         return $results;
     }
 

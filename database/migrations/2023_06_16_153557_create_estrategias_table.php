@@ -25,6 +25,10 @@ return new class extends Migration
             $table->time('activation_time')->nullable();
             $table->date('activation_date')->nullable();
             $table->tinyInteger('type')->default(0);
+
+
+            $table->integer('cobertura')->nullable();
+            $table->integer('total_registros')->nullable();
             $table->timestamps();
         });
     }
