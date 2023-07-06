@@ -45,8 +45,8 @@
                     @foreach ($channels as $k => $value)
                         <tr>
                             <td>
-                                {{ Form::checkbox('channels[' . $k . '][seleccionado]', $k, isset($client->active_channels[$k]) ? true : false, ['class' => 'name form-check-input', 'onchange' => 'enableRadio(this, ' . $k . ')']) }}
-                                <label class="form-check-label">{{ $value }}</label>
+                                {{ Form::checkbox('channels[' . $k . '][seleccionado]', $k, isset($client->active_channels[$k]) ? true : false, ['id' => 'checkbox_'.$k, 'class' => 'name form-check-input', 'onchange' => 'enableRadio(this, ' . $k . ')']) }}
+                                <label for="checkbox_{{ $k }}" class="form-check-label">{{ $value }}</label>
                             </td>
                             <td>
                                 {{ Form::checkbox('channels[' . $k . '][multiple]', $k.'_1', isset($client->active_channels[$k]['multiple']) ? true : false, ['class' => 'name form-check-input', 'id' => 'check_' . $k, 'disabled' => isset($client->active_channels[$k]) ? false : true]) }}

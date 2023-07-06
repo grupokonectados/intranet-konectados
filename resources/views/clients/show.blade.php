@@ -47,10 +47,12 @@
                        {{ $data->canal }}
                     </td>
                     <td class="text-center align-middle">
-                        {{ $data->porcentaje_registros_unicos }}%
+                        {{ number_format($data->cobertura, 2, ',', '.') }}%
+                        
                     </td>
                     <td class="text-center align-middle">
-                        {{ $data->total_registros_unicos }}
+                        {{ number_format($data->registros_unicos, 0, ',', '.') }}
+                        
                     </td>
                     <td class="align-middle">
                         @if ($data->repeatUsers == 1)
@@ -66,7 +68,8 @@
                         @endif
                     </td>
                     <td class="text-center align-middle">
-                        {{ $data->repetidos ?? 0 }}
+                        {{ number_format($data->registros_repetidos, 0, ',', '.') }}
+                        
                         
                     </td>
                     <td>{{ $data->onlyWhere }}</td>
@@ -97,16 +100,15 @@
                 @endif
             @endforeach
             </tbody>
-            @if ($suma_total > 0)
-            <tfoot>
-                <tr>
-                    <td></td>
-                    <td class="text-center align-middle">{{ $porcentaje_total }}%</td>
-                    <td class="text-center align-middle">{{ $suma_total }}</td>
-                    <td colspan="8"></td>
-
-                </tr>
-            </tfoot>
+            @if (isset($suma_total))
+                <tfoot>
+                    <tr>
+                        <td></td>
+                        <th class="text-center">{{ number_format($porcentaje_total, 2, ',', '.') }}%</th>
+                        <th class="text-center">{{ number_format($suma_total, 0, ',', '.') }}</th>
+                        <td colspan="8"></td>
+                    </tr>
+                </tfoot>
             @endif
             
         </table>

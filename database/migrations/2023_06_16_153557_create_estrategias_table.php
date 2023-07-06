@@ -13,22 +13,21 @@ return new class extends Migration
     {
         Schema::create('estrategias', function (Blueprint $table) {
             $table->id();
-            $table->text('query')->nullable();
-            $table->text('onlyWhere')->nullable();
-            $table->integer('channels')->nullable();
-            $table->text('table_name')->nullable();
-            $table->text('query_description')->nullable();
-            $table->string('prefix_client')->nullable();
+            $table->string('prefix_client');
+            $table->integer('channels');
+            $table->string('table_name');
+            $table->string('onlyWhere');
             $table->tinyInteger('repeatUsers')->default(0);
+            $table->date('activation_date')->nullable();
+            $table->time('activation_time')->nullable();
+            $table->integer('registros_unicos')->nullable();
+            $table->integer('registros_repetidos')->nullable();
+            $table->integer('total_registros')->nullable();
+            $table->double('cobertura', 8, 2)->nullable();
+            $table->json('registros')->nullable();
+            $table->tinyInteger('type')->default(0);
             $table->tinyInteger('isActive')->default(0);
             $table->tinyInteger('isDelete')->default(0);
-            $table->time('activation_time')->nullable();
-            $table->date('activation_date')->nullable();
-            $table->tinyInteger('type')->default(0);
-
-
-            $table->integer('cobertura')->nullable();
-            $table->integer('total_registros')->nullable();
             $table->timestamps();
         });
     }

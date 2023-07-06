@@ -83,22 +83,34 @@ class EstrategiaController extends Controller
     }
 
 
+
+
+
     public function saveEstrategia(Request $request)
     {
 
         // return $request;
 
         $saveQuery = new Estrategia();
-        $saveQuery->query = $request->query_text;
         $saveQuery->onlyWhere = $request->onlyWhere;
         $saveQuery->channels = $request->channels;
         $saveQuery->table_name = $request->table_name;
-        $saveQuery->query_description = $request->query_description;
         $saveQuery->prefix_client = $request->prefix;
-        $saveQuery->repeatUsers = $request->repeatUsers;
 
-        // return $saveQuery;
+        $saveQuery->registros_unicos = $request->unic;
+        $saveQuery->registros_repetidos = $request->repe;
+        $saveQuery->total_registros = $request->total;
+        $saveQuery->cobertura = $request->cober;
+        $saveQuery->type = 1;
 
+        $saveQuery->registros = json_encode(json_decode($request['registros'], true));
+
+
+        if (isset($request->repeatUsers)) {
+            $saveQuery->repeatUsers = $request->repeatUsers;
+        } else {
+            $saveQuery->repeatUsers = 0;
+        }
 
         $saveQuery->save();
 
@@ -134,92 +146,179 @@ class EstrategiaController extends Controller
     }
 
 
-    public function runQuery(Request $request)
-    {
-
-        // return $request; //Verificar que datos llegan. 
-
-        // Aqui se prueba la consulta y se pueden ver los resultados segun el filtro puesto
-        $result = \DB::select($request['query']);
-
-        // Extraemos los nombres de las columnas segun la el cliente que se vaya a utilizar        
-        $table = Estructura::select('COLUMN_NAME')->where('TABLE_NAME', '=', $request['table_name'])->get();
-
-
-
-        if (count($result) > 0) {
-
-            // se cuenta el total de hallados en la consulta anterior
-            $counter = \DB::select("select count(*) as counter from " . $request['table_name'] . " where " . $request['where']);
-
-            //Calculos de factibilidad dependiendo del canal *PREGUNTAR ESTE CASO* 
-            switch ($request['channel']) {
-                case 1:
-                    $factibilidad = \DB::select("select count(movil1) as cc from " . $request['table_name'] . " where " . $request['where'] . " and LENGTH(movil1) != 0");
-                    break;
-                case 2:
-                    $factibilidad = \DB::select("select count(fijo1) as cc from " . $request['table_name'] . " where " . $request['where'] . " and LENGTH(fijo1) != 0");
-                    break;
-                case 3:
-                    $factibilidad = \DB::select("select count(email1) as cc from " . $request['table_name'] . " where " . $request['where'] . " and LENGTH(email1) != 0");
-                    break;
-            }
-
-            //En base al contador total se le resta el contador segun el canal / (cc = counter channels)
-            $resto = $counter[0]->counter - $factibilidad[0]->cc;
-            // Se calcula el procentaje y se formatea
-            // number_format(int or float, numero de decimales, coma para los decimales, punto para los miles)
-            $porcentaje = number_format(($counter[0]->counter / 10000) * 100, 2, ',', '.');
-
-            return [
-                'contador' => $counter[0]->counter,  // Muestro el contador
-                'result' => $result, // El resultado de la consulta 
-                'table' => $table, // Los nombres de las columnas
-                'resto' => $resto, // la resta entre la factibilidad y el contador
-                'porcentaje' => $porcentaje //el procentaje de factibilidad
-            ];
-        } else {
-            return [
-                'result' => 0, // El resultado de la consulta 
-                'message' => 'No hay nada que mostrar'
-            ];
-        }
-
-        return $result;
-    }
-
-
     public function isActive(Request $request)
     {
 
         $dataCompare = Estrategia::where('isActive', '=', 1)->get();
+
+
+
         $data = Estrategia::where('id', '=', $request->id)->update(['isActive' => 1, 'type' => 2]);
         return $data;
     }
 
-    public function queryResults($strings_query)
+
+
+    public function probarStrategy(Request $request)
     {
 
-        $query_ruts = [];
 
-        foreach ($strings_query as $v) {
-            $query_ruts[] = \DB::table($v[0])->whereRaw($v[1])->pluck('rut')->toArray();
+
+        $datas = DB::table('estrategias')
+            ->select('id', 'onlyWhere', 'table_name', 'channels', 'isActive', 'isDelete', 'type', 'repeatUsers', 'registros')
+            ->where('prefix_client', '=', $request->prefix)
+            ->whereIn('isActive', [0, 1])
+            ->whereIn('type', [0, 1, 2])
+            ->where('isDelete', '=', 0)
+            ->orderBy('isActive', 'DESC')
+            ->orderBy('type', 'ASC')
+            ->orderBy('created_at', 'ASC')
+            ->get();
+
+
+        $queries = [];
+
+        foreach ($datas as $key => $val) {
+            $queries[$key][] = $val->table_name;
+            $queries[$key][] = $val->onlyWhere;
+            $queries[$key][] = $val->type;
+            $queries[$key]['registros'] = json_decode($val->registros, true);
+            $queries[$key]['total_cartera'] = 10000;
         }
 
+        $data_counter = count($datas);
+
+        $queries[$data_counter][] = $request['table_name'];
+        $queries[$data_counter][] = $request['query'];
+        $queries[$data_counter][] = 0;
+        $queries[$data_counter]['total_cartera'] = 10000;
+
+
+        // return $queries;
+
+
+        return $this->queryResults($queries);
+    }
+
+    public function queryResults($strings_query)
+    {
+        $query_ruts = [];
+        $query_ruts_existe = [];
         $results = [];
 
-        for ($i = 0; $i < count($query_ruts); $i++) {
-            $arr_compare = $query_ruts[$i];
-            $arrs = array_slice($query_ruts, 0, $i);
-            $diff = array_diff($arr_compare, ...$arrs);
 
-            $results[] = [
-                //'arr' => $i,
-                $diff,
-                //'total_r' => count($query_ruts[$i]),
-            ];
+
+        // return $strings_query;
+
+
+
+
+
+
+        foreach ($strings_query as $value) {
+
+            if ($value[2] === 2 || $value[2] === 1) {
+                $query_ruts[] = $value['registros'];
+            } else {
+                $query_ruts[] = DB::table($value[0])->whereRaw($value[1])->pluck('rut')->toArray();
+            }
         }
 
+
+        // return $strings_query[1][2];
+
+
+        $array = array();
+        for ($i = 0; $i < count($query_ruts); $i++) {
+
+            if ($strings_query[$i][2] === 1 || $strings_query[$i][2] === 2) {
+                $array[$i]['unicos'] = $query_ruts[$i];
+                $array[$i]['repetidos'] = 0;
+            } else {
+                $tempArr = [];
+                for ($j = 0; $j < count($query_ruts); $j++) {
+                    if ($i !== $j) {
+                        $tempArr = array_merge($tempArr, $query_ruts[$j]);
+                    }
+                }
+
+                $merge[$i] = array_unique(array_merge($tempArr));
+
+                $array[$i]['unicos'] = array_filter($query_ruts[$i], function ($valor) use ($merge, $i) {
+                    return !in_array($valor, $merge[$i]);
+                });
+
+                $array[$i]['repetidos'] = array_filter($query_ruts[$i], function ($valor) use ($merge, $i) {
+                    return in_array($valor, $merge[$i]);
+                });
+            }
+
+            $total_unicos[$i] = count($array[$i]['unicos']);
+
+            if($array[$i]['repetidos'] != 0){
+                $total_repetidos[$i] = count($array[$i]['repetidos']);
+            }else{
+                $total_repetidos[$i] = $array[$i]['repetidos'];
+            }
+            
+
+            $percent_cober[$i] = ($total_unicos[$i]/10000)*100;
+            $total_r[$i] = count($query_ruts[$i]);
+
+            $results[$i] = [
+                        'unicos' => array_values($array[$i]['unicos']),
+                        'total_unicos' => $total_unicos[$i],
+                        'total_repetidos' => $total_repetidos[$i],
+                        'percent_cober' => $percent_cober[$i],
+                        'total_r' => $total_r[$i],
+                    ];
+
+
+
+        }
+
+        return $results;
+
+
+
+
+
+
+
+
+
+        // for ($i = 0; $i < count($query_ruts); $i++) {
+        //     $tempArr = []; 
+        //     for ($j = 0; $j < count($query_ruts); $j++) {
+        //         if ($i !== $j) {
+        //             $tempArr = array_merge($tempArr, $query_ruts[$j]);
+        //         }
+        //     }
+
+        //     $merge[$i] = array_unique(array_merge($tempArr));
+
+        //     $unicos[] = array_diff($query_ruts[$i], $merge[$i]);
+
+        //     $repetidos[] = array_intersect($query_ruts[$i], $merge[$i]);
+
+        //     $total_unicos[] = count(array_diff($query_ruts[$i], $merge[$i]));
+
+        //     $total_repetidos[] = count(array_intersect($query_ruts[$i], $merge[$i]));
+
+        //     $percent_cober[] = (count(array_diff($query_ruts[$i], $merge[$i])) / $strings_query[$i]['total_cartera']) * 100;
+
+        //     $total_r[] = count($query_ruts[$i]);
+
+        //     $results = [
+        //         'unicos' => $unicos,
+        //         'total_unicos' => $total_unicos,
+        //         'total_repetidos' => $total_repetidos,
+        //         'percent_cober' => $percent_cober,
+        //         'total_r' => $total_r,
+        //         'criterio' => $strings_query[$i]
+        //     ];
+        // }
+        // Realizamos el retorno.
         return $results;
     }
 
@@ -346,6 +445,7 @@ class EstrategiaController extends Controller
         $estrategia = Estrategia::find($id);
         $estrategia->isDelete = 1;
         $estrategia->isActive = 0;
+        $estrategia->type = 3;
         $estrategia->save();
         return back();
     }

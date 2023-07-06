@@ -57,4 +57,8 @@ Route::group(['middleware' => ['auth']], function () {
     route::get('/estrategia/delete-strategy/{id}', [EstrategiaController::class, 'deleteStrategy'])->name('estrategia.delete-strategy');
     route::post('/estrategia/accepted-strategy', [EstrategiaController::class, 'acceptedStrategy'])->name('estrategia.accepted-strategy');
     route::get('/estrategia/stop-strategy/{id}', [EstrategiaController::class, 'stopStrategy'])->name('estrategia.stop-strategy');
+
+    //Probar la estrategia antes 
+
+    route::post('/estrategia/probar-strategy', [EstrategiaController::class, 'probarStrategy'])->name('estrategia.probar-strategy');
 });

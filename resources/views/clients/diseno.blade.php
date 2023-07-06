@@ -23,21 +23,20 @@
 
     <x-cards size='4' xtrasclass='mb-3' header="Canales Permitidos" titlecolor='primary'>
         <div class="row">
-            @if(count($client->active_channels) >0)
-            @foreach ($channels as $key => $val)
-                @if (isset($client->active_channels[$key]))
-                    <div class="col-4">
-                        <i class="fas fa-check text-success"></i>&nbsp;
-                        {{ $val }}
-                    </div>
-                
-                @endif
-            @endforeach
+            @if (count($client->active_channels) > 0)
+                @foreach ($channels as $key => $val)
+                    @if (isset($client->active_channels[$key]))
+                        <div class="col-4">
+                            <i class="fas fa-check text-success"></i>&nbsp;
+                            {{ $val }}
+                        </div>
+                    @endif
+                @endforeach
             @else
                 <div class="alert alert-danger alert-dismissible show mb-0" role="alert">
                     No tiene canales Activos.
                 </div>
-                @endif
+            @endif
 
         </div>
     </x-cards>
@@ -63,86 +62,70 @@
             </thead>
             <tbody class="align-middle">
                 @foreach ($datas as $k => $data)
-                @if($data->isActive === 0)
-                    <tr>
-                        <td class="text-center align-middle">
-                            {{ $data->canal }}
-                        </td>
-                        <td class="text-center align-middle">{{ $data->porcentaje_registros_unicos }}%</td>
-                        <td class="text-center align-middle">{{ $data->total_registros_unicos }}</td>
-                        <td class="text-center align-middle">
-                            @if ($data->repeatUsers == 1)
-                                <div class="form-check form-switch align-items-stretch">
-                                    <label for="form-check-label">Si</label>
-                                    <input class="form-check-input ml-0" disabled checked type="checkbox">
-                                </div>
-                            @else
-                                <div class="form-check form-switch align-items-stretch">
-                                    <label for="form-check-label">No</label>
-                                    <input class="form-check-input ml-0" disabled type="checkbox">
-                                </div>
-                            @endif
-                        </td>
-                        <td class="text-center align-middle">
-                            @if ($data->repeatUsers == 1)
-                                {{ count($data->repetidos) }}
-                            @else
-                                0
-                            @endif
-                        </td>
-                        <td class="align-middle">{{ $data->onlyWhere }}</td>
-                        <td class="text-center align-middle">
-                            <div class="btn-group" role="group" aria-label="Basic example">
+                    @if ($data->isActive === 0)
+                        <tr>
+                            <td class="text-center align-middle">
+                                {{ $data->canal }}
+                            </td>
+                            <td class="text-center align-middle">{{ $data->cobertura }}%</td>
+                            <td class="text-center align-middle">{{ $data->registros_unicos }}</td>
+                            <td class="text-center align-middle">
+                                @if ($data->repeatUsers == 1)
+                                    <div class="form-check form-switch align-items-stretch">
+                                        <label for="form-check-label">Si</label>
+                                        <input class="form-check-input ml-0" disabled checked type="checkbox">
+                                    </div>
+                                @else
+                                    <div class="form-check form-switch align-items-stretch">
+                                        <label for="form-check-label">No</label>
+                                        <input class="form-check-input ml-0" disabled type="checkbox">
+                                    </div>
+                                @endif
+                            </td>
+                            <td class="text-center align-middle">
+                               
+                                    {{ $data->registros_repetidos}}        
+                            </td>
+                            <td class="align-middle">{{ $data->onlyWhere }}</td>
+                            <td class="text-center align-middle">
+                                <div class="btn-group" role="group" aria-label="Basic example">
 
-                                <x-btn-standar type='a' title='Aceptar' color="success" sm='sm'
-                                    icon='check-circle' onclick="acceptedStrategy({{ $data->id }})" />
+                                    <x-btn-standar type='a' title='Aceptar' color="success" sm='sm'
+                                        icon='check-circle' onclick="acceptedStrategy({{ $data->id }})" />
 
-                                {{-- <a class="btn btn-warning btn-sm">
+                                    {{-- <a class="btn btn-warning btn-sm">
                             <i class="fas fa-edit"></i>
                         </a> --}}
 
-                                <x-btn-standar type='a' title='Eliminar' color="danger" sm='sm'
-                                    icon='times-circle' extraclass='eliminar-estrategia'
-                                    href="{{ route('estrategia.delete-strategy', $data->id) }}" />
+                                    <x-btn-standar type='a' title='Eliminar' color="danger" sm='sm'
+                                        icon='times-circle' extraclass='eliminar-estrategia'
+                                        href="{{ route('estrategia.delete-strategy', $data->id) }}" />
 
 
-                            </div>
-                        </td>
-                    </tr>
+                                </div>
+                            </td>
+                        </tr>
                     @endif
                 @endforeach
             </tbody>
         </table>
     </x-cards>
 
-    <x-cards xtrasclass='mt-3' header="Nueva estrategia" titlecolor='success' >
+    <x-cards xtrasclass='mt-3' header="Nueva estrategia" titlecolor='success'>
         <div class="row">
-            <div class="col-5">
-                <table class="table table-bordered">
-                    <tr>
-                        <th width=45% class="text-uppercase  align-middle" scope="col">Cliente</th>
-                        <th class="text-uppercase align-middle" scope="col">{{ $client->name }}
-                        </th>
-                    </tr>
+            <div class="col-12">
+                <table class="table table-borderless">
                     {!! Form::open([
                         'route' => 'estrategia.save-estrategia',
                         'method' => 'POST',
                         'id' => 'myForm',
                     ]) !!}
-                    <tr>
-                        <th class="text-uppercase  align-middle" scope="col">¿Desea que para la estrategia se
-                            repitan los usuarios?</th>
-                        <th class="text-uppercase text-center align-middle" scope="col">
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" id="check" type="checkbox">
-                            </div>
-                        </th>
-                    </tr>
 
                     <tr>
-                        <th class="text-uppercase align-middle" scope="col">Canales</th>
+                        <th class="text-uppercase align-middle" scope="col">Canal: </th>
                         <th>
-                            <select class="form-select" name="channels" id="canalsito">
+                            <select onchange='aceptaRepetidos(this.value)' class="form-select" name="channels"
+                                id="canalsito">
                                 <option value="">Seleccione</option>
                                 @for ($i = 0; $i < count($channels); $i++)
                                     @if (in_array($i, $ch_approve))
@@ -155,56 +138,74 @@
                         </th>
                     </tr>
                     <tr>
+                        <th width='25%' class="text-uppercase  align-middle" scope="col">¿Desea que para la estrategia
+                            se
+                            repitan los usuarios?</th>
                         <th class="text-uppercase align-middle" scope="col">
-                            Descripcion
-                        </th>
-                        <th>
-                            <textarea class="form-control" id='query_description' name='query_description'></textarea>
+                            {{ Form::checkbox('repeatUsers', 1, '', ['disabled' => 'true', 'id' => 'check', 'class' => 'name form-check-input']) }}
+                            <label class="form-check-label">Si</label>
                         </th>
                     </tr>
-                    <tr>
-                        <th colspan="2" class="text-uppercase align-middle" scope="col">
-                            <textarea class="form-control" id="showQue" name="showQue" disabled></textarea>
-                            <input type="hidden" name='query_text' id='query_text'>
-                            <input type="hidden" name='prefix' id='prefix' value={{ $client->prefix }}>
-                            <input type="hidden" name='onlyWhere' id='onlyWhere'>
-                            <input type="hidden" name='table_name' id='table_name2'>
-                            <input type="hidden" name='repeatUsers' id='repeatUsers'>
-                            <input type="hidden" name='location' value='diseno'>
-                        </th>
-                    </tr>
-                    <tr>
-                        <th colspan="2" class="text-uppercase align-middle" scope="col">
-                            <button class="btn btn-success btn-sm mb-0" type="submit">
-                                <i class="fas fa-save"></i>
-                                Guardar</button>
-                        </th>
-                    </tr>
-                    {!! Form::close() !!}
-                </table>
-            </div>
-            <div class="col-7">
-                <table class="table table-bordered">
+
+
                     <tr>
                         <th class="text-uppercase align-middle" scope="col">
-                            <button class="btn btn-success btn-sm" id='btnNuevo'
+                            <a type="button" class="btn btn-success btn-sm" id='btnNuevo'
                                 onclick="addRow('{{ $client->prefix }}')">
                                 <i class="fas fa-plus-circle"></i>
                                 Agregar nuevo campo
-                            </button>
+                            </a>
                         </th>
                     </tr>
                 </table>
-
                 <table id="myTable" class="table-sm table table-bordered">
                     <thead>
                         <tr>
                             <th class="align-middle text-center" width='3%'>Eliminar</th>
-                            <th class="align-middle text-center" width='20%'>Operador</th>
                             <th class="align-middle text-center" width='15%'>Campo</th>
+                            <th class="align-middle text-center" width='20%'>Operador</th>
                             <th class="align-middle text-center">Valor</th>
+
                         </tr>
                     </thead>
+                </table>
+
+                <table class="table table-borderless">
+                    <tr>
+                        <th colspan="2" class="text-uppercase align-middle" scope="col">
+                            <textarea class="form-control" id="showQue" name="showQue" disabled></textarea>
+                            <input type="hidden" name='prefix' id='prefix' value={{ $client->prefix }}>
+                            <input type="hidden" name='onlyWhere' id='onlyWhere'>
+                            <input type="hidden" name='table_name' id='table_name2'>
+                            <input type="hidden" name='location' value='diseno'>
+
+                            <input type="hidden" id="cober" name='cober'>
+
+                            <input type="hidden" id="unic" name='unic'>
+
+                            <input type="hidden" id="repe" name='repe'>
+                            <input type="hidden" id="tota" name='total'>
+
+                            <input type="hidden" id="registros" name='registros'>
+                        </th>
+                    </tr>
+                    <tr>
+                        <th class="text-uppercase align-middle" scope="col">
+                            <div class="btn-group" role="group">
+                                <x-btn-standar type='submit' name='Guardar' extraclass="mb-0" title='Guardar'
+                                    color="success" sm='sm' icon='save' />
+                                <x-btn-standar type='a' name='Probar' title='Probar' extraclass="mb-0"
+                                    color="primary" sm='sm' icon='play-circle' onclick="probarConsulta()" />
+                            </div>
+                        </th>
+                        <th>
+                            <span id='cobertura'></span>
+                            <span id='unicos'></span>
+                            <span id='repetidos'></span>
+                            <span id="total"></span>
+                        </th>
+                    </tr>
+                    {!! Form::close() !!}
                 </table>
             </div>
         </div>
@@ -218,7 +219,7 @@
     <script>
         const csrfToken = "{{ csrf_token() }}";
         var i = 0;
-        
+
         document.getElementById("myForm").addEventListener('submit', validar);
 
 
@@ -270,6 +271,71 @@
             31: 'Vitacura'
         }
 
+
+        function probarConsulta() {
+
+            var query = document.getElementById('showQue').value;
+            var prefix = document.getElementById('prefix').value;
+            var table_name = document.getElementById('table_name2').value;
+
+
+            fetch('{{ route('estrategia.probar-strategy') }}', {
+                method: 'POST',
+                body: JSON.stringify({
+                    query: query,
+                    prefix: prefix,
+                    table_name: table_name
+                }),
+                headers: {
+                    'content-type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                }
+            }).then(response => {
+                return response.json();
+            }).then(data => {
+                
+                posicion = data.length - 1
+
+                console.log(data)
+
+                document.getElementById('cobertura').innerHTML = `Cobertura: ${data[posicion].percent_cober.toFixed(2)}`
+                document.getElementById('unicos').innerHTML = `Unicos: ${data[posicion].total_unicos}`
+                document.getElementById('repetidos').innerHTML = `Repetidos: ${data[posicion].total_repetidos}`
+                document.getElementById('total').innerHTML = `Registros Encontrados: ${data[posicion].total_r}`
+
+                document.getElementById('cober').value = data[posicion].percent_cober.toFixed(2)
+                document.getElementById('unic').value = data[posicion].total_unicos
+                document.getElementById('repe').value = data[posicion].total_repetidos
+                document.getElementById('tota').value = data[posicion].total_r
+                document.getElementById('registros').value = JSON.stringify(data[posicion].unicos)
+
+
+
+                
+                
+                
+                
+
+            });
+
+
+
+
+
+        }
+
+
+        function aceptaRepetidos(value) {
+
+            var canales_cliente = @json($client->active_channels)
+
+            if ('multiple' in canales_cliente[value]) {
+                document.getElementById("check").disabled = false;
+            } else {
+                document.getElementById("check").disabled = true;
+            }
+        }
+
         function validar(e) {
             const valoresElements = document.querySelectorAll('.valores');
             if (document.getElementById("canalsito").value === '') {
@@ -277,11 +343,7 @@
                 document.getElementById("canalsito").focus()
                 e.preventDefault();
                 return false
-            } else if (document.getElementById("query_description").value === '') {
-                alert('Debe ingresar una descripcion para la estrategia.');
-                document.getElementById("query_description").focus()
-                e.preventDefault();
-                return false
+
             } else if (valoresElements.length === 0) {
                 alert('debe haber al menos una consultar para generar la estrategia.');
                 document.getElementById("btnNuevo").focus()
@@ -308,7 +370,6 @@
             }).then(data => {
                 // Recargar la página actual
 
-                // console.log(data)
                 if (data.result === 1) {
                     document.querySelector('.alert').classList.remove('d-none');
                     document.querySelector('.alert').classList.add('alert-success')
@@ -352,10 +413,10 @@
                     <a onclick="borrarRow(this)" class="btn btn-sm btn-block mb-0 btn-danger mb-0"><i class="fas fa-minus-circle"></i></a>`;
                 cell2.className = "text-center align-middle bg-danger p-0"
 
-                cell4.innerHTML = lines
-                cell4.id = "td_" + i
+                cell3.innerHTML = lines
+                cell3.id = "td_" + i
 
-                cell3.innerHTML = `
+                cell4.innerHTML = `
                     <select class='form-select form-select-sm operator' id='operator_${i}'>
                         <option>Seleccione</option>
                         <option value="=" > = </option>
@@ -387,7 +448,6 @@
 
             valoresElements.forEach((element, i) => {
 
-                console.log(element.value)
                 if (element.name === 'monto_min' && element.value !== '') { //Verificamos el campo monto
                     const montoMin = parseFloat(element.value);
                     const montoMax = parseFloat(document.querySelector('[name="monto_max"]').value);
@@ -419,15 +479,11 @@
                 }
             });
 
-            document.getElementById('check').checked === true ? document.getElementById('repeatUsers').value = 1 : document
-                .getElementById('repeatUsers').value = 0
             query = queryParts.join(' and '); //añadimos los and a la consulta
             var query2 = 'select * from ' + name_table.value + ' where ' + queryParts.join(' and ');
             document.getElementById('showQue').value = query; // muestro en el textarea el codigo
             document.getElementById('onlyWhere').value = query; // muestro en el textarea el codigo
             document.getElementById('table_name2').value = name_table.value; // muestro en el textarea el codigo
-            document.getElementById('query_text').value =
-                query2; // asigno a un hidden en el form el valor de la query para poder guardarlo
         }
 
         function selectInputType(value, i, e, op = '') {
@@ -542,11 +598,9 @@
                 if (document.getElementById('td2_' + i)) {
                     document.getElementById('td2_' + i).innerHTML = ''
                     document.getElementById('td2_' + i).appendChild(nuevoInput)
-                    console.log(document.getElementById('td2_' + i))
                 } else {
                     nuevoTd.appendChild(nuevoInput);
                     ultimaFila.appendChild(nuevoTd);
-                    console.log(document.getElementById('td2_' + i))
                 }
 
                 const campos = document.querySelectorAll(".limite-input");
