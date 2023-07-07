@@ -119,9 +119,21 @@ class UserController extends Controller
             'breads' => 'Configuracion > Usuarios > Editar: ' . $user->name,
             'btn-back' => 'users.index',
             'btn-edit' => 'users.edit',
+            'btn-password-reset' => 'users.reset-password',
         ];
 
         return view('config.users.edit', compact('user', 'roles', 'userRole', 'config_layout', 'clients'));
+    }
+
+
+
+    public function resetPassword($id){
+
+        $user = User::find($id);
+        $user->password = Hash::make(12345678);
+        $user->password_changed_at = null;
+        $user->save();
+        return back();
     }
 
     public function update(Request $request, $id)

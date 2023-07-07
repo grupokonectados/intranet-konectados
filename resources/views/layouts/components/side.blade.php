@@ -18,11 +18,11 @@
                 @endcan
                 
                 @can('root-list')
-                <div class="sb-sidenav-menu-heading">Estrategias</div>
+                {{-- <div class="sb-sidenav-menu-heading">Estrategias</div>
                 <a class="nav-link" href="{{ route('estrategia.index') }}">
                     <div class="sb-nav-link-icon"><i class="fas fa-chart-area"></i></div>
                     Estrategias
-                </a>
+                </a> --}}
 
 
 

@@ -29,7 +29,7 @@
 
         {{-- PARA METODOS API --}}
 
-        <tbody>
+        <tbody class="text-center">
             @if(count($data) > 0)
             @foreach ($data as $d)
                 <tr style="cursor: pointer" onclick="window.location='/clients/{{ $d['id'] }}';">

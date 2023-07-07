@@ -8,12 +8,18 @@
         href="{{ route($config_layout['btn-back']) }}" />
 @endsection
 
+@section('others-btn')
+<x-btn-standar type='a' name='Restaurar Contraseña' title='Restaurar Contraseña' color="danger" sm='sm' icon='sync'
+        href="{{ route($config_layout['btn-password-reset'], $user->id) }}" />
+@endsection
+
+
 
 @section('content')
     {{-- @dd($ve_clientes) --}}
     @if (count($errors) > 0)
         <div class="alert alert-danger">
-            <strong>Whoops!</strong> Something went wrong.<br><br>
+            <strong>Whoops!</strong> Verifica los errores.<br><br>
             <ul>
                 @foreach ($errors->all() as $error)
                     <li>{{ $error }}</li>
@@ -27,32 +33,20 @@
         <div class="row">
             <div class="col-6 mb-3">
                 <div class="form-group">
-                    <strong>Name:</strong>
-                    {!! Form::text('name', null, ['placeholder' => 'Name', 'class' => 'form-control']) !!}
+                    <strong>Nombre y Apellido:</strong>
+                    {!! Form::text('name', null, ['placeholder' => 'Name', 'class' => 'form-control form-control-sm']) !!}
                 </div>
             </div>
             <div class="col-6 mb-3">
                 <div class="form-group">
-                    <strong>Email:</strong>
-                    {!! Form::text('email', null, ['placeholder' => 'Email', 'class' => 'form-control']) !!}
+                    <strong>Correo Electronico:</strong>
+                    {!! Form::text('email', null, ['placeholder' => 'Email', 'class' => 'form-control form-control-sm']) !!}
                 </div>
             </div>
             <div class="col-6 mb-3">
                 <div class="form-group">
-                    <strong>Password:</strong>
-                    {!! Form::password('password', ['placeholder' => 'Password', 'class' => 'form-control']) !!}
-                </div>
-            </div>
-            <div class="col-6 mb-3">
-                <div class="form-group">
-                    <strong>Confirm Password:</strong>
-                    {!! Form::password('confirm-password', ['placeholder' => 'Confirm Password', 'class' => 'form-control']) !!}
-                </div>
-            </div>
-            <div class="col-6 mb-3">
-                <div class="form-group">
-                    <strong>Role:</strong>
-                    {!! Form::select('roles[]', $roles, $userRole, ['class' => 'form-control', 'multiple']) !!}
+                    <strong>Permisos:</strong>
+                    {!! Form::select('roles[]', $roles, $userRole, ['class' => 'form-select form-select-sm', 'multiple']) !!}
                 </div>
             </div>
             <div class="col-6 mb-3">
@@ -62,13 +56,11 @@
                         @for ($i = 0; $i < count($clients); $i++)
                             @if (in_array($clients[$i]->id, $user->ve_clientes))
                                 <div class="col-4">
-
                                     {{ Form::checkbox('ve_clientes[]', $clients[$i]->id, true, ['class' => 'form-check-input']) }}
                                     <label class="form-check-label">{{ $clients[$i]->name }}</label>
                                 </div>
                             @else
                                 <div class="col-4">
-
                                     {{ Form::checkbox('ve_clientes[]', $clients[$i]->id, false, ['class' => 'form-check-input']) }}
                                     <label class="form-check-label">{{ $clients[$i]->name }}</label>
                                 </div>

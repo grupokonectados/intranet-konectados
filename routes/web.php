@@ -79,6 +79,7 @@ Route::group(['middleware' => ['auth']], function () {
     //Usuarios
 
     Route::resource('/mantenice/users', UserController::class);
+    route::get('/mantenice/users/reset-password/{id}', [UserController::class, 'resetPassword'])->name('users.reset-password');
     });
 
     

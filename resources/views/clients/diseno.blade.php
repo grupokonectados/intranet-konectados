@@ -55,7 +55,7 @@
                 <th width='7%' class="align-middle ">Canal</th>
                 <th class="align-middle" width='3%'>Cobertura</th>
                 <th class="align-middle" width='3%'>Registros</th>
-                <th width='7%'>¿Acepta repetidos?</th>
+                <th width='15%'>¿Acepta repetidos?</th>
                 <th class="align-middle" width='3%'>Repetidos</th>
                 <th class="align-middle">Criterio</th>
                 <th width='3%' class="align-middle">Acciones</th>
@@ -161,12 +161,12 @@
                     </tr>
                 </table>
                 <table id="myTable" class="table-sm table table-bordered">
-                    <thead>
+                    <thead class="text-center">
                         <tr>
-                            <th class="align-middle text-center" width='3%'>Eliminar</th>
-                            <th class="align-middle text-center" width='15%'>Campo</th>
-                            <th class="align-middle text-center" width='20%'>Operador</th>
-                            <th class="align-middle text-center">Valor</th>
+                            <th class="align-middle" width='3%'>Eliminar</th>
+                            <th class="align-middle" width='15%'>Campo</th>
+                            <th class="align-middle" width='20%'>Operador</th>
+                            <th class="align-middle">Valor</th>
 
                         </tr>
                     </thead>
@@ -180,14 +180,10 @@
                             <input type="hidden" name='onlyWhere' id='onlyWhere'>
                             <input type="hidden" name='table_name' id='table_name2'>
                             <input type="hidden" name='location' value='diseno'>
-
                             <input type="hidden" id="cober" name='cober'>
-
                             <input type="hidden" id="unic" name='unic'>
-
                             <input type="hidden" id="repe" name='repe'>
                             <input type="hidden" id="tota" name='total'>
-
                             <input type="hidden" id="registros" name='registros'>
                         </th>
                     </tr>
@@ -214,7 +210,7 @@
     </th>
     <x-cards size='4' xtrasclass='mt-3' header="Estimados" titlecolor='success'>
         <table class="table table-sm table-bordered mb-0 table-condensed">
-            <thead class="text-center text-uppercase">
+            <thead class="table-dark text-center text-uppercase">
                 <tr>
                 <th>cobertura</th>
                 <th>unicos</th>
@@ -305,8 +301,6 @@
             }
             
             let opciones = { style: "decimal", minimumFractionDigits: 2, maximumFractionDigits: 2 };
-            // let opciones1 = { style: "decimal", minimumFractionDigits: 2, maximumFractionDigits: 2 };
-
 
             fetch('{{ route('estrategia.probar-strategy') }}', {
                 method: 'POST',
@@ -326,8 +320,6 @@
                 
                 posicion = data.length - 1
 
-                // console.log(check)
-
                 document.getElementById('cobertura').innerHTML = `${data[posicion].percent_cober.toLocaleString("de-DE", opciones)}%`
                 document.getElementById('unicos').innerHTML = data[posicion].total_unicos.toLocaleString("de-DE")
                 document.getElementById('repetidos').innerHTML = data[posicion].total_repetidos.toLocaleString("de-DE")
@@ -339,26 +331,10 @@
                 document.getElementById('tota').value = data[posicion].total_r
 
                 if(check === '1'){
-
-                    // console.log('si')
-                    // console.log(data[posicion].total_enc)
-
                     document.getElementById('registros').value = JSON.stringify(data[posicion].total_enc)
                 }else{
-
-                    // console.log('no')
-                    // console.log(data[posicion].unicos)
                     document.getElementById('registros').value = JSON.stringify(data[posicion].unicos)
-                }
-                
-
-
-
-                
-                
-                
-                
-
+                }                
             });
 
 
