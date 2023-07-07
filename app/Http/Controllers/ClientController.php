@@ -119,7 +119,7 @@ class ClientController extends Controller
 
         // Obtengo todos las estrategias que el cliente tiene que no estan activas
         $datas = DB::table('estrategias')
-        ->select('id', 'channels', 'onlyWhere', 'isActive', 'isDelete', 'type', 'repeatUsers', 'cobertura', 'registros_unicos', 'registros_repetidos')
+        ->select('id', 'channels', 'onlyWhere', 'isActive', 'isDelete', 'type', 'repeatUsers', 'cobertura', 'registros_unicos', 'registros_repetidos', 'registros')
         ->where('prefix_client', '=', $client->prefix)
         ->whereIn('isActive', [0, 1])
         ->whereIn('type', [0, 1, 2])
@@ -146,6 +146,12 @@ class ClientController extends Controller
                 if (isset($channels[$data->channels])) {
                     $data->canal = $channels[$data->channels];
                 }
+
+                if($data->repeatUsers === 1){
+                    $data->registros_t = count(json_decode($data->registros, true));
+                }
+                
+                unset($data->registros);
 
                 if ($client->active_channels != null) {
                     if ($data->type === 0) {
@@ -203,11 +209,12 @@ class ClientController extends Controller
 
 
         $datas = DB::table('estrategias')
-            ->select('id', 'channels', 'onlyWhere', 'isActive', 'isDelete', 'type', 'repeatUsers', 'cobertura', 'registros_unicos', 'registros_repetidos', 'activation_date', 'activation_time')
+            ->select('id', 'channels', 'onlyWhere', 'isActive', 'isDelete', 'type', 'repeatUsers', 'cobertura', 'registros_unicos', 'registros_repetidos', 'activation_date', 'activation_time', 'registros')
             ->where('prefix_client', '=', $client->prefix)
             ->orderBy('isActive', 'DESC')
             ->orderBy('type', 'ASC')
-            ->orderBy('created_at', 'ASC')
+            ->orderBy('activation_date', 'DESC')
+            ->orderBy('activation_time', 'DESC')
             ->get();
 
         $total_cartera = 0;
@@ -217,6 +224,8 @@ class ClientController extends Controller
 
         $queries = [];
 
+        // return $datas;
+
         if ($data_counter > 0) {
             
             
@@ -225,12 +234,18 @@ class ClientController extends Controller
                     $data->canal = $channels[$data->channels];
                 }
 
+
                 if($data->type === 2){
+                    if($data->repeatUsers === 0){
                     $suma_total += $data->registros_unicos;
+                    }else{
+                        $data->registros_t = count(json_decode($data->registros, true));
+                        $suma_total +=$data->registros_t;
+                    }
                     $porcentaje_total += $data->cobertura;
                 }
-                
 
+                unset($data->registros);
             }
 
 
@@ -244,6 +259,9 @@ class ClientController extends Controller
             }
         }
 
+
+        // return $ch_approve;
+
         $config_layout = [
             'title-section' => 'Cliente: ' . $client->name,
             'breads' => 'Clientes > ' . $client->name,
@@ -251,6 +269,7 @@ class ClientController extends Controller
         ];
 
 
-        return view('clients/show', compact('config_layout', 'client', 'datas', 'channels', 'porcentaje_total', 'suma_total'));
+
+        return view('clients/show', compact('config_layout', 'client', 'datas', 'channels', 'ch_approve', 'porcentaje_total', 'suma_total'));
     }
 }

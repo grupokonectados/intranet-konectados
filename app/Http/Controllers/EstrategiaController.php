@@ -103,14 +103,20 @@ class EstrategiaController extends Controller
         $saveQuery->cobertura = $request->cober;
         $saveQuery->type = 1;
 
-        $saveQuery->registros = json_encode(json_decode($request['registros'], true));
+        
 
 
         if (isset($request->repeatUsers)) {
             $saveQuery->repeatUsers = $request->repeatUsers;
+            $saveQuery->registros = json_encode(json_decode($request['registros'], true));
+            
         } else {
             $saveQuery->repeatUsers = 0;
+            $saveQuery->registros = json_encode(json_decode($request['registros'], true));
         }
+
+
+        // return $saveQuery->registros;
 
         $saveQuery->save();
 
@@ -163,7 +169,6 @@ class EstrategiaController extends Controller
     {
 
 
-
         $datas = DB::table('estrategias')
             ->select('id', 'onlyWhere', 'table_name', 'channels', 'isActive', 'isDelete', 'type', 'repeatUsers', 'registros')
             ->where('prefix_client', '=', $request->prefix)
@@ -182,6 +187,8 @@ class EstrategiaController extends Controller
             $queries[$key][] = $val->table_name;
             $queries[$key][] = $val->onlyWhere;
             $queries[$key][] = $val->type;
+            $queries[$key][] = $val->repeatUsers;
+            
             $queries[$key]['registros'] = json_decode($val->registros, true);
             $queries[$key]['total_cartera'] = 10000;
         }
@@ -191,11 +198,10 @@ class EstrategiaController extends Controller
         $queries[$data_counter][] = $request['table_name'];
         $queries[$data_counter][] = $request['query'];
         $queries[$data_counter][] = 0;
+        $queries[$data_counter][] = intval($request->check);
         $queries[$data_counter]['total_cartera'] = 10000;
 
-
-        // return $queries;
-
+        
 
         return $this->queryResults($queries);
     }
@@ -203,20 +209,13 @@ class EstrategiaController extends Controller
     public function queryResults($strings_query)
     {
         $query_ruts = [];
-        $query_ruts_existe = [];
         $results = [];
+        $arr = [];
 
-
-
-        // return $strings_query;
-
-
-
-
+        // return $strings_query[3][3] === 1?'si':'no';
 
 
         foreach ($strings_query as $value) {
-
             if ($value[2] === 2 || $value[2] === 1) {
                 $query_ruts[] = $value['registros'];
             } else {
@@ -224,16 +223,12 @@ class EstrategiaController extends Controller
             }
         }
 
-
-        // return $strings_query[1][2];
-
-
-        $array = array();
+        
         for ($i = 0; $i < count($query_ruts); $i++) {
 
             if ($strings_query[$i][2] === 1 || $strings_query[$i][2] === 2) {
-                $array[$i]['unicos'] = $query_ruts[$i];
-                $array[$i]['repetidos'] = 0;
+                $arr[$i]['unicos'] = $query_ruts[$i];
+                $arr[$i]['repetidos'] = 0;
             } else {
                 $tempArr = [];
                 for ($j = 0; $j < count($query_ruts); $j++) {
@@ -242,40 +237,61 @@ class EstrategiaController extends Controller
                     }
                 }
 
+
+
+              
+
                 $merge[$i] = array_unique(array_merge($tempArr));
 
-                $array[$i]['unicos'] = array_filter($query_ruts[$i], function ($valor) use ($merge, $i) {
+                $arr[$i]['unicos'] = array_filter($query_ruts[$i], function ($valor) use ($merge, $i) {
                     return !in_array($valor, $merge[$i]);
                 });
 
-                $array[$i]['repetidos'] = array_filter($query_ruts[$i], function ($valor) use ($merge, $i) {
+                $arr[$i]['repetidos'] = array_filter($query_ruts[$i], function ($valor) use ($merge, $i) {
                     return in_array($valor, $merge[$i]);
                 });
             }
 
-            $total_unicos[$i] = count($array[$i]['unicos']);
 
-            if($array[$i]['repetidos'] != 0){
-                $total_repetidos[$i] = count($array[$i]['repetidos']);
-            }else{
-                $total_repetidos[$i] = $array[$i]['repetidos'];
-            }
+
+
+
             
 
-            $percent_cober[$i] = ($total_unicos[$i]/10000)*100;
+            $total_unicos[$i] = count($arr[$i]['unicos']);
+
+            if ($arr[$i]['repetidos'] != 0) {
+                $total_repetidos[$i] = count($arr[$i]['repetidos']);
+            } else {
+                $total_repetidos[$i] = $arr[$i]['repetidos'];
+            }
+
+            if($strings_query[$i][3]===0){
+                $percent_cober[$i] = ($total_unicos[$i] / 10000) * 100;
+            }else{
+                $percent_cober[$i] = (count($query_ruts[$i]) / 10000) * 100;
+            }
+
+
+
+            // $percent_cober[$i] = ($total_unicos[$i] / 10000) * 100;
             $total_r[$i] = count($query_ruts[$i]);
 
+
+
             $results[$i] = [
-                        'unicos' => array_values($array[$i]['unicos']),
-                        'total_unicos' => $total_unicos[$i],
-                        'total_repetidos' => $total_repetidos[$i],
-                        'percent_cober' => $percent_cober[$i],
-                        'total_r' => $total_r[$i],
-                    ];
-
-
-
+                'unicos' => array_values($arr[$i]['unicos']),
+                'repetidos' =>  $arr[$i]['repetidos'] === 0 ? 0 : array_values($arr[$i]['repetidos']),
+                'total_unicos' => $total_unicos[$i],
+                'total_repetidos' => $total_repetidos[$i],
+                'percent_cober' => $percent_cober[$i],
+                'total_r' => $total_r[$i],
+                'total_enc' => $query_ruts[$i],
+            ];
         }
+
+
+        // return $arr;
 
         return $results;
 
@@ -448,5 +464,57 @@ class EstrategiaController extends Controller
         $estrategia->type = 3;
         $estrategia->save();
         return back();
+    }
+
+
+
+
+    // Filtro 
+
+    public function filterStrategy(Request $request){
+
+        
+
+        if($request->canal !== 'refresh'){
+            $datas = DB::table('estrategias')
+            ->select('id', 'onlyWhere', 'channels', 'activation_date', 'activation_time', )
+            ->where('channels', '=', $request->canal)
+            ->where('isDelete', '=', 1)
+            ->orderBy('activation_date', 'DESC')
+            ->orderBy('activation_time', 'DESC')
+            ->get();
+        }else{
+            $datas = DB::table('estrategias')
+            ->select('id', 'onlyWhere', 'channels', 'activation_date', 'activation_time', )
+            ->where('isDelete', '=', 1)
+            ->orderBy('activation_date', 'DESC')
+            ->orderBy('activation_time', 'DESC')
+            ->get();
+        }
+
+        
+
+
+
+
+        
+
+
+            $channels = DB::table('canales')->where('isActive', '=', 1)->pluck('name')->toArray();
+
+
+            foreach ($datas as $key => $data) {
+                if (isset($channels[$data->channels])) {
+                    $data->canal = $channels[$data->channels];
+                }
+            }
+
+            
+
+
+            
+
+
+            return $datas;
     }
 }

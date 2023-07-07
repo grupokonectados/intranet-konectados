@@ -68,34 +68,36 @@
                                 {{ $data->canal }}
                             </td>
                             <td class="text-center align-middle">{{ $data->cobertura }}%</td>
-                            <td class="text-center align-middle">{{ $data->registros_unicos }}</td>
-                            <td class="text-center align-middle">
-                                @if ($data->repeatUsers == 1)
-                                    <div class="form-check form-switch align-items-stretch">
-                                        <label for="form-check-label">Si</label>
-                                        <input class="form-check-input ml-0" disabled checked type="checkbox">
-                                    </div>
-                                @else
-                                    <div class="form-check form-switch align-items-stretch">
-                                        <label for="form-check-label">No</label>
-                                        <input class="form-check-input ml-0" disabled type="checkbox">
-                                    </div>
-                                @endif
-                            </td>
-                            <td class="text-center align-middle">
-                               
-                                    {{ $data->registros_repetidos}}        
-                            </td>
+                            @if ($data->repeatUsers == 1)
+                        <td class="text-center align-middle">
+                            {{ number_format($data->registros_t, 0, ',', '.') }}
+                            
+                        </td>
+                        <td class="align-middle text-center">
+                            Si
+                        </td>
+                        <td class="text-center align-middle">
+                            {{ number_format($data->registros_t, 0, ',', '.') }}
+                        </td>
+                        @else
+                        <td class="text-center align-middle">
+                            {{ number_format($data->registros_unicos, 0, ',', '.') }}
+                            
+                        </td>
+                        <td class="align-middle text-center">
+                            No
+                        </td>
+                        <td class="text-center align-middle">
+                            {{ number_format($data->registros_repetidos, 0, ',', '.') }}
+                        </td>
+                            
+                        @endif
                             <td class="align-middle">{{ $data->onlyWhere }}</td>
                             <td class="text-center align-middle">
                                 <div class="btn-group" role="group" aria-label="Basic example">
 
                                     <x-btn-standar type='a' title='Aceptar' color="success" sm='sm'
                                         icon='check-circle' onclick="acceptedStrategy({{ $data->id }})" />
-
-                                    {{-- <a class="btn btn-warning btn-sm">
-                            <i class="fas fa-edit"></i>
-                        </a> --}}
 
                                     <x-btn-standar type='a' title='Eliminar' color="danger" sm='sm'
                                         icon='times-circle' extraclass='eliminar-estrategia'
@@ -111,7 +113,7 @@
         </table>
     </x-cards>
 
-    <x-cards xtrasclass='mt-3' header="Nueva estrategia" titlecolor='success'>
+    <x-cards size='8' xtrasclass='mt-3' header="Nueva estrategia" titlecolor='success'>
         <div class="row">
             <div class="col-12">
                 <table class="table table-borderless">
@@ -124,7 +126,7 @@
                     <tr>
                         <th class="text-uppercase align-middle" scope="col">Canal: </th>
                         <th>
-                            <select onchange='aceptaRepetidos(this.value)' class="form-select" name="channels"
+                            <select onchange='aceptaRepetidos(this.value)' class="form-select form-select-sm" name="channels"
                                 id="canalsito">
                                 <option value="">Seleccione</option>
                                 @for ($i = 0; $i < count($channels); $i++)
@@ -198,17 +200,37 @@
                                     color="primary" sm='sm' icon='play-circle' onclick="probarConsulta()" />
                             </div>
                         </th>
-                        <th>
-                            <span id='cobertura'></span>
-                            <span id='unicos'></span>
-                            <span id='repetidos'></span>
-                            <span id="total"></span>
-                        </th>
                     </tr>
                     {!! Form::close() !!}
                 </table>
             </div>
         </div>
+    </x-cards>
+    <th>
+        
+        
+        
+        
+    </th>
+    <x-cards size='4' xtrasclass='mt-3' header="Estimados" titlecolor='success'>
+        <table class="table table-sm table-bordered mb-0 table-condensed">
+            <thead class="text-center text-uppercase">
+                <tr>
+                <th>cobertura</th>
+                <th>unicos</th>
+                <th>repetidos</th>
+                <th>total</th>
+                </tr>
+            </thead>
+            <tbody class="text-center">
+                <tr>
+                    <td><span id='cobertura'></span></td>
+                    <td><span id='unicos'></span></td>
+                    <td><span id='repetidos'></span></td>
+                    <td><span id="total"></span></td>
+                </tr>
+            </tbody>
+        </table>
     </x-cards>
 
 
@@ -278,13 +300,21 @@
             var prefix = document.getElementById('prefix').value;
             var table_name = document.getElementById('table_name2').value;
 
+            if(document.getElementById('check').checked === true){
+                var check = document.getElementById('check').value
+            }
+            
+            let opciones = { style: "decimal", minimumFractionDigits: 2, maximumFractionDigits: 2 };
+            // let opciones1 = { style: "decimal", minimumFractionDigits: 2, maximumFractionDigits: 2 };
+
 
             fetch('{{ route('estrategia.probar-strategy') }}', {
                 method: 'POST',
                 body: JSON.stringify({
                     query: query,
                     prefix: prefix,
-                    table_name: table_name
+                    table_name: table_name,
+                    check: check,
                 }),
                 headers: {
                     'content-type': 'application/json',
@@ -296,18 +326,31 @@
                 
                 posicion = data.length - 1
 
-                console.log(data)
+                // console.log(check)
 
-                document.getElementById('cobertura').innerHTML = `Cobertura: ${data[posicion].percent_cober.toFixed(2)}`
-                document.getElementById('unicos').innerHTML = `Unicos: ${data[posicion].total_unicos}`
-                document.getElementById('repetidos').innerHTML = `Repetidos: ${data[posicion].total_repetidos}`
-                document.getElementById('total').innerHTML = `Registros Encontrados: ${data[posicion].total_r}`
+                document.getElementById('cobertura').innerHTML = `${data[posicion].percent_cober.toLocaleString("de-DE", opciones)}%`
+                document.getElementById('unicos').innerHTML = data[posicion].total_unicos.toLocaleString("de-DE")
+                document.getElementById('repetidos').innerHTML = data[posicion].total_repetidos.toLocaleString("de-DE")
+                document.getElementById('total').innerHTML = data[posicion].total_r.toLocaleString("de-DE")
 
                 document.getElementById('cober').value = data[posicion].percent_cober.toFixed(2)
                 document.getElementById('unic').value = data[posicion].total_unicos
                 document.getElementById('repe').value = data[posicion].total_repetidos
                 document.getElementById('tota').value = data[posicion].total_r
-                document.getElementById('registros').value = JSON.stringify(data[posicion].unicos)
+
+                if(check === '1'){
+
+                    // console.log('si')
+                    // console.log(data[posicion].total_enc)
+
+                    document.getElementById('registros').value = JSON.stringify(data[posicion].total_enc)
+                }else{
+
+                    // console.log('no')
+                    // console.log(data[posicion].unicos)
+                    document.getElementById('registros').value = JSON.stringify(data[posicion].unicos)
+                }
+                
 
 
 

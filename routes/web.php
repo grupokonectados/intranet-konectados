@@ -61,4 +61,7 @@ Route::group(['middleware' => ['auth']], function () {
     //Probar la estrategia antes 
 
     route::post('/estrategia/probar-strategy', [EstrategiaController::class, 'probarStrategy'])->name('estrategia.probar-strategy');
+
+    // Filtro
+    route::post('/estrategia/filter-strategy', [EstrategiaController::class, 'filterStrategy'])->name('estrategia.filter-strategy');
 });

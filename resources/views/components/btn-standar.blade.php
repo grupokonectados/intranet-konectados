@@ -18,7 +18,7 @@
         {{ $name }}
     </button>
     @else
-        <button class="btn btn-{{ $color ?? 'info' }} btn-{{ $sm ?? '' }} {{ $extraclass ?? '' }}">
+        <button @if (isset($onclick)) onclick="{{ $onclick }}" @endif class="btn btn-{{ $color ?? 'info' }} btn-{{ $sm ?? '' }} {{ $extraclass ?? '' }}">
             @if (isset($icon))
                 <i class="fas fa-{{ $icon }}"></i>
             @endif
@@ -26,7 +26,7 @@
         </button>
     @endif
 @else
-    <button class="btn btn-{{ $color ?? 'info' }} btn-{{ $sm ?? '' }} {{ $extraclass ?? '' }}">
+    <button @if (isset($onclick)) onclick="{{ $onclick }}" @endif class="btn btn-{{ $color ?? 'info' }} btn-{{ $sm ?? '' }} {{ $extraclass ?? '' }}">
         @if (isset($icon))
             <i class="fas fa-{{ $icon }}"></i>
         @endif
