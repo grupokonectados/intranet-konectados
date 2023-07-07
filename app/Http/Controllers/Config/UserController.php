@@ -79,7 +79,11 @@ class UserController extends Controller
         $input = $request->all();
         $input['password'] = Hash::make($input['password']);
 
-        $input['ve_clientes'] = json_encode($input['ve_clientes']);
+        if(isset($input['ve_clientes'])){
+            $input['ve_clientes'] = json_encode($input['ve_clientes']);
+        }
+
+        
 
         // return $input;
     
