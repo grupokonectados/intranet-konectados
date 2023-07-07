@@ -25,8 +25,14 @@ class ClientController extends Controller
          if(Gate::check('root-list')){
             $data = Client::all();
          }else{
-            $clientes = json_decode(auth()->user()->ve_clientes, true);
-            $data = Client::whereIn('id', $clientes)->get();
+            if(auth()->user()->ve_clientes !== null){
+                $clientes = json_decode(auth()->user()->ve_clientes, true);
+                $data = Client::whereIn('id', $clientes)->get();
+            }else{
+                $data = [];
+            }
+            
+            
          }
 
         /**

@@ -15,6 +15,7 @@
 
 
 
+
 @section('content')
 
     <x-cards titlecolor='primary'>
@@ -41,15 +42,15 @@
             <tr>
                 <td class="text-uppercase bg-dark text-white w-25"><strong>Clientes:</strong></td>
                 <td class="align-middle">
-                    @for ($i = 0; $i < count($clients); $i++)
-                        @if (in_array($clients[$i]->id, $user->ve_clientes))
-                            @if ($i === count($clients) - 1)
-                                {{ $clients[$i]->name }}
-                            @else
-                                {{ $clients[$i]->name }},
+                    @if (count($clients) > 0)
+                        @for ($i = 0; $i < count($clients); $i++)
+                            @if (in_array($clients[$i]->id, $user->ve_clientes))
+                                <span class="mx-3">{{ $clients[$i]->name }}</span>
                             @endif
-                        @endif
-                    @endfor
+                        @endfor
+                    @else
+                        <span class="mx-3">Nada que mostrar</span>
+                    @endif
                 </td>
             </tr>
         </table>

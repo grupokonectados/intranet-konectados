@@ -51,14 +51,14 @@
 
 
         <table class="table table-sm table-bordered mb-0">
-            <thead class="bg-dark">
-                <th width='7%' class="align-middle text-white text-center text-uppercase">Canal</th>
-                <th class="align-middle text-white text-uppercase" width='3%'>Cobertura</th>
-                <th class="align-middle text-white text-uppercase" width='3%'>Registros</th>
-                <th width='7%' class="text-center text-white text-uppercase">¿Acepta repetidos?</th>
-                <th class="align-middle text-white text-uppercase" width='3%'>Repetidos</th>
-                <th class="align-middle text-white text-uppercase text-center">Criterio</th>
-                <th width='3%' class="align-middle text-uppercase text-center text-white">Acciones</th>
+            <thead class="table-dark text-uppercase text-center">
+                <th width='7%' class="align-middle ">Canal</th>
+                <th class="align-middle" width='3%'>Cobertura</th>
+                <th class="align-middle" width='3%'>Registros</th>
+                <th width='7%'>¿Acepta repetidos?</th>
+                <th class="align-middle" width='3%'>Repetidos</th>
+                <th class="align-middle">Criterio</th>
+                <th width='3%' class="align-middle">Acciones</th>
             </thead>
             <tbody class="align-middle">
                 @foreach ($datas as $k => $data)
