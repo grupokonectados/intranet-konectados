@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Client;
 use App\Models\Estructura;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -17,9 +18,16 @@ class ClientController extends Controller
         /**
          * Metodo laravel
          */
+        
 
-        $data = Client::all();
+         
 
+         if(Gate::check('root-list')){
+            $data = Client::all();
+         }else{
+            $clientes = json_decode(auth()->user()->ve_clientes, true);
+            $data = Client::whereIn('id', $clientes)->get();
+         }
 
         /**
          * Metodo API
@@ -223,6 +231,7 @@ class ClientController extends Controller
         $data_counter = count($datas);
 
         $queries = [];
+        $ch_approve = [];
 
         // return $datas;
 
@@ -256,6 +265,7 @@ class ClientController extends Controller
                 $client->active_channels = $ch_approve;
             } else {
                 $client->active_channels = [];
+                $ch_approve = [];
             }
         }
 

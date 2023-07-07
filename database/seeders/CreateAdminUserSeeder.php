@@ -4,6 +4,7 @@ namespace Database\Seeders;
   
 use Illuminate\Database\Seeder;
 use App\Models\User;
+use Carbon\Carbon;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
   
@@ -17,9 +18,10 @@ class CreateAdminUserSeeder extends Seeder
     public function run()
     {
         $user = User::create([
-            'name' => 'admin', 
+            'name' => 'Administrador', 
             'email' => 'admin@1.com',
-            'password' => bcrypt('123')
+            'password' => bcrypt('123'),
+            'password_changed_at' => Carbon::now()->toDateTimeString()
         ]);
 
         $user2 = User::create([

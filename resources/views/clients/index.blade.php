@@ -3,8 +3,11 @@
 @section('title-section', $config_layout['title-section'])
 @section('breads', $config_layout['breads'])
 
+
+
 @section('content')
 <x-cards header='Lista de Clientes' titlecolor='primary'>
+
     <table class="table table-sm mb-0 table-bordered table-hover">
         <thead class="table-dark text-uppercase">
             <tr >

@@ -2,10 +2,17 @@
 
 use App\Http\Controllers\{
     ClientController,
-    EstrategiaController
+    EstrategiaController,
+    HomeController,
 };
-//use App\Http\Controllers\EstrategiaController;
-use App\Http\Controllers\HomeController;
+use App\Http\Controllers\Auth\{
+    ExpiredPasswordController,
+};
+use App\Http\Controllers\Config\{
+    UserController,
+};
+
+
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -29,7 +36,8 @@ Route::get('/home', [HomeController::class, 'index'])->name('home');
 
 Route::group(['middleware' => ['auth']], function () {
 
-    Route::get('/', [HomeController::class, 'index'])->name('home');
+    Route::group(['middleware' => ['password_expired']], function () {
+        Route::get('/', [HomeController::class, 'index'])->name('home');
 
 
     /**
@@ -64,4 +72,18 @@ Route::group(['middleware' => ['auth']], function () {
 
     // Filtro
     route::post('/estrategia/filter-strategy', [EstrategiaController::class, 'filterStrategy'])->name('estrategia.filter-strategy');
+
+
+    //Mantenimientos. 
+
+    //Usuarios
+
+    Route::resource('/mantenice/users', UserController::class);
+    });
+
+    
+
+
+    Route::get('/password/expired', [ExpiredPasswordController::class, 'expired'])->name('password.expired');
+    Route::post('password/post_expired', [ExpiredPasswordController::class, 'postExpired'])->name('password.post_expired');
 });

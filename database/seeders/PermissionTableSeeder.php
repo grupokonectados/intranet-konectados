@@ -25,7 +25,6 @@ class PermissionTableSeeder extends Seeder
            'strategy-edit',
            'strategy-delete',
 
-
            'clients-list',
            'clients-create',
            'clients-edit',

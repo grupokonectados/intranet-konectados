@@ -15,7 +15,7 @@
         @if (isset($icon))
             <i class="fas fa-{{ $icon }}"></i>
         @endif
-        {{ $name }}
+        {{ $name ?? '' }}
     </button>
     @else
         <button @if (isset($onclick)) onclick="{{ $onclick }}" @endif class="btn btn-{{ $color ?? 'info' }} btn-{{ $sm ?? '' }} {{ $extraclass ?? '' }}">
