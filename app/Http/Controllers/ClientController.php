@@ -102,8 +102,18 @@ class ClientController extends Controller
        
         $channels = $responses['canales']->json()[0];
 
-        $config_clients = DB::table('config_clients')->select('channels_config')->where('client_id', '=', $id)->get()[0];
-        $channels_config = json_decode($config_clients->channels_config, true);
+
+
+        if(count(DB::table('config_clients')->select('channels_config')->where('client_id', '=', $id)->get())>0){
+            $config_clients = DB::table('config_clients')->select('channels_config')->where('client_id', '=', $id)->get()[0];
+            $channels_config = json_decode($config_clients->channels_config, true);
+        }else{ 
+            $config_clients = [];
+            $channels_config = [];
+        }
+
+        
+        
 
 
         return [
