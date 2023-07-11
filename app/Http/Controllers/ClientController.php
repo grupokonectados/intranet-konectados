@@ -7,11 +7,15 @@ use App\Models\Estructura;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+
+
+use Illuminate\Http\Client\Pool;
 
 class ClientController extends Controller
 {
 
-    const PATH_API = '/clients';
+    const PATH_API = '/clientes';
 
     public function index()
     {
@@ -22,25 +26,25 @@ class ClientController extends Controller
 
          
 
-         if(Gate::check('root-list')){
-            $data = Client::all();
-         }else{
-            if(auth()->user()->ve_clientes !== null){
-                $clientes = json_decode(auth()->user()->ve_clientes, true);
-                $data = Client::whereIn('id', $clientes)->get();
-            }else{
-                $data = [];
-            }
+        //  if(Gate::check('root-list')){
+        //     $data = Client::all();
+        //  }else{
+        //     if(auth()->user()->ve_clientes !== null){
+        //         $clientes = json_decode(auth()->user()->ve_clientes, true);
+        //         $data = Client::whereIn('id', $clientes)->get();
+        //     }else{
+        //         $data = [];
+        //     }
             
             
-         }
+        //  }
 
         /**
          * Metodo API
          */
 
-        // $response = Http::get(env('API_URL').self::PATH_API);
-        // $data = $response->json();
+        $response = Http::get(env('API_URL').env('API_CLIENTS'));
+        $data = $response->json()[0];
 
 
         $config_layout = [
@@ -55,11 +59,19 @@ class ClientController extends Controller
     public function edit($id)
     {
 
-        $client = Client::find($id);
+        // return $result = $this->getClientData($id);
 
-        $channels = DB::table('canales')->where('isActive', '=', 1)->pluck('name')->toArray();
 
-        $client->active_channels = json_decode($client->active_channels, true);
+        $result = $this->getClientData($id);
+
+        $client = $result[0];
+        $channels = $result[1];
+        $channels_config = $result[2];
+
+
+        
+         
+         
 
         $config_layout = [
             'title-section' => 'Editar: ' . $client->name,
@@ -67,17 +79,64 @@ class ClientController extends Controller
             'btn-back' => 'clients.show'
         ];
 
-        return view('clients/edit', compact('client', 'config_layout', 'channels'));
+        return view('clients/edit', compact('client', 'config_layout', 'channels', 'channels_config'));
+    }
+
+
+
+    function getClientData($id){
+
+        /**
+         * Cuando el enpoint que entrega los datos de un cliente unico, cambiar el metodo
+         * de consulta del cliente por el endpoint de la API 
+         */
+
+
+        $client = Client::find($id);
+
+
+        $responses = Http::pool(fn (Pool $pool) => [
+            //  $pool->as('clientes')->get(env('API_URL').env('API_CLIENTS')),
+             $pool->as('canales')->get(env('API_URL').env('API_CHANNELS')),
+         ]);
+       
+        $channels = $responses['canales']->json()[0];
+
+        $config_clients = DB::table('config_clients')->select('channels_config')->where('client_id', '=', $id)->get()[0];
+        $channels_config = json_decode($config_clients->channels_config, true);
+
+
+        return [
+            $client,
+            $channels,
+            $channels_config,
+        ];
     }
 
 
     public function update(Request $request, $id)
     {
 
-        //return $request;
-        $client = Client::find($id);
-        $client->active_channels = json_encode($request['channels']);
-        $client->save();
+        
+
+        $conf_client = DB::table('config_clients')->where('client_id', '=', $id)->get();
+
+        if(count($conf_client) === 0){
+            DB::insert('insert into config_clients (client_id, channels_config) values (?, ?)', [$id, json_encode($request['channels'])]);
+        }else{
+            DB::update('update config_clients set channels_config = ? where client_id = ?', [json_encode($request['channels']), $id]);
+        }
+
+        // ds($conf_client);
+
+        // $conf_client->save();
+
+        // return $conf_client;
+
+
+        // $client = Client::find($id);
+        // $client->active_channels = json_encode($request['channels']);
+        // $client->save();
 
         return redirect(route('clients.show', $id));
     }
@@ -146,10 +205,7 @@ class ClientController extends Controller
         $queries = [];
         $ch_approve = [];
 
-
-
         if (count($datas) > 0) { 
-
 
             foreach ($datas as $key => $data) {
 
@@ -203,19 +259,20 @@ class ClientController extends Controller
 
 
 
-    public function show($id, Request $request)
+    public function show($id)
     {
 
-        // return $request;
+        
 
-        /**
-         * Metodo laravel
-         */
+        
 
-        $client = Client::select('id', 'name', 'prefix', 'active_channels')->find($id); //Traigo los datos del cliente
+      
+        $client = Client::select('id', 'name', 'prefix')->find($id); //Traigo los datos del cliente
 
         // convierto en un array los canales permitidos del cliente
-        $client->active_channels = json_decode($client->active_channels, true);
+        // $client->active_channels = json_decode($client->active_channels, true);
+
+
 
 
 

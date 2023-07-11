@@ -9,5 +9,5 @@ class ClientACSATable extends Model
 {
     use HasFactory;
 
-    protected $table = 'cartera_primer_dia'
+    protected $table = 'cartera_primer_dia';
 }

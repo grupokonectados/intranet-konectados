@@ -152,16 +152,6 @@ class EstrategiaController extends Controller
     }
 
 
-    public function isActive(Request $request)
-    {
-
-        $dataCompare = Estrategia::where('isActive', '=', 1)->get();
-
-
-
-        $data = Estrategia::where('id', '=', $request->id)->update(['isActive' => 1, 'type' => 2]);
-        return $data;
-    }
 
 
 
@@ -342,7 +332,7 @@ class EstrategiaController extends Controller
     public function deleteStrategy($id)
     {
 
-        $estrategia = Estrategia::find($id)->delete();
+        Estrategia::find($id)->delete();
         return back();
     }
 
@@ -493,27 +483,13 @@ class EstrategiaController extends Controller
         }
 
         
-
-
-
-
-        
-
-
             $channels = DB::table('canales')->where('isActive', '=', 1)->pluck('name')->toArray();
-
 
             foreach ($datas as $key => $data) {
                 if (isset($channels[$data->channels])) {
                     $data->canal = $channels[$data->channels];
                 }
             }
-
-            
-
-
-            
-
 
             return $datas;
     }
