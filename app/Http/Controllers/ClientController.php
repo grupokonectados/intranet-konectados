@@ -15,6 +15,13 @@ use Illuminate\Http\Client\Pool;
 
 class ClientController extends Controller
 {
+    function __construct()
+    {
+        $this->middleware('permission:root-list|clients-list', ['only' => ['index', 'show', 'getClientData']]);
+        $this->middleware('permission:root-create|clients-create', ['only' => ['disenoEstrategia']]);
+        $this->middleware('permission:root-edit|clients-edit', ['only' => ['edit', 'update']]);
+    }
+
 
     const PATH_API = '/clientes';
 

@@ -15,7 +15,7 @@ class EstrategiaController extends Controller
 
     function __construct()
     {
-        $this->middleware('permission:root-list|strategy-list', ['only' => ['index', 'show', 'queryResults']]);
+        $this->middleware('permission:root-list|strategy-list', ['only' => ['index', 'show', 'queryResults', 'probarStrategy']]);
         $this->middleware('permission:root-create|strategy-create', ['only' => ['create', 'store', 'saveEstrategia', 'isActive', 'acceptedStrategy']]);
         $this->middleware('permission:root-edit', ['only' => ['edit', 'update']]);
         $this->middleware('permission:root-delete|strategy-delete', ['only' => ['destroy', 'deleteStrategy', 'stopStrategy']]);
@@ -112,7 +112,7 @@ class EstrategiaController extends Controller
     public function probarStrategy(Request $request)
     {
 
-        return $request;
+        // return $request;
         $datas = DB::table('estrategias')
             ->select('id', 'onlyWhere', 'table_name', 'channels', 'isActive', 'isDelete', 'type', 'repeatUsers', 'registros')
             ->where('prefix_client', '=', $request->prefix)

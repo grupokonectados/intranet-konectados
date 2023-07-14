@@ -6,7 +6,7 @@
 
 
 @section('others-btn')
-    @can('root-edit')
+    @can('clients-edit')
         <x-btn-standar type='a' name='Editar cliente' title='Editar cliente' extraclass='ml-auto' color="warning" sm='sm'
             icon='edit' href="{{ route('clients.edit', $client->id) }}" />
     @endcan
