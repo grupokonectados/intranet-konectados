@@ -8,7 +8,6 @@ use App\Models\Estructura;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
-use SebastianBergmann\Diff\Diff;
 
 class EstrategiaController extends Controller
 {
@@ -34,131 +33,86 @@ class EstrategiaController extends Controller
             'btn-create' => 'estrategia.create'
         ];
 
-        /**
-         * Metodo laravel
-         */
-
-
-
-        $data = Estrategia::select('estrategias.*', 'c.name', 'c.id as client_id')
-            ->join('clients as c', 'c.prefix', '=', 'estrategias.prefix_client')
-            ->get();
-
-        $channels = DB::table('canales')->where('isActive', '=', 1)->pluck('name')->toArray();
-
-        foreach ($data as  $d) {
-            if (isset($channels[$d->channels])) {
-                $d->canal = $channels[$d->channels];
-            }
-        }
-
-        // return $data;
-        /**
-         * Metodo API
-         */
-
-
-        // $response = Http::get(env('API_URL').self::PATH_API);
-        // $data = $response->json();
-
-        //return $data;
-
-
-        return view('estrategias/index', compact('data', 'config_layout'));
+        return view('estrategias/index', compact('config_layout'));
     }
-
-
-    public function create()
-    {
-
-        $config_layout = [
-            'title-section' => 'Crear Estrategia',
-            'breads' => 'Estrategias > Crear Estrategia',
-            'btn-back' => 'estrategia.index'
-        ];
-
-
-        $data = Client::all();
-        return view('estrategias/create', compact('config_layout', 'data'));
-    }
-
-
-
 
 
     public function saveEstrategia(Request $request)
     {
 
-        // return $request;
+        $getEstrategiasCliente = Http::get(env('API_URL').env('API_ESTRATEGIA').'/'.$request->prefix);
+        $data = $getEstrategiasCliente->collect()[0];
 
-        $saveQuery = new Estrategia();
-        $saveQuery->onlyWhere = $request->onlyWhere;
-        $saveQuery->channels = $request->channels;
-        $saveQuery->table_name = $request->table_name;
-        $saveQuery->prefix_client = $request->prefix;
+        $exist_record = [];
 
-        $saveQuery->registros_unicos = $request->unic;
-        $saveQuery->registros_repetidos = $request->repe;
-        $saveQuery->total_registros = $request->total;
-        $saveQuery->cobertura = $request->cober;
-        $saveQuery->type = 1;
-
-        
-
-
-        if (isset($request->repeatUsers)) {
-            $saveQuery->repeatUsers = $request->repeatUsers;
-            $saveQuery->registros = json_encode(json_decode($request['registros'], true));
-            
-        } else {
-            $saveQuery->repeatUsers = 0;
-            $saveQuery->registros = json_encode(json_decode($request['registros'], true));
+        foreach ($data as $key => $value) {
+            if ($value['onlyWhere'] === $request->onlyWhere) {
+                if($value['channels'] === (int)$request->channels){
+                    if(date('Y-m-d', strtotime($data[$key]['created_at'])) == date('Y-m-d')){
+                        $exist_record[] = 1;
+                    }
+                }
+            } 
         }
 
+        if(count($exist_record) > 0){
+            $message = [
+                'type' => 'danger',
+                'message' => 'Error!, existe un criterio creado el dia de hoy para ese canal, con las mismas caracteristicas. Por favor, verifíquelo e inténtelo nuevamente.',
+            ];
+            return back()->with('message', $message);
+        }else{
 
-        // return $saveQuery->registros;
+            $saveQuery = new Estrategia();
+            $saveQuery->onlyWhere = $request->onlyWhere;
+            $saveQuery->channels = $request->channels;
+            $saveQuery->table_name = $request->table_name;
+            $saveQuery->prefix_client = $request->prefix;
+            $saveQuery->registros_unicos = $request->unic;
+            $saveQuery->registros_repetidos = $request->repe;
+            $saveQuery->total_registros = $request->total;
+            $saveQuery->cobertura = $request->cober;
+            $saveQuery->type = 1;
+    
+            if (isset($request->repeatUsers)) {
+                $saveQuery->repeatUsers = $request->repeatUsers;
+                $saveQuery->registros = json_encode(json_decode($request['registros'], true));
+            } else {
+                $saveQuery->repeatUsers = 0;
+                $saveQuery->registros = json_encode(json_decode($request['registros'], true));
+            }
+    
+            $save = Http::post(env('API_URL').env('API_ESTRATEGIA'), $saveQuery);
+            $result = $save->json();
 
-        $saveQuery->save();
-
-
-        if ($request->location == 'create') {
-            return redirect()->route('estrategia.index');
-        } else {
-            return back();
+            if($result != false){
+                if($result['protocol41'] === true){
+                    $message = [
+                        'type' => 'success',
+                        'message' => 'Exito!, Se registro la estrategia con exito',
+                    ];
+                    return back()->with('message', $message);
+                }else{
+                    $message = [
+                        'type' => 'danger',
+                        'message' => 'Error!, Hubo un problema y su estrategia no se registro correctamente. Por favor, verifíquelo e inténtelo nuevamente.',
+                    ];
+                    return back()->with('message', $message);
+                }
+            }else{
+                $message = [
+                    'type' => 'danger',
+                    'message' => 'Error!, Alguno de los campos de la estrategia no estan correctamente llenado. Por favor, verifíquelo e inténtelo nuevamente.',
+                ];
+                return back()->with('message', $message);
+            }
         }
     }
-
-    public function show($id)
-    {
-
-        $data = Estrategia::find($id);
-
-        $config_layout = [
-            'title-section' => 'Estrategia: ' . $data->query_description,
-            'breads' => 'Estrategias > Estrategia: ' . $data->query_description,
-            'btn-back' => 'estrategia.index'
-        ];
-
-
-        return view('estrategias/show', compact('data', 'config_layout'));
-
-
-        // $response = Http::get(env('API_URL').self::PATH_API.'/'.$id);
-        // $data = $response->json();
-
-        // return view('estrategias/show', compact('data'));
-
-        //return $data;
-    }
-
-
-
-
 
     public function probarStrategy(Request $request)
     {
 
-
+        return $request;
         $datas = DB::table('estrategias')
             ->select('id', 'onlyWhere', 'table_name', 'channels', 'isActive', 'isDelete', 'type', 'repeatUsers', 'registros')
             ->where('prefix_client', '=', $request->prefix)
@@ -170,7 +124,6 @@ class EstrategiaController extends Controller
             ->orderBy('created_at', 'ASC')
             ->get();
 
-
         $queries = [];
 
         foreach ($datas as $key => $val) {
@@ -178,7 +131,7 @@ class EstrategiaController extends Controller
             $queries[$key][] = $val->onlyWhere;
             $queries[$key][] = $val->type;
             $queries[$key][] = $val->repeatUsers;
-            
+
             $queries[$key]['registros'] = json_decode($val->registros, true);
             $queries[$key]['total_cartera'] = 10000;
         }
@@ -191,8 +144,6 @@ class EstrategiaController extends Controller
         $queries[$data_counter][] = intval($request->check);
         $queries[$data_counter]['total_cartera'] = 10000;
 
-        
-
         return $this->queryResults($queries);
     }
 
@@ -202,9 +153,6 @@ class EstrategiaController extends Controller
         $results = [];
         $arr = [];
 
-        // return $strings_query[3][3] === 1?'si':'no';
-
-
         foreach ($strings_query as $value) {
             if ($value[2] === 2 || $value[2] === 1) {
                 $query_ruts[] = $value['registros'];
@@ -213,7 +161,7 @@ class EstrategiaController extends Controller
             }
         }
 
-        
+
         for ($i = 0; $i < count($query_ruts); $i++) {
 
             if ($strings_query[$i][2] === 1 || $strings_query[$i][2] === 2) {
@@ -227,10 +175,6 @@ class EstrategiaController extends Controller
                     }
                 }
 
-
-
-              
-
                 $merge[$i] = array_unique(array_merge($tempArr));
 
                 $arr[$i]['unicos'] = array_filter($query_ruts[$i], function ($valor) use ($merge, $i) {
@@ -242,12 +186,6 @@ class EstrategiaController extends Controller
                 });
             }
 
-
-
-
-
-            
-
             $total_unicos[$i] = count($arr[$i]['unicos']);
 
             if ($arr[$i]['repetidos'] != 0) {
@@ -256,9 +194,9 @@ class EstrategiaController extends Controller
                 $total_repetidos[$i] = $arr[$i]['repetidos'];
             }
 
-            if($strings_query[$i][3]===0){
+            if ($strings_query[$i][3] === 0) {
                 $percent_cober[$i] = ($total_unicos[$i] / 10000) * 100;
-            }else{
+            } else {
                 $percent_cober[$i] = (count($query_ruts[$i]) / 10000) * 100;
             }
 
@@ -461,36 +399,37 @@ class EstrategiaController extends Controller
 
     // Filtro 
 
-    public function filterStrategy(Request $request){
+    public function filterStrategy(Request $request)
+    {
 
-        
 
-        if($request->canal !== 'refresh'){
+
+        if ($request->canal !== 'refresh') {
             $datas = DB::table('estrategias')
-            ->select('id', 'onlyWhere', 'channels', 'activation_date', 'activation_time', )
-            ->where('channels', '=', $request->canal)
-            ->where('isDelete', '=', 1)
-            ->orderBy('activation_date', 'DESC')
-            ->orderBy('activation_time', 'DESC')
-            ->get();
-        }else{
+                ->select('id', 'onlyWhere', 'channels', 'activation_date', 'activation_time',)
+                ->where('channels', '=', $request->canal)
+                ->where('isDelete', '=', 1)
+                ->orderBy('activation_date', 'DESC')
+                ->orderBy('activation_time', 'DESC')
+                ->get();
+        } else {
             $datas = DB::table('estrategias')
-            ->select('id', 'onlyWhere', 'channels', 'activation_date', 'activation_time', )
-            ->where('isDelete', '=', 1)
-            ->orderBy('activation_date', 'DESC')
-            ->orderBy('activation_time', 'DESC')
-            ->get();
+                ->select('id', 'onlyWhere', 'channels', 'activation_date', 'activation_time',)
+                ->where('isDelete', '=', 1)
+                ->orderBy('activation_date', 'DESC')
+                ->orderBy('activation_time', 'DESC')
+                ->get();
         }
 
-        
-            $channels = DB::table('canales')->where('isActive', '=', 1)->pluck('name')->toArray();
 
-            foreach ($datas as $key => $data) {
-                if (isset($channels[$data->channels])) {
-                    $data->canal = $channels[$data->channels];
-                }
+        $channels = DB::table('canales')->where('isActive', '=', 1)->pluck('name')->toArray();
+
+        foreach ($datas as $key => $data) {
+            if (isset($channels[$data->channels])) {
+                $data->canal = $channels[$data->channels];
             }
+        }
 
-            return $datas;
+        return $datas;
     }
 }

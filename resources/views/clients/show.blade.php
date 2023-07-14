@@ -41,44 +41,55 @@
             </thead>
             <tbody class="text-center">
                 @foreach ($datas as $k => $data)
-                    @if ($data->isActive === 1 && $data->type === 2)
+                    {{-- @if ($data->isActive === 1 && $data->type === 2) --}}
+                    @if ($data['isActive'] === 1 && $data['type'] === 2)
                         <tr>
                             <td class="align-middle">
-                                {{ $data->canal }}
+                                {{-- {{ $data->canal }} --}}
+                                {{ $data['canal'] }}
                             </td>
                             <td class="align-middle">
-                                {{ number_format($data->cobertura, 2, ',', '.') }}%
+                                {{-- {{ number_format($data->cobertura, 2, ',', '.') }}% --}}
+                                {{ number_format($data['cobertura'], 2, ',', '.') }}%
                             </td>
-                            @if ($data->repeatUsers == 1)
+                            {{-- @if ($data->repeatUsers == 1) --}}
+                            @if ($data['repeatUsers'] == 1)
                                 <td class="align-middle">
-                                    {{ number_format($data->registros_t, 0, ',', '.') }}
+                                    {{-- {{ number_format($data->registros_t, 0, ',', '.') }} --}}
+                                    {{ number_format($data['registros_t'], 0, ',', '.') }}
                                 </td>
                                 <td class="align-middle">
                                     Si
                                 </td>
                                 <td class="align-middle">
-                                    {{ number_format($data->registros_t, 0, ',', '.') }}
+                                    {{-- {{ number_format($data->registros_t, 0, ',', '.') }} --}}
+                                    {{ number_format($data['registros_t'], 0, ',', '.') }}
                                 </td>
                             @else
                                 <td class="align-middle">
-                                    {{ number_format($data->registros_unicos, 0, ',', '.') }}
+                                    {{-- {{ number_format($data->registros_unicos, 0, ',', '.') }} --}}
+                                    {{ number_format($data['registros_unicos'], 0, ',', '.') }}
                                 </td>
                                 <td class="align-middle">
                                     No
                                 </td>
                                 <td class="align-middle">
-                                    {{ number_format($data->registros_repetidos, 0, ',', '.') }}
+                                    {{-- {{ number_format($data->registros_repetidos, 0, ',', '.') }} --}}
+                                    {{ number_format($data['registros_repetidos'], 0, ',', '.') }}
                                 </td>
                             @endif
-                            <td>{{ $data->onlyWhere }}</td>
+                            {{-- <td>{{ $data->onlyWhere }}</td> --}}
+                            <td>{{ $data['onlyWhere'] }}</td>
                             <td class="align-middle">
                                 Activo
                             </td>
                             <td class="align-middle">
-                                {{ $data->activation_date === null ? 'Sin Activar' : date('d-m-Y', strtotime($data->activation_date)) }}
+                                {{-- {{ $data->activation_date === null ? 'Sin Activar' : date('d-m-Y', strtotime($data->activation_date)) }} --}}
+                                {{ $data['activation_date'] === null ? 'Sin Activar' : date('d-m-Y', strtotime($data['activation_date'])) }}
                             </td>
                             <td class="align-middle">
-                                {{ $data->activation_time === null ? 'Sin Activar' : date('G:i:m', strtotime($data->activation_time)) }}
+                                {{-- {{ $data->activation_time === null ? 'Sin Activar' : date('G:i:m', strtotime($data->activation_time)) }} --}}
+                                {{ $data['activation_time'] === null ? 'Sin Activar' : date('G:i:m', strtotime($data['activation_time'])) }}
                             </td>
                             <td class="align-middle ">
                                 <div class="progress" role="progressbar" aria-label="Animated striped example"
@@ -89,8 +100,9 @@
                             </td>
                             <td class="align-middle">
                                 <x-btn-standar type='a' title='Detener' extraclass='detener-estrategia'
-                                    href="{{ route('estrategia.stop-strategy', $data->id) }}" color="danger" sm='sm'
-                                    icon='stop-circle' />
+                                {{-- href="{{ route('estrategia.stop-strategy', $data->id) }}" color="danger" sm='sm' --}}
+                                href="{{ route('estrategia.stop-strategy', $dataid) }}" color="danger" sm='sm'
+                                icon='stop-circle' />
 
                             </td>
                         </tr>
@@ -118,7 +130,7 @@
                     <option value="">Seleccione</option>
                     @for ($i = 0; $i < count($channels); $i++)
                         @if (in_array($i, $ch_approve))
-                            <option value="{{ $i }}">{{ $channels[$i] }}</option>
+                            <option value="{{ $i }}">{{ $channels[$i]['name'] }}</option>
                         @endif
                     @endfor
                 </select>
@@ -137,17 +149,22 @@
                     </thead>
                     <tbody class="text-center">
                         @foreach ($datas as $k => $data)
-                            @if ($data->isDelete === 1 && $data->type === 3)
-                                <tr>
+                        {{-- @if ($data->isDelete === 1 && $data->type === 3) --}}
+                        @if ($data['isDelete'] === 1 && $data['type'] === 3)
+                        <tr>
                                     <td class="align-middle">
-                                        {{ $data->canal }}
+                                        {{-- {{ $data->canal }} --}}
+                                        {{ $data['canal'] }}
                                     </td>
-                                    <td>{{ $data->onlyWhere }}</td>
+                                    {{-- <td>{{ $data->onlyWhere }}</td> --}}
+                                    <td>{{ $data['onlyWhere'] }}</td>
                                     <td class="align-middle">
-                                        {{ $data->activation_date === null ? 'Sin Activar' : date('d-m-Y', strtotime($data->activation_date)) }}
+                                        {{ $data['activation_date'] === null ? 'Sin Activar' : date('d-m-Y', strtotime($data['activation_date'])) }}
+                                        {{-- {{ $data->activation_date === null ? 'Sin Activar' : date('d-m-Y', strtotime($data->activation_date)) }} --}}
                                     </td>
                                     <td class="align-middle">
-                                        {{ $data->activation_time === null ? 'Sin Activar' : date('G:i:m', strtotime($data->activation_time)) }}
+                                        {{ $data['activation_time'] === null ? 'Sin Activar' : date('G:i:m', strtotime($data['activation_time'])) }}
+                                        {{-- {{ $data->activation_time === null ? 'Sin Activar' : date('G:i:m', strtotime($data->activation_time)) }} --}}
                                     </td>
                                     <td class="align-middle ">
                                         <div class="progress" role="progressbar" aria-label="Animated striped example"

@@ -10,6 +10,21 @@
 
 
 @section('content')
+@if ($message = Session::get('message'))
+<div class="col-12 mb-3">
+    <div class="alert alert-{{ $message['type'] }} alert-dismissible show mb-0" role="alert">
+        @if ($message['type']==='success')
+            <i class="fas fa-check-circle"></i>
+        @else
+            <i class="fas fa-exclamation-triangle"></i>
+        @endif
+        
+        <strong>{{ $message['message']}}</strong>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+     </div>
+    </div>
+
+@endif
     <x-cards size='8' xtrasclass='mb-3' header="Datos del cliente" titlecolor='primary'>
         <div class="d-flex justify-content-between">
             <div class="col-6">
@@ -23,12 +38,12 @@
 
     <x-cards size='4' xtrasclass='mb-3' header="Canales Permitidos" titlecolor='primary'>
         <div class="row">
-            @if (count($client->active_channels) > 0)
+            @if (count($channels_config) > 0)
                 @foreach ($channels as $key => $val)
-                    @if (isset($client->active_channels[$key]))
+                    @if (isset($channels_config[$key]))
                         <div class="col-4">
                             <i class="fas fa-check text-success"></i>&nbsp;
-                            {{ $val }}
+                            {{ $val['name'] }}
                         </div>
                     @endif
                 @endforeach
@@ -52,6 +67,7 @@
 
         <table class="table table-sm table-bordered mb-0">
             <thead class="table-dark text-uppercase text-center">
+                <th width='3%' class="align-middle ">#</th>
                 <th width='7%' class="align-middle ">Canal</th>
                 <th class="align-middle" width='3%'>Cobertura</th>
                 <th class="align-middle" width='3%'>Registros</th>
@@ -61,47 +77,60 @@
                 <th width='3%' class="align-middle">Acciones</th>
             </thead>
             <tbody class="align-middle">
+                
                 @foreach ($datas as $k => $data)
-                    @if ($data->isActive === 0)
-                        <tr>
+                {{-- @dd($data['canal']) --}}
+                {{-- @if ($data->isActive === 0) --}}
+                @if ($data['isActive'] === 0)
+                <tr>
+                    <td class="text-center align-middle">{{ ++$k }}</td>
                             <td class="text-center align-middle">
-                                {{ $data->canal }}
+                                {{-- {{ $data->canal }} --}}
+                                {{ $data['canal'] }}
                             </td>
-                            <td class="text-center align-middle">{{ $data->cobertura }}%</td>
-                            @if ($data->repeatUsers == 1)
+                            {{-- <td class="text-center align-middle">{{ $data->cobertura }}%</td> --}}
+                            <td class="text-center align-middle">{{ number_format($data['cobertura'], 2, ',', '.') }}%</td>
+                            {{-- @if ($data->repeatUsers == 1) --}}
+                            @if ($data['repeatUsers'] == 1)
                         <td class="text-center align-middle">
-                            {{ number_format($data->registros_t, 0, ',', '.') }}
-                            
+                            {{-- {{ number_format($data->registros_t, 0, ',', '.') }} --}}
+                            {{ number_format($data['registros_t'], 0, ',', '.') }}
                         </td>
                         <td class="align-middle text-center">
                             Si
                         </td>
                         <td class="text-center align-middle">
-                            {{ number_format($data->registros_t, 0, ',', '.') }}
+                            {{-- {{ number_format($data->registros_t, 0, ',', '.') }} --}}
+                            {{ number_format($data['registros_t'], 0, ',', '.') }}
                         </td>
                         @else
                         <td class="text-center align-middle">
-                            {{ number_format($data->registros_unicos, 0, ',', '.') }}
+                            {{-- {{ number_format($data->registros_unicos, 0, ',', '.') }} --}}
+                            {{ number_format($data['registros_unicos'], 0, ',', '.') }}
                             
                         </td>
                         <td class="align-middle text-center">
                             No
                         </td>
                         <td class="text-center align-middle">
-                            {{ number_format($data->registros_repetidos, 0, ',', '.') }}
+                            {{-- {{ number_format($data->registros_repetidos, 0, ',', '.') }} --}}
+                            {{ number_format($data['registros_repetidos'], 0, ',', '.') }}
                         </td>
                             
                         @endif
-                            <td class="align-middle">{{ $data->onlyWhere }}</td>
+                            {{-- <td class="align-middle">{{ $data->onlyWhere }}</td> --}}
+                            <td>{{ $data['onlyWhere'] }}</td>
                             <td class="text-center align-middle">
                                 <div class="btn-group" role="group" aria-label="Basic example">
 
                                     <x-btn-standar type='a' title='Aceptar' color="success" sm='sm'
-                                        icon='check-circle' onclick="acceptedStrategy({{ $data->id }})" />
+                                    {{-- icon='check-circle' onclick="acceptedStrategy({{ $data->id }})" /> --}}
+                                    icon='check-circle' onclick="acceptedStrategy({{ $data['id'] }})" />
 
                                     <x-btn-standar type='a' title='Eliminar' color="danger" sm='sm'
                                         icon='times-circle' extraclass='eliminar-estrategia'
-                                        href="{{ route('estrategia.delete-strategy', $data->id) }}" />
+                                        {{-- href="{{ route('estrategia.delete-strategy', $data->id) }}" /> --}}
+                                        href="{{ route('estrategia.delete-strategy', $data['id']) }}" />
 
 
                                 </div>
@@ -131,7 +160,7 @@
                                 <option value="">Seleccione</option>
                                 @for ($i = 0; $i < count($channels); $i++)
                                     @if (in_array($i, $ch_approve))
-                                        <option value="{{ $i }}">{{ $channels[$i] }}</option>
+                                        <option value="{{ $i }}">{{ $channels[$i]['name'] }}</option>
                                     @endif
                                 @endfor
 
@@ -346,7 +375,7 @@
 
         function aceptaRepetidos(value) {
 
-            var canales_cliente = @json($client->active_channels)
+            var canales_cliente = @json($channels_config)
 
             if ('multiple' in canales_cliente[value]) {
                 document.getElementById("check").disabled = false;

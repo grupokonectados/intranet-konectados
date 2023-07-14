@@ -10,6 +10,7 @@ use Hash;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Http;
 
 class UserController extends Controller
 {
@@ -48,7 +49,6 @@ class UserController extends Controller
             'breads' => 'Configuracion > Usuarios > Nuevo Usuario',
             'btn-back' => 'users.index'
         ];
-
 
         return view('config.users.create', compact('roles', 'config_layout', 'clients'));
     }
@@ -173,5 +173,27 @@ class UserController extends Controller
         User::find($id)->delete();
         return redirect()->route('users.index')
             ->with('success', 'User deleted successfully');
+    }
+
+
+    public function getClienteUser(){
+
+        if (Gate::check('root-list')) {
+            $data_clientes = Http::get(env('API_URL') . env('API_CLIENTS'))->json()[0];
+        } else {
+            if (auth()->user()->ve_clientes !== null) {
+                $clientes = json_decode(auth()->user()->ve_clientes, true);
+                $response = Http::get(env('API_URL') . env('API_CLIENTS'))->json()[0];
+                foreach ($response as $key => $value) {
+                    if (in_array($value['id'], $clientes)) {
+                        $data_clientes[] = $value;
+                    }
+                }
+            } else {
+                $data_clientes = [];
+            }
+        }
+
+        return $data_clientes;
     }
 }

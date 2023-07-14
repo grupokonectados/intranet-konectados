@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Config\UserController;
 use App\Models\Client;
 use App\Models\Estructura;
 use Illuminate\Support\Facades\Gate;
@@ -19,33 +20,7 @@ class ClientController extends Controller
 
     public function index()
     {
-        /**
-         * Metodo laravel
-         */
-        
-
-         
-
-        //  if(Gate::check('root-list')){
-        //     $data = Client::all();
-        //  }else{
-        //     if(auth()->user()->ve_clientes !== null){
-        //         $clientes = json_decode(auth()->user()->ve_clientes, true);
-        //         $data = Client::whereIn('id', $clientes)->get();
-        //     }else{
-        //         $data = [];
-        //     }
-            
-            
-        //  }
-
-        /**
-         * Metodo API
-         */
-
-        $response = Http::get(env('API_URL').env('API_CLIENTS'));
-        $data = $response->json()[0];
-
+        $data = (new UserController)->getClienteUser();
 
         $config_layout = [
             'title-section' => 'Clientes',
@@ -58,20 +33,11 @@ class ClientController extends Controller
 
     public function edit($id)
     {
-
-        // return $result = $this->getClientData($id);
-
-
         $result = $this->getClientData($id);
 
         $client = $result[0];
         $channels = $result[1];
         $channels_config = $result[2];
-
-
-        
-         
-         
 
         $config_layout = [
             'title-section' => 'Editar: ' . $client->name,
@@ -84,38 +50,48 @@ class ClientController extends Controller
 
 
 
-    function getClientData($id){
+    function getClientData($id)
+    {
 
         /**
+         * Funcion para obtener los recursos necesarios para procesar al cliente una uni vez en distintos tiempos de ejecucion. 
+         * 
+         * Vista Editar
+         * Vista Show
+         * vista Disenio
+         * 
          * Cuando el enpoint que entrega los datos de un cliente unico, cambiar el metodo
          * de consulta del cliente por el endpoint de la API 
          */
 
 
-        $client = Client::find($id);
+        $client = Client::find($id); // datos del cliente, eliminar cuando exista el endpoint
 
 
+        $config_clients = [];
+        $channels_config = [];
+
+        // Consultamos mediante un pool de peticiones, lo hacemos asi para obtener todos los datos en un solo arreglo de datos y 
+        // no tener que consultar uno a uno los datos del cliente y los canales activos.
         $responses = Http::pool(fn (Pool $pool) => [
-            //  $pool->as('clientes')->get(env('API_URL').env('API_CLIENTS')),
-             $pool->as('canales')->get(env('API_URL').env('API_CHANNELS')),
-         ]);
-       
+            //  $pool->as('clientes')->get(env('API_URL').env('API_CLIENTS')), 
+            $pool->as('canales')->get(env('API_URL') . env('API_CHANNELS')),
+        ]);
+
+        // Obtengo los canales activos
         $channels = $responses['canales']->json()[0];
 
+        // Verifico la configuracion del cliente para conocer los canales habilitados para su uso.
+        $config_clients = DB::table('config_clients')->select('channels_config')->where('client_id', '=', $id)->count();
 
+        //Verificamos que el cliente tenga canales habilitados
+        if ($config_clients > 0) { //Caso positivo
 
-        if(count(DB::table('config_clients')->select('channels_config')->where('client_id', '=', $id)->get())>0){
-            $config_clients = DB::table('config_clients')->select('channels_config')->where('client_id', '=', $id)->get()[0];
-            $channels_config = json_decode($config_clients->channels_config, true);
-        }else{ 
-            $config_clients = [];
-            $channels_config = [];
+            // la configuracion retornada la almacenamos en un arreglo
+            $channels_config = json_decode(DB::table('config_clients')->select('channels_config')->where('client_id', '=', $id)->get()[0]->channels_config, true);
         }
 
-        
-        
-
-
+        // Retornamos los datos del cliente y los canales de manera general y la configuracion de los canales habilitados para el cliente.
         return [
             $client,
             $channels,
@@ -127,71 +103,49 @@ class ClientController extends Controller
     public function update(Request $request, $id)
     {
 
-        
+        /**
+         * Tengo que esperar el Endpoint de update
+         */
 
         $conf_client = DB::table('config_clients')->where('client_id', '=', $id)->get();
 
-        if(count($conf_client) === 0){
+        if (count($conf_client) === 0) {
             DB::insert('insert into config_clients (client_id, channels_config) values (?, ?)', [$id, json_encode($request['channels'])]);
-        }else{
+        } else {
             DB::update('update config_clients set channels_config = ? where client_id = ?', [json_encode($request['channels']), $id]);
         }
 
-        // ds($conf_client);
-
-        // $conf_client->save();
-
-        // return $conf_client;
-
-
-        // $client = Client::find($id);
-        // $client->active_channels = json_encode($request['channels']);
-        // $client->save();
 
         return redirect(route('clients.show', $id));
     }
 
-
-    public function searchCliente(Request $request)
-    {
-
-        /**
-         * Metodo laravel
-         */
-
-        $prefix = $request->prefix;
-        $query = Estructura::select('COLUMN_NAME', 'COLUMN_TYPE', 'DATA_TYPE', 'TABLE_NAME')->where("PREFIX", '=', $prefix)->get();
-        return $query;
-
-
-
-        /**
-         * Metodo API
-         */
-
-        // $body_req = [
-        //     'prefix' => $request->prefix,
-        // ];
-
-        // $response = Http::post(env('API_URL') . '/estructura76/search-estructura', $body_req);
-        // return $response;
-    }
-
-
-
     public function disenoEstrategia($id)
     {
 
-        $client = Client::select('id', 'name', 'prefix', 'active_channels')->find($id); //Traigo los datos del cliente
 
-        // convierto en un array los canales permitidos del cliente
-        $client->active_channels = json_decode($client->active_channels, true);
+        $result = $this->getClientData($id);
 
-        //Extraemos el nombre de los canales
-        $channels = DB::table('canales')->where('isActive', '=', 1)->pluck('name')->toArray();
+        $client = $result[0];
+        $channels = $result[1];
+        $channels_config = $result[2];
 
-        // Traemo la estructura de la tabla
-        $estructura = Estructura::select('COLUMN_NAME', 'COLUMN_TYPE', 'DATA_TYPE', 'TABLE_NAME')->where("PREFIX", '=', $client->prefix)->get();
+
+        $response = Http::get(env('API_URL') . env('API_ESTRATEGIA') . '/' . strtoupper($client->prefix));
+        $datas =  $response->collect()[0];
+
+        for ($i = 0; $i < count($datas); $i++) {
+            $datas[$i]['registros'] = count(json_decode($datas[$i]['registros'], true));
+        }
+
+
+
+        // Traemos la estructura de la tabla
+
+
+
+
+
+        $estructura = Http::get(env('API_URL') . env('API_ESTRUCTURA') . '/' . $id)->json()[0];
 
         //Configuramos la vista
         $config_layout = [
@@ -201,69 +155,75 @@ class ClientController extends Controller
         ];
 
         // Obtengo todos las estrategias que el cliente tiene que no estan activas
-        $datas = DB::table('estrategias')
-        ->select('id', 'channels', 'onlyWhere', 'isActive', 'isDelete', 'type', 'repeatUsers', 'cobertura', 'registros_unicos', 'registros_repetidos', 'registros')
-        ->where('prefix_client', '=', $client->prefix)
-        ->whereIn('isActive', [0, 1])
-        ->whereIn('type', [0, 1, 2])
-        ->where('isDelete', '=', 0)
-        ->orderBy('isActive', 'DESC')
-        ->orderBy('type', 'ASC')
-        ->orderBy('created_at', 'ASC')
-        ->get();
+        // $datas = DB::table('estrategias')
+        //     ->select(
+        //         DB::raw('id, channels, onlyWhere, isActive, isDelete, type, repeatUsers, cobertura, registros_unicos, registros_repetidos, JSON_LENGTH(registros) as registros')
+        //     )
+        //     // id, channels, onlyWhere, isActive, isDelete, type, repeatUsers, cobertura, registros_unicos, registros_repetidos, 'count(registros)')
+        //     ->where('prefix_client', '=', $client->prefix)
+        //     ->where('type', '!=', 3)
+        //     ->where('isDelete', '!=', 1)
+        //     ->orderBy('isActive', 'DESC')
+        //     ->orderBy('type', 'ASC')
+        //     ->orderBy('created_at', 'ASC')
+        //     ->get();
+
+
+        // return $datas[0]['channels'];
+        // return $channels[0]['id'];
+
+        // return in_array($datas[0]['channels'], array_keys($channels))? 'si' : 'no';
 
         $queries = [];
         $ch_approve = [];
 
-        if (count($datas) > 0) { 
+        if (count($datas) > 0) {
 
             foreach ($datas as $key => $data) {
 
-                if ($data->type === 0) {
-                    $canales[] = $data->channels;
+                // if ($data->type === 0) {
+                if ($data['type'] === 0) {
+
+                    // $canales[] = $data->channels;
+                    $canales[] = $data['channels'];
                 }
 
-                if (isset($channels[$data->channels])) {
-                    $data->canal = $channels[$data->channels];
+                if (in_array($data['channels'], array_keys($channels))) {
+                    // $data->canal = $channels[$key]['name'];
+                    $datas[$key]['canal'] = $channels[$data['channels']]['name'];
+
+                    // array_push($data, ['canal' => 'agente']);
                 }
 
-                if($data->repeatUsers === 1){
-                    $data->registros_t = count(json_decode($data->registros, true));
+                // if ($data->repeatUsers === 1) {
+                // if ($data->repeatUsers === 1) {
+                if ($data['repeatUsers'] === 1) {
+                    // $data->registros_t = $data->registros;
+                    $datas[$key]['registros_t'] = $data['registros'];
                 }
-                
-                unset($data->registros);
 
-                if ($client->active_channels != null) {
-                    if ($data->type === 0) {
-                        $key_active_channels = array_keys($client->active_channels);
 
+                if ($channels_config != null) {
+                    // if ($data->type === 0) {
+                    if ($data['type'] === 0) {
+                        $key_active_channels = array_keys($channels_config);
                         $ch_approve = array_diff($key_active_channels, $canales);
                     } else {
-                        $key_active_channels = array_keys($client->active_channels);
-                        $ch_approve = $key_active_channels;
+                        $ch_approve = array_keys($channels_config);
                     }
-                } else {
-                    $ch_approve = [];
-                    $client->active_channels = [];
                 }
             }
-
         } else {
 
-            if ($client->active_channels != null) {
-                $key_active_channels = array_keys($client->active_channels);
-
-                $ch_approve = $key_active_channels;
-            } else {
-                $ch_approve = [];
-                $client->active_channels = [];
+            if ($channels_config != null) {
+                $ch_approve = array_keys($channels_config);
             }
         }
 
         // return $datas;
 
 
-        return view('clients/diseno', compact('client', 'datas', 'config_layout', 'channels', 'estructura', 'ch_approve'));
+        return view('clients/diseno', compact('client', 'datas', 'config_layout', 'channels', 'estructura', 'ch_approve', 'channels_config'));
     }
 
 
@@ -272,32 +232,46 @@ class ClientController extends Controller
     public function show($id)
     {
 
-        
 
-        
+        // Obtenemos datos y configuraciones del cliente. 
+        $result = $this->getClientData($id);
 
-      
-        $client = Client::select('id', 'name', 'prefix')->find($id); //Traigo los datos del cliente
+
+
+        $client = $result[0];
+        $channels = $result[1];
+        $channels_config = $result[2];
+
+
+
+        $response = Http::get(env('API_URL') . env('API_ESTRATEGIA') . '/' . strtoupper($client->prefix));
+        $datas =  $response->collect()[0];
+
+        for ($i = 0; $i < count($datas); $i++) {
+            $datas[$i]['registros'] = count(json_decode($datas[$i]['registros'], true));
+        }
+
+
+        // return $datas;
+
 
         // convierto en un array los canales permitidos del cliente
         // $client->active_channels = json_decode($client->active_channels, true);
 
 
+        // $datas = DB::table('estrategias')
+        //     ->select(DB::raw('id, channels, onlyWhere, isActive, isDelete, type, repeatUsers, cobertura, registros_unicos, registros_repetidos, activation_date, activation_time, JSON_LENGTH(registros) as registros'))
+        //     //'id', 'channels', 'onlyWhere', 'isActive', 'isDelete', 'type', 'repeatUsers', 'cobertura', 'registros_unicos', 'registros_repetidos', 'activation_date', 'activation_time', 'registros')
+        //     ->where('prefix_client', '=', $client->prefix)
+        //     ->where('type', '!=', 1)
+        //     ->orderBy('isActive', 'DESC')
+        //     ->orderBy('type', 'ASC')
+        //     ->orderBy('activation_date', 'DESC')
+        //     ->orderBy('activation_time', 'DESC')
+        //     ->get();
 
 
-
-        $channels = DB::table('canales')->where('isActive', '=', 1)->pluck('name')->toArray();
-
-
-        $datas = DB::table('estrategias')
-            ->select('id', 'channels', 'onlyWhere', 'isActive', 'isDelete', 'type', 'repeatUsers', 'cobertura', 'registros_unicos', 'registros_repetidos', 'activation_date', 'activation_time', 'registros')
-            ->where('prefix_client', '=', $client->prefix)
-            ->orderBy('isActive', 'DESC')
-            ->orderBy('type', 'ASC')
-            ->orderBy('activation_date', 'DESC')
-            ->orderBy('activation_time', 'DESC')
-            ->get();
-
+        // return $datas;
         $total_cartera = 0;
         $suma_total = 0;
         $porcentaje_total = 0;
@@ -306,44 +280,40 @@ class ClientController extends Controller
         $queries = [];
         $ch_approve = [];
 
-        // return $datas;
 
         if ($data_counter > 0) {
-            
-            
+
+
             foreach ($datas as $key => $data) {
-                if (isset($channels[$data->channels])) {
-                    $data->canal = $channels[$data->channels];
+                if (isset($channels[$key])) {
+                    $data['canal'] = $channels[$key]['name'];
+                    // $data->canal = $channels[$key]['name'];
                 }
 
-
-                if($data->type === 2){
-                    if($data->repeatUsers === 0){
-                    $suma_total += $data->registros_unicos;
-                    }else{
-                        $data->registros_t = count(json_decode($data->registros, true));
-                        $suma_total +=$data->registros_t;
+                if ($data['type'] === 2) {
+                    // if ($data->type === 2) {
+                    // if ($data->repeatUsers === 0) {
+                    if ($data['repeatUsers'] === 0) {
+                        $suma_total += $data->registros_unicos;
+                    } else {
+                        $data->registros_t = $data->registros;
+                        $suma_total += $data->registros_t;
                     }
                     $porcentaje_total += $data->cobertura;
                 }
-
-                unset($data->registros);
             }
 
 
             if ($client->active_channels !== null) {
-                foreach ($client->active_channels as $k => $v) {
+                foreach ($channels_config as $k => $v) {
                     $ch_approve[] = $v['seleccionado'];
                 }
-                $client->active_channels = $ch_approve;
-            } else {
-                $client->active_channels = [];
-                $ch_approve = [];
+                $channels_config = $ch_approve;
             }
         }
 
 
-        // return $ch_approve;
+        // return $datas;
 
         $config_layout = [
             'title-section' => 'Cliente: ' . $client->name,
