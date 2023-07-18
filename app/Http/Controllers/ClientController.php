@@ -130,29 +130,34 @@ class ClientController extends Controller
     {
 
 
+
+
         $result = $this->getClientData($id);
 
         $client = $result[0];
         $channels = $result[1];
         $channels_config = $result[2];
 
+        // return $client
 
-        $response = Http::get(env('API_URL') . env('API_ESTRATEGIA') . '/' . strtoupper($client->prefix));
-        $datas =  $response->collect()[0];
+
+        $responses = Http::pool(fn (Pool $pool) => [
+            $pool->as('estrategias')->get(env('API_URL') .  env('API_ESTRATEGIAS') . '/diseno/'.strtoupper($client->prefix)),
+            $pool->as('estructura')->get(env('API_URL') .  env('API_ESTRUCTURA') . '/' . $id),
+            
+        ]);
+
+
+        
+
+
+        $datas =  $responses['estrategias']->collect()[0];
+        // return $datas;
+        $estructura = $responses['estructura']->json()[0];
 
         for ($i = 0; $i < count($datas); $i++) {
             $datas[$i]['registros'] = count(json_decode($datas[$i]['registros'], true));
         }
-
-
-
-        // Traemos la estructura de la tabla
-
-
-
-
-
-        $estructura = Http::get(env('API_URL') . env('API_ESTRUCTURA') . '/' . $id)->json()[0];
 
         //Configuramos la vista
         $config_layout = [
@@ -161,25 +166,6 @@ class ClientController extends Controller
             'btn-back' => 'clients.show'
         ];
 
-        // Obtengo todos las estrategias que el cliente tiene que no estan activas
-        // $datas = DB::table('estrategias')
-        //     ->select(
-        //         DB::raw('id, channels, onlyWhere, isActive, isDelete, type, repeatUsers, cobertura, registros_unicos, registros_repetidos, JSON_LENGTH(registros) as registros')
-        //     )
-        //     // id, channels, onlyWhere, isActive, isDelete, type, repeatUsers, cobertura, registros_unicos, registros_repetidos, 'count(registros)')
-        //     ->where('prefix_client', '=', $client->prefix)
-        //     ->where('type', '!=', 3)
-        //     ->where('isDelete', '!=', 1)
-        //     ->orderBy('isActive', 'DESC')
-        //     ->orderBy('type', 'ASC')
-        //     ->orderBy('created_at', 'ASC')
-        //     ->get();
-
-
-        // return $datas[0]['channels'];
-        // return $channels[0]['id'];
-
-        // return in_array($datas[0]['channels'], array_keys($channels))? 'si' : 'no';
 
         $queries = [];
         $ch_approve = [];
@@ -188,24 +174,16 @@ class ClientController extends Controller
 
             foreach ($datas as $key => $data) {
 
-                // if ($data->type === 0) {
                 if ($data['type'] === 0) {
-
-                    // $canales[] = $data->channels;
                     $canales[] = $data['channels'];
                 }
 
                 if (in_array($data['channels'], array_keys($channels))) {
-                    // $data->canal = $channels[$key]['name'];
-                    $datas[$key]['canal'] = $channels[$data['channels']]['name'];
+                    $datas[$key]['canal'] = strtoupper($channels[$data['channels']]['name']);
 
-                    // array_push($data, ['canal' => 'agente']);
                 }
 
-                // if ($data->repeatUsers === 1) {
-                // if ($data->repeatUsers === 1) {
                 if ($data['repeatUsers'] === 1) {
-                    // $data->registros_t = $data->registros;
                     $datas[$key]['registros_t'] = $data['registros'];
                 }
 
@@ -250,8 +228,11 @@ class ClientController extends Controller
         $channels_config = $result[2];
 
 
+        // return $client
 
-        $response = Http::get(env('API_URL') . env('API_ESTRATEGIA') . '/' . strtoupper($client->prefix));
+
+
+        $response = Http::get(env('API_URL') .  '/estrategias/' . strtoupper($client->prefix));
         $datas =  $response->collect()[0];
 
         for ($i = 0; $i < count($datas); $i++) {
@@ -266,17 +247,6 @@ class ClientController extends Controller
         // $client->active_channels = json_decode($client->active_channels, true);
 
 
-        // $datas = DB::table('estrategias')
-        //     ->select(DB::raw('id, channels, onlyWhere, isActive, isDelete, type, repeatUsers, cobertura, registros_unicos, registros_repetidos, activation_date, activation_time, JSON_LENGTH(registros) as registros'))
-        //     //'id', 'channels', 'onlyWhere', 'isActive', 'isDelete', 'type', 'repeatUsers', 'cobertura', 'registros_unicos', 'registros_repetidos', 'activation_date', 'activation_time', 'registros')
-        //     ->where('prefix_client', '=', $client->prefix)
-        //     ->where('type', '!=', 1)
-        //     ->orderBy('isActive', 'DESC')
-        //     ->orderBy('type', 'ASC')
-        //     ->orderBy('activation_date', 'DESC')
-        //     ->orderBy('activation_time', 'DESC')
-        //     ->get();
-
 
         // return $datas;
         $total_cartera = 0;
@@ -287,26 +257,23 @@ class ClientController extends Controller
         $queries = [];
         $ch_approve = [];
 
-
         if ($data_counter > 0) {
 
 
             foreach ($datas as $key => $data) {
-                if (isset($channels[$key])) {
-                    $data['canal'] = $channels[$key]['name'];
-                    // $data->canal = $channels[$key]['name'];
+                if (in_array($data['channels'], array_keys($channels))) {
+                    $datas[$key]['canal'] = $channels[$data['channels']]['name'];
+
                 }
 
                 if ($data['type'] === 2) {
-                    // if ($data->type === 2) {
-                    // if ($data->repeatUsers === 0) {
                     if ($data['repeatUsers'] === 0) {
-                        $suma_total += $data->registros_unicos;
+                        $suma_total += $data['registros_unicos'];
                     } else {
-                        $data->registros_t = $data->registros;
-                        $suma_total += $data->registros_t;
+                        $data->registros_t = $data['registros'];
+                        $suma_total += $data['registros_t'];
                     }
-                    $porcentaje_total += $data->cobertura;
+                    $porcentaje_total += $data['cobertura'];
                 }
             }
 

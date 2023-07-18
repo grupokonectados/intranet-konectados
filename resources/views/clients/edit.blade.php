@@ -38,7 +38,8 @@
                 <thead>
                     <tr>
                         <th width='50%'>Canales:</th>
-                        <th colspan="2">Se puede repetir el canal en la estrategia?:</th>
+                        <th>Se puede repetir el canal en la estrategia?:</th>
+                        <th>tipo de canal</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -51,6 +52,10 @@
                             <td>
                                 {{ Form::checkbox('channels[' . $k . '][multiple]', $k.'_1', isset($channels_config[$k]['multiple']) ? true : false, ['class' => 'name form-check-input', 'id' => 'check_' . $k, 'disabled' => isset($channels_config[$k]['seleccionado']) ? false : true]) }}
                                 <label class="form-check-label">Si</label>
+                            </td>
+                            <td>
+                                {{ Form::checkbox('channels[' . $k . '][tipo]', $k.'_1', isset($channels_config[$k]['tipo']) ? true : false, ['class' => 'name form-check-input', 'id' => 'check_tipo_' . $k, 'disabled' => isset($channels_config[$k]['seleccionado']) ? false : true]) }}
+                                <label class="form-check-label">Masivo</label>
                             </td>
                         </tr>
                     @endforeach
@@ -72,11 +77,14 @@
 @section('js')
     <script>
         function enableRadio(element, c) {
-            var radio = document.getElementById("check_" + c)
-            if (radio.hasAttribute("disabled")) {
-                radio.removeAttribute("disabled")
+            var check_multiple = document.getElementById("check_" + c)
+            var check_tipo = document.getElementById("check_tipo_" + c)
+            if (check_multiple.hasAttribute("disabled")) {
+                check_multiple.removeAttribute("disabled")
+                check_tipo.removeAttribute("disabled")
             } else {
-                radio.setAttribute("disabled", true);
+                check_multiple.setAttribute("disabled", true);
+                check_tipo.setAttribute("disabled", true);
             }
         }
     </script>

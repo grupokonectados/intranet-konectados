@@ -10,21 +10,21 @@
 
 
 @section('content')
-@if ($message = Session::get('message'))
-<div class="col-12 mb-3">
-    <div class="alert alert-{{ $message['type'] }} alert-dismissible show mb-0" role="alert">
-        @if ($message['type']==='success')
-            <i class="fas fa-check-circle"></i>
-        @else
-            <i class="fas fa-exclamation-triangle"></i>
-        @endif
-        
-        <strong>{{ $message['message']}}</strong>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-     </div>
-    </div>
+    @if ($message = Session::get('message'))
+        <div class="col-12 mb-3">
+            <div class="alert alert-{{ $message['type'] }} alert-dismissible show mb-0" role="alert" id='alerta'>
+                @if ($message['type'] === 'success')
+                    <i class="fas fa-check-circle"></i>
+                @else
+                    <i class="fas fa-exclamation-triangle"></i>
+                @endif
+                <span id='mensaje'><strong>{{ $message['message'] }}</strong></span>
 
-@endif
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+
+    @endif
     <x-cards size='8' xtrasclass='mb-3' header="Datos del cliente" titlecolor='primary'>
         <div class="d-flex justify-content-between">
             <div class="col-6">
@@ -43,7 +43,7 @@
                     @if (isset($channels_config[$key]))
                         <div class="col-4">
                             <i class="fas fa-check text-success"></i>&nbsp;
-                            {{ $val['name'] }}
+                            {{ strtoupper($val['name']) }}
                         </div>
                     @endif
                 @endforeach
@@ -58,7 +58,7 @@
     <x-cards xtrasclass='my-3' header="Estrategias" titlecolor='primary'>
 
 
-        <div class="alert  alert-dismissible fade show d-none" role="alert">
+        <div class="alert alert-dismissible fade show d-none" role="alert">
             <span id='messages'></span>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
@@ -77,13 +77,13 @@
                 <th width='3%' class="align-middle">Acciones</th>
             </thead>
             <tbody class="align-middle">
-                
+
                 @foreach ($datas as $k => $data)
-                {{-- @dd($data['canal']) --}}
-                {{-- @if ($data->isActive === 0) --}}
-                @if ($data['isActive'] === 0)
-                <tr>
-                    <td class="text-center align-middle">{{ ++$k }}</td>
+                    {{-- @dd($data['canal']) --}}
+                    {{-- @if ($data->isActive === 0) --}}
+                    @if ($data['type'] === 1)
+                        <tr>
+                            <td class="text-center align-middle">{{ $data['id'] }}</td>
                             <td class="text-center align-middle">
                                 {{-- {{ $data->canal }} --}}
                                 {{ $data['canal'] }}
@@ -92,45 +92,42 @@
                             <td class="text-center align-middle">{{ number_format($data['cobertura'], 2, ',', '.') }}%</td>
                             {{-- @if ($data->repeatUsers == 1) --}}
                             @if ($data['repeatUsers'] == 1)
-                        <td class="text-center align-middle">
-                            {{-- {{ number_format($data->registros_t, 0, ',', '.') }} --}}
-                            {{ number_format($data['registros_t'], 0, ',', '.') }}
-                        </td>
-                        <td class="align-middle text-center">
-                            Si
-                        </td>
-                        <td class="text-center align-middle">
-                            {{-- {{ number_format($data->registros_t, 0, ',', '.') }} --}}
-                            {{ number_format($data['registros_t'], 0, ',', '.') }}
-                        </td>
-                        @else
-                        <td class="text-center align-middle">
-                            {{-- {{ number_format($data->registros_unicos, 0, ',', '.') }} --}}
-                            {{ number_format($data['registros_unicos'], 0, ',', '.') }}
-                            
-                        </td>
-                        <td class="align-middle text-center">
-                            No
-                        </td>
-                        <td class="text-center align-middle">
-                            {{-- {{ number_format($data->registros_repetidos, 0, ',', '.') }} --}}
-                            {{ number_format($data['registros_repetidos'], 0, ',', '.') }}
-                        </td>
-                            
-                        @endif
-                            {{-- <td class="align-middle">{{ $data->onlyWhere }}</td> --}}
+                                <td class="text-center align-middle">
+                                    {{-- {{ number_format($data->registros_t, 0, ',', '.') }} --}}
+                                    {{ number_format($data['registros_t'], 0, ',', '.') }}
+                                </td>
+                                <td class="align-middle text-center">
+                                    Si
+                                </td>
+                                <td class="text-center align-middle">
+                                    {{-- {{ number_format($data->registros_t, 0, ',', '.') }} --}}
+                                    {{ number_format($data['registros_t'], 0, ',', '.') }}
+                                </td>
+                            @else
+                                <td class="text-center align-middle">
+                                    {{-- {{ number_format($data->registros_unicos, 0, ',', '.') }} --}}
+                                    {{ number_format($data['registros_unicos'], 0, ',', '.') }}
+
+                                </td>
+                                <td class="align-middle text-center">
+                                    No
+                                </td>
+                                <td class="text-center align-middle">
+                                    {{-- {{ number_format($data->registros_repetidos, 0, ',', '.') }} --}}
+                                    {{ number_format($data['registros_repetidos'], 0, ',', '.') }}
+                                </td>
+                            @endif
                             <td>{{ $data['onlyWhere'] }}</td>
                             <td class="text-center align-middle">
                                 <div class="btn-group" role="group" aria-label="Basic example">
 
                                     <x-btn-standar type='a' title='Aceptar' color="success" sm='sm'
-                                    {{-- icon='check-circle' onclick="acceptedStrategy({{ $data->id }})" /> --}}
-                                    icon='check-circle' onclick="acceptedStrategy({{ $data['id'] }})" />
+                                    icon='check-circle'
+                                        onclick="acceptedStrategy('{{ $data['prefix_client'] }}')" />
 
                                     <x-btn-standar type='a' title='Eliminar' color="danger" sm='sm'
                                         icon='times-circle' extraclass='eliminar-estrategia'
-                                        {{-- href="{{ route('estrategia.delete-strategy', $data->id) }}" /> --}}
-                                        href="{{ route('estrategia.delete-strategy', $data['id']) }}" />
+                                        dataid="{{ $data['id'] }}" />
 
 
                                 </div>
@@ -155,12 +152,12 @@
                     <tr>
                         <th class="text-uppercase align-middle" scope="col">Canal: </th>
                         <th>
-                            <select onchange='aceptaRepetidos(this.value)' class="form-select form-select-sm" name="channels"
-                                id="canalsito">
+                            <select onchange='aceptaRepetidos(this.value)' class="form-select form-select-sm"
+                                name="channels" id="canalsito">
                                 <option value="">Seleccione</option>
                                 @for ($i = 0; $i < count($channels); $i++)
                                     @if (in_array($i, $ch_approve))
-                                        <option value="{{ $i }}">{{ $channels[$i]['name'] }}</option>
+                                        <option value="{{ $i }}">{{ strtoupper($channels[$i]['name']) }}</option>
                                     @endif
                                 @endfor
 
@@ -214,6 +211,7 @@
                             <input type="hidden" id="repe" name='repe'>
                             <input type="hidden" id="tota" name='total'>
                             <input type="hidden" id="registros" name='registros'>
+                            <input type="hidden" id="id_cliente" name='id_cliente' value={{ $client->id }}>
                         </th>
                     </tr>
                     <tr>
@@ -232,19 +230,19 @@
         </div>
     </x-cards>
     <th>
-        
-        
-        
-        
+
+
+
+
     </th>
     <x-cards size='4' xtrasclass='mt-3' header="Estimados" titlecolor='success'>
         <table class="table table-sm table-bordered mb-0 table-condensed">
             <thead class="table-dark text-center text-uppercase">
                 <tr>
-                <th>cobertura</th>
-                <th>unicos</th>
-                <th>repetidos</th>
-                <th>total</th>
+                    <th>cobertura</th>
+                    <th>unicos</th>
+                    <th>repetidos</th>
+                    <th>total</th>
                 </tr>
             </thead>
             <tbody class="text-center">
@@ -279,6 +277,31 @@
                     const confirmacion = confirm('¿Desea eliminar la estrategia?');
                     if (!confirmacion) {
                         event.preventDefault();
+                    } else {
+                        fetch(`http://apiest.konecsys.com:8080/estrategia/eliminar/${enlaceElement.dataset.identificador}`, {
+                                method: 'DELETE',
+                            })
+                            .then(response => {
+                                if (response.ok) {
+                                    // La respuesta fue exitosa (código de estado HTTP 200-299)
+                                    return response
+                                        .json(); // Devuelve una promesa que resuelve a un objeto JSON
+                                } else {
+                                    // La respuesta no fue exitosa
+                                    throw new Error('Error de respuesta');
+                                }
+                            })
+                            .then(data => {
+                                // Haz algo con los datos recibidos
+                                if (data.status === "201") {
+                                    alert('Eliminado con exito')
+                                    location.reload()
+                                }
+                            })
+                            .catch(error => {
+                                // Manejar errores de red u otros errores
+                                console.error(error);
+                            });
                     }
                 });
             });
@@ -324,12 +347,17 @@
             var query = document.getElementById('showQue').value;
             var prefix = document.getElementById('prefix').value;
             var table_name = document.getElementById('table_name2').value;
+            var id_cliente = document.getElementById('id_cliente').value;
 
-            if(document.getElementById('check').checked === true){
+            if (document.getElementById('check').checked === true) {
                 var check = document.getElementById('check').value
             }
-            
-            let opciones = { style: "decimal", minimumFractionDigits: 2, maximumFractionDigits: 2 };
+
+            let opciones = {
+                style: "decimal",
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            };
 
             fetch('{{ route('estrategia.probar-strategy') }}', {
                 method: 'POST',
@@ -338,6 +366,7 @@
                     prefix: prefix,
                     table_name: table_name,
                     check: check,
+                    id_cliente: id_cliente,
                 }),
                 headers: {
                     'content-type': 'application/json',
@@ -346,12 +375,14 @@
             }).then(response => {
                 return response.json();
             }).then(data => {
-                
+
                 posicion = data.length - 1
 
-                document.getElementById('cobertura').innerHTML = `${data[posicion].percent_cober.toLocaleString("de-DE", opciones)}%`
+                document.getElementById('cobertura').innerHTML =
+                    `${data[posicion].percent_cober.toLocaleString("de-DE", opciones)}%`
                 document.getElementById('unicos').innerHTML = data[posicion].total_unicos.toLocaleString("de-DE")
-                document.getElementById('repetidos').innerHTML = data[posicion].total_repetidos.toLocaleString("de-DE")
+                document.getElementById('repetidos').innerHTML = data[posicion].total_repetidos.toLocaleString(
+                    "de-DE")
                 document.getElementById('total').innerHTML = data[posicion].total_r.toLocaleString("de-DE")
 
                 document.getElementById('cober').value = data[posicion].percent_cober.toFixed(2)
@@ -359,11 +390,11 @@
                 document.getElementById('repe').value = data[posicion].total_repetidos
                 document.getElementById('tota').value = data[posicion].total_r
 
-                if(check === '1'){
+                if (check === '1') {
                     document.getElementById('registros').value = JSON.stringify(data[posicion].total_enc)
-                }else{
+                } else {
                     document.getElementById('registros').value = JSON.stringify(data[posicion].unicos)
-                }                
+                }
             });
 
 
@@ -404,6 +435,8 @@
 
         function acceptedStrategy(id) {
 
+            // console.log(id)
+
             fetch('{{ route('estrategia.accepted-strategy') }}', {
                 method: 'POST',
                 body: JSON.stringify({
@@ -417,6 +450,8 @@
                 return response.json();
             }).then(data => {
                 // Recargar la página actual
+
+                console.log(data)
 
                 if (data.result === 1) {
                     document.querySelector('.alert').classList.remove('d-none');

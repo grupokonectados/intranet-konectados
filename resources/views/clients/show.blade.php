@@ -41,54 +41,43 @@
             </thead>
             <tbody class="text-center">
                 @foreach ($datas as $k => $data)
-                    {{-- @if ($data->isActive === 1 && $data->type === 2) --}}
-                    @if ($data['isActive'] === 1 && $data['type'] === 2)
+                    @if ($data['type'] == 2)
                         <tr>
                             <td class="align-middle">
-                                {{-- {{ $data->canal }} --}}
                                 {{ $data['canal'] }}
                             </td>
                             <td class="align-middle">
-                                {{-- {{ number_format($data->cobertura, 2, ',', '.') }}% --}}
                                 {{ number_format($data['cobertura'], 2, ',', '.') }}%
                             </td>
-                            {{-- @if ($data->repeatUsers == 1) --}}
                             @if ($data['repeatUsers'] == 1)
                                 <td class="align-middle">
-                                    {{-- {{ number_format($data->registros_t, 0, ',', '.') }} --}}
                                     {{ number_format($data['registros_t'], 0, ',', '.') }}
                                 </td>
                                 <td class="align-middle">
                                     Si
                                 </td>
                                 <td class="align-middle">
-                                    {{-- {{ number_format($data->registros_t, 0, ',', '.') }} --}}
                                     {{ number_format($data['registros_t'], 0, ',', '.') }}
                                 </td>
                             @else
                                 <td class="align-middle">
-                                    {{-- {{ number_format($data->registros_unicos, 0, ',', '.') }} --}}
                                     {{ number_format($data['registros_unicos'], 0, ',', '.') }}
                                 </td>
                                 <td class="align-middle">
                                     No
                                 </td>
                                 <td class="align-middle">
-                                    {{-- {{ number_format($data->registros_repetidos, 0, ',', '.') }} --}}
                                     {{ number_format($data['registros_repetidos'], 0, ',', '.') }}
                                 </td>
                             @endif
-                            {{-- <td>{{ $data->onlyWhere }}</td> --}}
                             <td>{{ $data['onlyWhere'] }}</td>
                             <td class="align-middle">
                                 Activo
                             </td>
                             <td class="align-middle">
-                                {{-- {{ $data->activation_date === null ? 'Sin Activar' : date('d-m-Y', strtotime($data->activation_date)) }} --}}
                                 {{ $data['activation_date'] === null ? 'Sin Activar' : date('d-m-Y', strtotime($data['activation_date'])) }}
                             </td>
                             <td class="align-middle">
-                                {{-- {{ $data->activation_time === null ? 'Sin Activar' : date('G:i:m', strtotime($data->activation_time)) }} --}}
                                 {{ $data['activation_time'] === null ? 'Sin Activar' : date('G:i:m', strtotime($data['activation_time'])) }}
                             </td>
                             <td class="align-middle ">
@@ -99,10 +88,8 @@
                                 </div>
                             </td>
                             <td class="align-middle">
-                                <x-btn-standar type='a' title='Detener' extraclass='detener-estrategia'
-                                {{-- href="{{ route('estrategia.stop-strategy', $data->id) }}" color="danger" sm='sm' --}}
-                                href="{{ route('estrategia.stop-strategy', $dataid) }}" color="danger" sm='sm'
-                                icon='stop-circle' />
+                                <x-btn-standar type='a' title='Detener' extraclass='detener-estrategia' color="danger"
+                                    sm='sm' icon='stop-circle' dataid="{{ $data['id'] }}" />
 
                             </td>
                         </tr>
@@ -126,7 +113,8 @@
     <x-cards header="Estrategias historico" titlecolor='danger' xtrasclass="my-3">
         <div class="row">
             <div class="col-4 mb-3">
-                <select class="form-select form-select-sm" name="selectFiltro" onchange="filtroCanales(this.value)" id="selectFiltro">
+                <select class="form-select form-select-sm" name="selectFiltro" onchange="filtroCanales(this.value)"
+                    id="selectFiltro">
                     <option value="">Seleccione</option>
                     @for ($i = 0; $i < count($channels); $i++)
                         @if (in_array($i, $ch_approve))
@@ -136,7 +124,8 @@
                 </select>
             </div>
             <div class="col-2">
-                <x-btn-standar name='Limpiar' color="success" sm='sm' icon='sync' onclick="filtroCanales('refresh')" />
+                <x-btn-standar name='Limpiar' color="success" sm='sm' icon='sync'
+                    onclick="filtroCanales('refresh')" />
             </div>
             <div class="col-12">
                 <table id='tabla_eliminados' class="table table-sm table-bordered mb-0">
@@ -149,22 +138,17 @@
                     </thead>
                     <tbody class="text-center">
                         @foreach ($datas as $k => $data)
-                        {{-- @if ($data->isDelete === 1 && $data->type === 3) --}}
-                        @if ($data['isDelete'] === 1 && $data['type'] === 3)
-                        <tr>
+                            @if ($data['type'] == 3)
+                                <tr>
                                     <td class="align-middle">
-                                        {{-- {{ $data->canal }} --}}
                                         {{ $data['canal'] }}
                                     </td>
-                                    {{-- <td>{{ $data->onlyWhere }}</td> --}}
                                     <td>{{ $data['onlyWhere'] }}</td>
                                     <td class="align-middle">
                                         {{ $data['activation_date'] === null ? 'Sin Activar' : date('d-m-Y', strtotime($data['activation_date'])) }}
-                                        {{-- {{ $data->activation_date === null ? 'Sin Activar' : date('d-m-Y', strtotime($data->activation_date)) }} --}}
                                     </td>
                                     <td class="align-middle">
                                         {{ $data['activation_time'] === null ? 'Sin Activar' : date('G:i:m', strtotime($data['activation_time'])) }}
-                                        {{-- {{ $data->activation_time === null ? 'Sin Activar' : date('G:i:m', strtotime($data->activation_time)) }} --}}
                                     </td>
                                     <td class="align-middle ">
                                         <div class="progress" role="progressbar" aria-label="Animated striped example"
@@ -193,6 +177,31 @@
                     const confirmacion = confirm('¿Desea detener la estrategia?');
                     if (!confirmacion) {
                         event.preventDefault();
+                    } else {
+                        fetch(`http://apiest.konecsys.com:8080/estrategia/detener/${enlaceElement.dataset.identificador}`, {
+                                method: 'PUT',
+                            })
+                            .then(response => {
+                                if (response.ok) {
+                                    // La respuesta fue exitosa (código de estado HTTP 200-299)
+                                    return response
+                                        .json(); // Devuelve una promesa que resuelve a un objeto JSON
+                                } else {
+                                    // La respuesta no fue exitosa
+                                    throw new Error('Error de respuesta');
+                                }
+                            })
+                            .then(data => {
+                                // Haz algo con los datos recibidos
+                                if (data.status === "201") {
+                                    alert('Detenido con exito')
+                                    location.reload()
+                                }
+                            })
+                            .catch(error => {
+                                // Manejar errores de red u otros errores
+                                console.error(error);
+                            });
                     }
                 });
             });

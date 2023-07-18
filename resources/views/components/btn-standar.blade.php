@@ -3,7 +3,9 @@
         <a title="{{ $title ?? '' }}" @if (isset($href)) href="{{ $href }}" @endif
             @if (isset($onclick)) onclick="{{ $onclick }}" @endif
             @if (isset($id)) id="{{ $id }}" @endif
-            class="btn btn-{{ $color ?? 'info' }} btn-{{ $sm ?? '' }} {{ $extraclass ?? '' }}">
+            class="btn btn-{{ $color ?? 'info' }} btn-{{ $sm ?? '' }} {{ $extraclass ?? '' }}"
+            @if (isset($dataid)) data-identificador="{{ $dataid }}" @endif
+            >
 
             @if (isset($icon))
                 <i class="fas fa-{{ $icon }}"></i>

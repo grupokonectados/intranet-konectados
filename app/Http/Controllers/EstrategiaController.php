@@ -24,23 +24,10 @@ class EstrategiaController extends Controller
     const PATH_API = '/estrategias';
 
 
-    public function index()
-    {
-
-        $config_layout = [
-            'title-section' => 'Estrategias',
-            'breads' => 'Estrategias',
-            'btn-create' => 'estrategia.create'
-        ];
-
-        return view('estrategias/index', compact('config_layout'));
-    }
-
-
     public function saveEstrategia(Request $request)
     {
 
-        $getEstrategiasCliente = Http::get(env('API_URL').env('API_ESTRATEGIA').'/'.$request->prefix);
+        $getEstrategiasCliente = Http::get(env('API_URL').'/estrategias/diseno/'.$request->prefix);
         $data = $getEstrategiasCliente->collect()[0];
 
         $exist_record = [];
@@ -58,7 +45,7 @@ class EstrategiaController extends Controller
         if(count($exist_record) > 0){
             $message = [
                 'type' => 'danger',
-                'message' => 'Error!, existe un criterio creado el dia de hoy para ese canal, con las mismas caracteristicas. Por favor, verifíquelo e inténtelo nuevamente.',
+                'message' => 'Error! existe un criterio creado el dia de hoy para ese canal, con las mismas caracteristicas. Por favor, verifíquelo e inténtelo nuevamente.',
             ];
             return back()->with('message', $message);
         }else{
@@ -81,6 +68,9 @@ class EstrategiaController extends Controller
                 $saveQuery->repeatUsers = 0;
                 $saveQuery->registros = json_encode(json_decode($request['registros'], true));
             }
+
+
+            // return $saveQuery;
     
             $save = Http::post(env('API_URL').env('API_ESTRATEGIA'), $saveQuery);
             $result = $save->json();
@@ -89,13 +79,13 @@ class EstrategiaController extends Controller
                 if($result['protocol41'] === true){
                     $message = [
                         'type' => 'success',
-                        'message' => 'Exito!, Se registro la estrategia con exito',
+                        'message' => 'Exito! Se registro la estrategia con exito',
                     ];
                     return back()->with('message', $message);
                 }else{
                     $message = [
                         'type' => 'danger',
-                        'message' => 'Error!, Hubo un problema y su estrategia no se registro correctamente. Por favor, verifíquelo e inténtelo nuevamente.',
+                        'message' => 'Error! Hubo un problema y su estrategia no se registro correctamente. Por favor, verifíquelo e inténtelo nuevamente.',
                     ];
                     return back()->with('message', $message);
                 }
@@ -112,39 +102,107 @@ class EstrategiaController extends Controller
     public function probarStrategy(Request $request)
     {
 
-        // return $request;
-        $datas = DB::table('estrategias')
-            ->select('id', 'onlyWhere', 'table_name', 'channels', 'isActive', 'isDelete', 'type', 'repeatUsers', 'registros')
-            ->where('prefix_client', '=', $request->prefix)
-            ->whereIn('isActive', [0, 1])
-            ->whereIn('type', [0, 1, 2])
-            ->where('isDelete', '=', 0)
-            ->orderBy('isActive', 'DESC')
-            ->orderBy('type', 'ASC')
-            ->orderBy('created_at', 'ASC')
-            ->get();
+        // return ;
 
-        $queries = [];
+        $query_ruts = [];
 
-        foreach ($datas as $key => $val) {
-            $queries[$key][] = $val->table_name;
-            $queries[$key][] = $val->onlyWhere;
-            $queries[$key][] = $val->type;
-            $queries[$key][] = $val->repeatUsers;
+        $estrategias = Http::get(env('API_URL') .  env('API_ESTRATEGIAS') . '/diseno/'.$request->prefix);
 
-            $queries[$key]['registros'] = json_decode($val->registros, true);
-            $queries[$key]['total_cartera'] = 10000;
+
+        $param = [
+            "idCliente" =>$request->id_cliente,
+            "cartera"=> $request->table_name,
+            "criterio"=> $request['query'],
+        ];
+        $ruts = Http::withBody(json_encode($param))->get("http://apiest.konecsys.com:8080/estrategia/records");
+
+
+        $response_ruts = [];
+        foreach($ruts->json()[0] as $val){
+            $response_ruts[] = $val['rut'];
         }
 
-        $data_counter = count($datas);
+        // return $estrategias->json()[0][0]['repeatUsers'];
 
-        $queries[$data_counter][] = $request['table_name'];
-        $queries[$data_counter][] = $request['query'];
-        $queries[$data_counter][] = 0;
-        $queries[$data_counter][] = intval($request->check);
-        $queries[$data_counter]['total_cartera'] = 10000;
 
-        return $this->queryResults($queries);
+        for($r = 0; $r <=count($estrategias->json()[0]); $r++){
+            if($r != count($estrategias->json()[0])){
+                if($estrategias->json()[0][$r]['type'] === 1 || $estrategias->json()[0][$r]['type'] === 2){
+                    $query_ruts[] = json_decode($estrategias->json()[0][$r]['registros'], true);
+                    // $query_ruts[] = $r;
+
+                }
+            }else{
+                $query_ruts[] = $response_ruts;
+            }
+        }
+
+        // return $query_ruts;
+
+        for ($i = 0; $i < count($query_ruts); $i++) {
+
+            if ($estrategias->json()[0] === 1 || $estrategias->json()[0] === 2) {
+                $arr[$i]['unicos'] = $query_ruts[$i];
+                $arr[$i]['repetidos'] = 0;
+                $arr[$i]['vuelta'] = $i;
+            } else {
+                $tempArr = [];
+                for ($j = 0; $j < count($query_ruts); $j++) {
+                    if ($i !== $j) {
+                        $tempArr = array_merge($tempArr, $query_ruts[$j]);
+                    }
+                }
+
+                $merge[$i] = array_unique(array_merge($tempArr));
+
+                $arr[$i]['unicos'] = array_filter($query_ruts[$i], function ($valor) use ($merge, $i) {
+                    return !in_array($valor, $merge[$i]);
+                });
+
+                $arr[$i]['repetidos'] = array_filter($query_ruts[$i], function ($valor) use ($merge, $i) {
+                    return in_array($valor, $merge[$i]);
+                });
+                $arr[$i]['vuelta'] = $i;
+            }
+
+
+            $total_unicos[$i] = count($arr[$i]['unicos']);
+
+            if ($arr[$i]['repetidos'] != 0) {
+                $total_repetidos[$i] = count($arr[$i]['repetidos']);
+            } else {
+                $total_repetidos[$i] = $arr[$i]['repetidos'];
+            }
+
+            // if ($estrategias->json()[0][$i]['repeatUsers'] === 0) {
+            //     $percent_cober[$i] = ($total_unicos[$i] / 10000) * 100;
+            // } else {
+            //     $percent_cober[$i] = (count($query_ruts[$i]) / 10000) * 100;
+            // }
+
+
+
+            // $percent_cober[$i] = ($total_unicos[$i] / 10000) * 100;
+            $total_r[$i] = count($query_ruts[$i]);
+
+
+
+            $results[$i] = [
+                'unicos' => array_values($arr[$i]['unicos']),
+                'repetidos' =>  $arr[$i]['repetidos'] === 0 ? 0 : array_values($arr[$i]['repetidos']),
+                'total_unicos' => $total_unicos[$i],
+                'total_repetidos' => $total_repetidos[$i],
+                'percent_cober' => 0,
+                'total_r' => $total_r[$i],
+                'total_enc' => $query_ruts[$i],
+            ];
+        }
+
+
+        return $results;
+
+       
+
     }
 
     public function queryResults($strings_query)
@@ -153,11 +211,25 @@ class EstrategiaController extends Controller
         $results = [];
         $arr = [];
 
+
+        // $param =
+        // [
+        
+        //     "idCliente" =>11,
+        //     "cartera"=> "cartera_primer_dia",
+        //     "criterio"=> "monto <= 2000 and monto >=1000"
+        // ];
+        //     $ruts = Http::withBody(json_encode($param))->
+        //     get("http://apiest.konecsys.com:8080/estrategia/records");
+
+
+        
+
         foreach ($strings_query as $value) {
             if ($value[2] === 2 || $value[2] === 1) {
                 $query_ruts[] = $value['registros'];
             } else {
-                $query_ruts[] = DB::table($value[0])->whereRaw($value[1])->pluck('rut')->toArray();
+                $query_ruts[] = DB::table($value[0])->whereRaw($value[1])->pluck('rut')->toArray(); //id/criterio/table_name
             }
         }
 
@@ -266,20 +338,12 @@ class EstrategiaController extends Controller
         return $results;
     }
 
-
-    public function deleteStrategy($id)
-    {
-
-        Estrategia::find($id)->delete();
-        return back();
-    }
-
     public function acceptedStrategy(Request $request)
     {
 
 
 
-
+        // return $request;
 
         /** 
          * CASO PARA SI SOLO ES UNO Y YAAAAA
@@ -319,31 +383,15 @@ class EstrategiaController extends Controller
          * CASO PARA SI SOLO LOS MULTIPLES
          */
 
-        $getStrategys = Estrategia::select('channels')
-            ->where('isActive', '=', 1)
-            ->where('type', '=', 2)
-            ->get();
+        
 
+        $getEstrategiasCliente = Http::get(env('API_URL').'/estrategias/diseno/'.$request->id);
 
-
-        $estrategia = Estrategia::find($request->id); // obtengo los dato de la estrategia segun el identificador
-
-
-        // return $estrategia;
-
-        //Obtengo la configuracion de los permisos de los canales del cliente.
-        $client = DB::table('clients')
-            ->select('active_channels')
-            ->where('prefix', '=', $estrategia->prefix_client)->get()[0];
-
-
-        //guardo en un array los permisos del cliente 
-        $permitidos_client = json_decode($client->active_channels, true);
-
-
-        // return $permitidos_client[0]['multiple'];
+        return $getEstrategiasCliente->collect()[0];
 
         $arr_key_permitidos = [];
+
+        //Esperar el enpoint para activar la estrategia.
 
         foreach ($permitidos_client as $k => $v) {
             if (isset($permitidos_client[$k]['multiple'])) { // Verifico y almaceno la posicion de los canales en los cuales se permite usar varias veces el mismo canal
