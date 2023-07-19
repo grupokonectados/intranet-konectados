@@ -422,7 +422,7 @@
                 console.log(data.result)
 
 
-                if (data.result === 201) {
+                if (data.result === '201') {
                     document.querySelector('.alert').classList.remove('d-none');
                     document.querySelector('.alert').classList.add('alert-success')
                     document.querySelector('#messages').innerHTML = data.message
