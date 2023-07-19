@@ -29,6 +29,13 @@ class CreateAdminUserSeeder extends Seeder
             'email' => 'sp@1.com',
             'password' => bcrypt('123')
         ]);
+
+        $user3= User::create([
+            'name' => 'Danny', 
+            'email' => 'danny@1.com',
+            'password' => bcrypt('123'),
+            'password_changed_at' => Carbon::now()->toDateTimeString()
+        ]);
     
         $role = Role::create(['name' => 'Admin']);
         $role2 = Role::create(['name' => 'Supervisor']);
@@ -41,6 +48,7 @@ class CreateAdminUserSeeder extends Seeder
         $role2->syncPermissions($permissionsSupervisor);
      
         $user->assignRole([$role->id]);
+        $user3->assignRole([$role->id]);
         $user2->assignRole([$role2->id]);
     }
 }

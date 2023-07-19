@@ -376,24 +376,25 @@
                 return response.json();
             }).then(data => {
 
-                posicion = data.length - 1
+                console.log(data)
+
 
                 document.getElementById('cobertura').innerHTML =
-                    `${data[posicion].percent_cober.toLocaleString("de-DE", opciones)}%`
-                document.getElementById('unicos').innerHTML = data[posicion].total_unicos.toLocaleString("de-DE")
-                document.getElementById('repetidos').innerHTML = data[posicion].total_repetidos.toLocaleString(
+                    `${data.percent_cober.toLocaleString("de-DE", opciones)}%`
+                document.getElementById('unicos').innerHTML = data.total_unicos.toLocaleString("de-DE")
+                document.getElementById('repetidos').innerHTML = data.total_repetidos.toLocaleString(
                     "de-DE")
-                document.getElementById('total').innerHTML = data[posicion].total_r.toLocaleString("de-DE")
+                document.getElementById('total').innerHTML = data.total_r.toLocaleString("de-DE")
 
-                document.getElementById('cober').value = data[posicion].percent_cober.toFixed(2)
-                document.getElementById('unic').value = data[posicion].total_unicos
-                document.getElementById('repe').value = data[posicion].total_repetidos
-                document.getElementById('tota').value = data[posicion].total_r
+                document.getElementById('cober').value = data.percent_cober.toFixed(2)
+                document.getElementById('unic').value = data.total_unicos
+                document.getElementById('repe').value = data.total_repetidos
+                document.getElementById('tota').value = data.total_r
 
                 if (check === '1') {
-                    document.getElementById('registros').value = JSON.stringify(data[posicion].total_enc)
+                    document.getElementById('registros').value = JSON.stringify(data.total_enc)
                 } else {
-                    document.getElementById('registros').value = JSON.stringify(data[posicion].unicos)
+                    document.getElementById('registros').value = JSON.stringify(data.unicos)
                 }
             });
 
@@ -551,7 +552,7 @@
                         }
                     }
                 } else {
-                    if (element.type === 'text' || op[i].value === 'like') {
+                     if (op[i].value === 'like') {
                         queryParts.push(`${element.name} like '%${element.value}%'`); // 
                     } else if (element.type === 'date' || element.type === 'text') {
                         queryParts.push(`${element.name} ${op[i].value} '${element.value}'`); // 

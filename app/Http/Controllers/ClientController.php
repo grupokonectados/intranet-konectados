@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Http;
 
 
 use Illuminate\Http\Client\Pool;
+use Illuminate\Support\Facades\Cache;
 
 class ClientController extends Controller
 {
@@ -137,23 +138,27 @@ class ClientController extends Controller
         $client = $result[0];
         $channels = $result[1];
         $channels_config = $result[2];
-
-        // return $client
-
-
-        $responses = Http::pool(fn (Pool $pool) => [
-            $pool->as('estrategias')->get(env('API_URL') .  env('API_ESTRATEGIAS') . '/diseno/'.strtoupper($client->prefix)),
-            $pool->as('estructura')->get(env('API_URL') .  env('API_ESTRUCTURA') . '/' . $id),
-            
-        ]);
-
-
         
 
+            Cache::forget('estrategias');
+            Cache::forget('estructura');
+            $responses = Http::pool(fn (Pool $pool) => [
+                $pool->as('estrategias')->get(env('API_URL') .  env('API_ESTRATEGIAS') . '/diseno/'.strtoupper($client->prefix)),
+                $pool->as('estructura')->get(env('API_URL') .  env('API_ESTRUCTURA') . '/' . $id),
+                
+            ]);
+            Cache::forever('estrategias', $responses['estrategias']->collect()[0]); 
+            Cache::forever('estructura', $responses['estructura']->collect()[0]); 
+            
+        
+            $estrategias_cache = Cache::get('estrategias');
+            $estructura_cache = Cache::get('estructura');
+        
+        
 
-        $datas =  $responses['estrategias']->collect()[0];
+        $datas =  $estrategias_cache;
         // return $datas;
-        $estructura = $responses['estructura']->json()[0];
+        $estructura = $estructura_cache;
 
         for ($i = 0; $i < count($datas); $i++) {
             $datas[$i]['registros'] = count(json_decode($datas[$i]['registros'], true));

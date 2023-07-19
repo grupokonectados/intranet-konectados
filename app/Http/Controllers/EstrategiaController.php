@@ -8,6 +8,7 @@ use App\Models\Estructura;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
 
 class EstrategiaController extends Controller
 {
@@ -49,9 +50,10 @@ class EstrategiaController extends Controller
             ];
             return back()->with('message', $message);
         }else{
+            $onlyWhere = $request->onlyWhere;
 
             $saveQuery = new Estrategia();
-            $saveQuery->onlyWhere = $request->onlyWhere;
+            $saveQuery->onlyWhere = str_replace("'","''", $onlyWhere);
             $saveQuery->channels = $request->channels;
             $saveQuery->table_name = $request->table_name;
             $saveQuery->prefix_client = $request->prefix;
@@ -60,6 +62,7 @@ class EstrategiaController extends Controller
             $saveQuery->total_registros = $request->total;
             $saveQuery->cobertura = $request->cober;
             $saveQuery->type = 1;
+            
     
             if (isset($request->repeatUsers)) {
                 $saveQuery->repeatUsers = $request->repeatUsers;
@@ -106,7 +109,11 @@ class EstrategiaController extends Controller
 
         $query_ruts = [];
 
-        $estrategias = Http::get(env('API_URL') .  env('API_ESTRATEGIAS') . '/diseno/'.$request->prefix);
+
+        $estrategias_cache = Cache::get('estrategias');
+
+
+        // return $estrategias_cache;
 
 
         $param = [
@@ -114,94 +121,109 @@ class EstrategiaController extends Controller
             "cartera"=> $request->table_name,
             "criterio"=> $request['query'],
         ];
-        $ruts = Http::withBody(json_encode($param))->get("http://apiest.konecsys.com:8080/estrategia/records");
+
+       
+
+        $result_query = Http::withBody(json_encode($param))->get("http://apiest.konecsys.com:8080/estrategia/records");
+        
+        $coleccion = $result_query->collect()[0];
 
 
-        $response_ruts = [];
-        foreach($ruts->json()[0] as $val){
-            $response_ruts[] = $val['rut'];
+        // return $coleccion;
+        $response_ruts = array_values(json_decode($coleccion[0]['detail_records'], true));
+
+        $full_merge = [];
+
+        for($i = 0; $i<count($estrategias_cache); $i++){
+ 
+                    $full_merge = array_merge($full_merge, json_decode($estrategias_cache[$i]['registros'],true));
+                    $xd[] = $i;            
+        }
+        // return count($full_merge);
+
+
+        $unicos = array_diff($response_ruts, $full_merge);
+        $iguales = array_intersect($response_ruts, $full_merge);
+
+
+        if(isset($request->check)){
+            $cobertura = ( $coleccion[0]['total_records'] / $coleccion[0]['total_cartera'])*100;
+        }else{
+            $cobertura = ( count($unicos) / $coleccion[0]['total_cartera'])*100;
         }
 
-        // return $estrategias->json()[0][0]['repeatUsers'];
+
+        $result = [
+            'unicos' => $unicos,
+            'total_unicos' => count($unicos),
+            'total_repetidos' => count($iguales),
+            'total_r' => $coleccion[0]['total_records'],
+            'percent_cober' => $cobertura,
+            'total_enc' => $response_ruts
+        ];
 
 
-        for($r = 0; $r <=count($estrategias->json()[0]); $r++){
-            if($r != count($estrategias->json()[0])){
-                if($estrategias->json()[0][$r]['type'] === 1 || $estrategias->json()[0][$r]['type'] === 2){
-                    $query_ruts[] = json_decode($estrategias->json()[0][$r]['registros'], true);
-                    // $query_ruts[] = $r;
-
+        return $result;
+/*
+        for($r = 0; $r <=count($estrategias_cache); $r++){
+            if($r != count($estrategias_cache)){
+                if($estrategias_cache[$r]['type'] === 1 || $estrategias_cache[$r]['type'] === 2){
+                    $query_ruts[] = json_decode($estrategias_cache[$r]['registros'], true);
                 }
             }else{
                 $query_ruts[] = $response_ruts;
-            }
-        }
-
-        // return $query_ruts;
-
-        for ($i = 0; $i < count($query_ruts); $i++) {
-
-            if ($estrategias->json()[0] === 1 || $estrategias->json()[0] === 2) {
-                $arr[$i]['unicos'] = $query_ruts[$i];
-                $arr[$i]['repetidos'] = 0;
-                $arr[$i]['vuelta'] = $i;
-            } else {
-                $tempArr = [];
                 for ($j = 0; $j < count($query_ruts); $j++) {
-                    if ($i !== $j) {
+                    if ($r !== $j) {
                         $tempArr = array_merge($tempArr, $query_ruts[$j]);
                     }
+                    $merge[$r] = array_unique(array_merge($tempArr));
                 }
+                $arr[$r]['unicos'] = array_filter($query_ruts[$r], function ($valor) use ($merge, $r) { return !in_array($valor, $merge[$r]); });
+                $arr[$r]['iguales'] = array_filter($query_ruts[$r], function ($valor) use ($merge, $r) { return in_array($valor, $merge[$r]); });
 
-                $merge[$i] = array_unique(array_merge($tempArr));
-
-                $arr[$i]['unicos'] = array_filter($query_ruts[$i], function ($valor) use ($merge, $i) {
-                    return !in_array($valor, $merge[$i]);
-                });
-
-                $arr[$i]['repetidos'] = array_filter($query_ruts[$i], function ($valor) use ($merge, $i) {
-                    return in_array($valor, $merge[$i]);
-                });
-                $arr[$i]['vuelta'] = $i;
+                $result[$r] = [
+                    'unicos' => $arr[$r]['unicos'],
+                    'repetidos' => count($arr[$r]['iguales']),
+                    'total_unicos' => count($arr[$r]['unicos']),
+                    'total_repetidos' => count($arr[$r]['iguales']),
+                    'total_r' => $coleccion[0]['total_records'],
+                    'percent_cober' => ( $coleccion[0]['total_records']/ $coleccion[0]['total_cartera'])*100
+                ];
             }
-
-
-            $total_unicos[$i] = count($arr[$i]['unicos']);
-
-            if ($arr[$i]['repetidos'] != 0) {
-                $total_repetidos[$i] = count($arr[$i]['repetidos']);
-            } else {
-                $total_repetidos[$i] = $arr[$i]['repetidos'];
-            }
-
-            // if ($estrategias->json()[0][$i]['repeatUsers'] === 0) {
-            //     $percent_cober[$i] = ($total_unicos[$i] / 10000) * 100;
-            // } else {
-            //     $percent_cober[$i] = (count($query_ruts[$i]) / 10000) * 100;
-            // }
-
-
-
-            // $percent_cober[$i] = ($total_unicos[$i] / 10000) * 100;
-            $total_r[$i] = count($query_ruts[$i]);
-
-
-
-            $results[$i] = [
-                'unicos' => array_values($arr[$i]['unicos']),
-                'repetidos' =>  $arr[$i]['repetidos'] === 0 ? 0 : array_values($arr[$i]['repetidos']),
-                'total_unicos' => $total_unicos[$i],
-                'total_repetidos' => $total_repetidos[$i],
-                'percent_cober' => 0,
-                'total_r' => $total_r[$i],
-                'total_enc' => $query_ruts[$i],
-            ];
+            
         }
 
 
-        return $results;
+        return $result;
 
-       
+        $tempArr = [];
+        
+        $arr= [];
+        
+
+
+
+        for($i = 0; $i <count($query_ruts); $i++){
+            if(count($query_ruts) < $i){
+                if ($estrategias_cache[$i]['type'] === 1 || $estrategias_cache[$i]['type'] === 2) {
+                    $arr[$i]['unicos'] = $query_ruts[$i];
+                    $arr[$i]['repetidos'] = 0;
+                    $xd[]['vuelta'] = $i;
+                } else {
+                    for ($j = 0; $j < count($query_ruts); $j++) {
+                        if ($i !== $j) {
+                            $tempArr = array_merge($tempArr, $query_ruts[$j]);
+                        }
+                    }
+                    $merge[$i] = array_unique(array_merge($tempArr));
+                    $xd[]['vuelta'] = $i;
+                }
+            }
+        }
+
+        return $xd;
+
+       */
 
     }
 
