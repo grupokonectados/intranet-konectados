@@ -418,9 +418,9 @@
             }).then(data => {
                 // Recargar la página actual
 
-                console.log(data)
+                // console.log(data)
                 if (data.result === '201') {
-                    alert(data.message)
+                    // alert(data.message)
                     location.reload()
                 } else {
                     document.querySelector('.alert').classList.remove('d-none');
