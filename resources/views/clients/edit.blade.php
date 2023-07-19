@@ -13,7 +13,6 @@
 
 @section('content')
     <x-cards header="Editar cliente" titlecolor='warning'>
-
         {!! Form::model($client, ['method' => 'PATCH', 'route' => ['clients.update', $client->id]]) !!}
         <div class="row mb-3">
             <div class="col-2 align-self-center pr-0">
@@ -23,7 +22,6 @@
                 <input type="text" value="{{ $client->name }}" disabled class="form-control">
 
             </div>
-
             <div class="col-2 align-self-center pr-0">
                 <label class="form-label mb-0">Prefijos:</label>
             </div>
@@ -31,7 +29,6 @@
                 <input type="text" value="{{ $client->prefix }}" disabled class="form-control">
             </div>
         </div>
-
         <div class="row mb-2">
 
             <table class="table table-sm table-bordered">

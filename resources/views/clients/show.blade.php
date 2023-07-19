@@ -113,19 +113,19 @@
     <x-cards header="Estrategias historico" titlecolor='danger' xtrasclass="my-3">
         <div class="row">
             <div class="col-4 mb-3">
-                <select class="form-select form-select-sm" name="selectFiltro" onchange="filtroCanales(this.value)"
+                <select class="form-select form-select-sm" name="selectFiltro" onchange="filtroCanales(this.value, '{{ $client->prefix }}')"
                     id="selectFiltro">
                     <option value="">Seleccione</option>
                     @for ($i = 0; $i < count($channels); $i++)
                         @if (in_array($i, $ch_approve))
-                            <option value="{{ $i }}">{{ $channels[$i]['name'] }}</option>
+                            <option value="{{ $i }}">{{ strtoupper($channels[$i]['name']) }}</option>
                         @endif
                     @endfor
                 </select>
             </div>
             <div class="col-2">
                 <x-btn-standar name='Limpiar' color="success" sm='sm' icon='sync'
-                    onclick="filtroCanales('refresh')" />
+                    onclick="filtroCanales('refresh', '{{ $client->prefix }}')" />
             </div>
             <div class="col-12">
                 <table id='tabla_eliminados' class="table table-sm table-bordered mb-0">
@@ -170,6 +170,7 @@
 
     <script>
         const enlacesElement = document.querySelectorAll('.detener-estrategia');
+        const csrfToken = "{{ csrf_token() }}";
 
         if (enlacesElement !== null) {
             enlacesElement.forEach((enlaceElement) => {
@@ -208,14 +209,13 @@
         }
 
 
-
-        function filtroCanales(value) {
-            const csrfToken = "{{ csrf_token() }}";
-
+        function filtroCanales(value, client) {
+            
             fetch('{{ route('estrategia.filter-strategy') }}', {
                 method: 'POST',
                 body: JSON.stringify({
                     canal: value,
+                    client: client,
                 }),
                 headers: {
                     'content-type': 'application/json',
@@ -225,15 +225,14 @@
                 return response.json();
             }).then(data => {
                 var tabla = ''
-
                 tabla += `<table id='tabla_eliminados' class="table table-sm table-bordered mb-0">
                     <table id='tabla_eliminados' class="table table-sm table-bordered mb-0">
-                    <thead class="table-dark text-uppercase text-center">
+                        <thead class="table-dark text-uppercase text-center">
                         <th width='10%' class="align-middle">Canal</th>
                         <th class="align-middle">Criterio</th>
-                        <th width='15%' class="align-middle">Fecha activación</th>
-                        <th width='7%' class="align-middle">Hora activación</th>
-                        <th class="align-middle">Avance</th>
+                        <th width='12%' class="align-middle">Fecha activación</th>
+                        <th width='12%' class="align-middle">Hora activación</th>
+                        <th width='15%' class="align-middle">Avance</th>
                     </thead><tbody class="text-center">`
                 for (let d in data) {
                     tabla += `<tr>
@@ -245,17 +244,11 @@
                         </tr>`
                 }
                 tabla += `</tbody></table>`
-
                 document.querySelector('#tabla_eliminados').innerHTML = tabla
-
                 if (value === 'refresh') {
                     document.querySelector('#selectFiltro').value = ''
                 }
-
             });
-
-
-
         }
     </script>
 

@@ -63,8 +63,6 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
 
-
-
         <table class="table table-sm table-bordered mb-0">
             <thead class="table-dark text-uppercase text-center">
                 <th width='3%' class="align-middle ">#</th>
@@ -77,35 +75,26 @@
                 <th width='3%' class="align-middle">Acciones</th>
             </thead>
             <tbody class="align-middle">
-
                 @foreach ($datas as $k => $data)
-                    {{-- @dd($data['canal']) --}}
-                    {{-- @if ($data->isActive === 0) --}}
                     @if ($data['type'] === 1)
                         <tr>
                             <td class="text-center align-middle">{{ $data['id'] }}</td>
                             <td class="text-center align-middle">
-                                {{-- {{ $data->canal }} --}}
                                 {{ $data['canal'] }}
                             </td>
-                            {{-- <td class="text-center align-middle">{{ $data->cobertura }}%</td> --}}
                             <td class="text-center align-middle">{{ number_format($data['cobertura'], 2, ',', '.') }}%</td>
-                            {{-- @if ($data->repeatUsers == 1) --}}
                             @if ($data['repeatUsers'] == 1)
                                 <td class="text-center align-middle">
-                                    {{-- {{ number_format($data->registros_t, 0, ',', '.') }} --}}
                                     {{ number_format($data['registros_t'], 0, ',', '.') }}
                                 </td>
                                 <td class="align-middle text-center">
                                     Si
                                 </td>
                                 <td class="text-center align-middle">
-                                    {{-- {{ number_format($data->registros_t, 0, ',', '.') }} --}}
                                     {{ number_format($data['registros_t'], 0, ',', '.') }}
                                 </td>
                             @else
                                 <td class="text-center align-middle">
-                                    {{-- {{ number_format($data->registros_unicos, 0, ',', '.') }} --}}
                                     {{ number_format($data['registros_unicos'], 0, ',', '.') }}
 
                                 </td>
@@ -113,7 +102,6 @@
                                     No
                                 </td>
                                 <td class="text-center align-middle">
-                                    {{-- {{ number_format($data->registros_repetidos, 0, ',', '.') }} --}}
                                     {{ number_format($data['registros_repetidos'], 0, ',', '.') }}
                                 </td>
                             @endif
@@ -122,8 +110,7 @@
                                 <div class="btn-group" role="group" aria-label="Basic example">
 
                                     <x-btn-standar type='a' title='Aceptar' color="success" sm='sm'
-                                    icon='check-circle'
-                                        onclick="acceptedStrategy('{{ $data['prefix_client'] }}')" />
+                                        icon='check-circle' onclick="acceptedStrategy('{{ $data['prefix_client'] }}')" />
 
                                     <x-btn-standar type='a' title='Eliminar' color="danger" sm='sm'
                                         icon='times-circle' extraclass='eliminar-estrategia'
@@ -148,7 +135,6 @@
                         'method' => 'POST',
                         'id' => 'myForm',
                     ]) !!}
-
                     <tr>
                         <th class="text-uppercase align-middle" scope="col">Canal: </th>
                         <th>
@@ -157,12 +143,11 @@
                                 <option value="">Seleccione</option>
                                 @for ($i = 0; $i < count($channels); $i++)
                                     @if (in_array($i, $ch_approve))
-                                        <option value="{{ $i }}">{{ strtoupper($channels[$i]['name']) }}</option>
+                                        <option value="{{ $i }}">{{ strtoupper($channels[$i]['name']) }}
+                                        </option>
                                     @endif
                                 @endfor
-
                             </select>
-
                         </th>
                     </tr>
                     <tr>
@@ -174,8 +159,6 @@
                             <label class="form-check-label">Si</label>
                         </th>
                     </tr>
-
-
                     <tr>
                         <th class="text-uppercase align-middle" scope="col">
                             <a type="button" class="btn btn-success btn-sm" id='btnNuevo'
@@ -193,7 +176,6 @@
                             <th class="align-middle" width='15%'>Campo</th>
                             <th class="align-middle" width='20%'>Operador</th>
                             <th class="align-middle">Valor</th>
-
                         </tr>
                     </thead>
                 </table>
@@ -217,10 +199,10 @@
                     <tr>
                         <th class="text-uppercase align-middle" scope="col">
                             <div class="btn-group" role="group">
-                                <x-btn-standar type='submit' name='Guardar' extraclass="mb-0" title='Guardar'
+                                <x-btn-standar type='submit' id='guard' disabled='true' name='Guardar' extraclass="mb-0" title='Guardar'
                                     color="success" sm='sm' icon='save' />
                                 <x-btn-standar type='a' name='Probar' title='Probar' extraclass="mb-0"
-                                    color="primary" sm='sm' icon='play-circle' onclick="probarConsulta()" />
+                                    color="primary" sm='sm' id='probar' disabled='true' icon='play-circle' onclick="probarConsulta()" />
                             </div>
                         </th>
                     </tr>
@@ -229,12 +211,6 @@
             </div>
         </div>
     </x-cards>
-    <th>
-
-
-
-
-    </th>
     <x-cards size='4' xtrasclass='mt-3' header="Estimados" titlecolor='success'>
         <table class="table table-sm table-bordered mb-0 table-condensed">
             <thead class="table-dark text-center text-uppercase">
@@ -255,8 +231,6 @@
             </tbody>
         </table>
     </x-cards>
-
-
 @endsection
 
 
@@ -266,7 +240,6 @@
         var i = 0;
 
         document.getElementById("myForm").addEventListener('submit', validar);
-
 
         const enlacesElement = document.querySelectorAll('.eliminar-estrategia');
 
@@ -343,7 +316,7 @@
 
 
         function probarConsulta() {
-
+            document.getElementById('guard').disabled = true;
             var query = document.getElementById('showQue').value;
             var prefix = document.getElementById('prefix').value;
             var table_name = document.getElementById('table_name2').value;
@@ -376,9 +349,6 @@
                 return response.json();
             }).then(data => {
 
-                console.log(data)
-
-
                 document.getElementById('cobertura').innerHTML =
                     `${data.percent_cober.toLocaleString("de-DE", opciones)}%`
                 document.getElementById('unicos').innerHTML = data.total_unicos.toLocaleString("de-DE")
@@ -396,12 +366,10 @@
                 } else {
                     document.getElementById('registros').value = JSON.stringify(data.unicos)
                 }
+
+                document.getElementById('guard').disabled = false;
+
             });
-
-
-
-
-
         }
 
 
@@ -436,8 +404,6 @@
 
         function acceptedStrategy(id) {
 
-            // console.log(id)
-
             fetch('{{ route('estrategia.accepted-strategy') }}', {
                 method: 'POST',
                 body: JSON.stringify({
@@ -451,8 +417,6 @@
                 return response.json();
             }).then(data => {
                 // Recargar la página actual
-
-                console.log(data)
 
                 if (data.result === 1) {
                     document.querySelector('.alert').classList.remove('d-none');
@@ -523,6 +487,9 @@
 
 
         function showQuery() {
+            document.getElementById('guard').disabled = true;
+            document.getElementById('probar').disabled = false;
+            
             var query = "";
             var queryParts = [];
             const valoresElements = document.querySelectorAll('.valores');
@@ -552,7 +519,7 @@
                         }
                     }
                 } else {
-                     if (op[i].value === 'like') {
+                    if (op[i].value === 'like') {
                         queryParts.push(`${element.name} like '%${element.value}%'`); // 
                     } else if (element.type === 'date' || element.type === 'text') {
                         queryParts.push(`${element.name} ${op[i].value} '${element.value}'`); // 
