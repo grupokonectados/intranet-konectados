@@ -419,6 +419,8 @@
                 // Recargar la página actual
 
 
+                console.log(data.result)
+
 
                 if (data.result === 201) {
                     document.querySelector('.alert').classList.remove('d-none');
