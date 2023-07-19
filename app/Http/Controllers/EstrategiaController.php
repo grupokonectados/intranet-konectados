@@ -23,7 +23,7 @@ class EstrategiaController extends Controller
     public function saveEstrategia(Request $request)
     {
 
-        $getEstrategiasCliente = Http::get(env('API_URL').env('API_ESTRATEGIA').'/diseno/'.$request->prefix);
+        $getEstrategiasCliente = Http::get(env('API_URL').env('API_ESTRATEGIAS').'/diseno/'.$request->prefix);
         $data = $getEstrategiasCliente->collect()[0];
 
         $exist_record = [];
@@ -57,6 +57,8 @@ class EstrategiaController extends Controller
             $saveQuery->total_registros = $request->total;
             $saveQuery->cobertura = $request->cober;
             $saveQuery->type = 1;
+
+            
             
     
             if (isset($request->repeatUsers)) {
@@ -66,8 +68,7 @@ class EstrategiaController extends Controller
                 $saveQuery->repeatUsers = 0;
                 $saveQuery->registros = json_encode(json_decode($request['registros'], true));
             }
-
-            $save = Http::post(env('API_URL').env('API_ESTRATEGIAS'), $saveQuery);
+            $save = Http::post(env('API_URL').env('API_ESTRATEGIA'), $saveQuery);
             $result = $save->json();
 
             if($result != false){
