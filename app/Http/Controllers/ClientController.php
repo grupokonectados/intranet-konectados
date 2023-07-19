@@ -69,6 +69,7 @@ class ClientController extends Controller
             
         }
         
+        
         Cache::forget('canales');
         Cache::forget('cliente');
         Cache::forget('estructura');
@@ -86,26 +87,22 @@ class ClientController extends Controller
     public function update(Request $request, $id)
     {
 
-        
-
          $update = [];
          $update['idClient'] = intval($id);
-         $update['channels'] = json_encode(json_encode($request['channels']));
+         $update['channels'] = json_encode($request['channels'], JSON_FORCE_OBJECT);
 
-         return $update;
-         
-         $updated = Http::put("http://apiest.konecsys.com:8080/cliente/canales", $update);
+         $updated = Http::put(env('API_URL').env('API_CLIENT')."/canales", $update);
 
          
-        if($updated == 'false'){
-            return 'falso';
+        if($updated['affectedRows'] == 1){
+            return redirect(route('clients.show', $id));
+        }else{
+            return $updated;
         }
 
 
-         return $updated;
 
-
-        return redirect(route('clients.show', $id));
+        
     }
 
     public function disenoEstrategia($id)
@@ -113,13 +110,16 @@ class ClientController extends Controller
 
         $this->getClientData($id);
 
+
+        
+
         $client = Cache::get('cliente');
         $channels = Cache::get('canales');
         $channels_config = Cache::get('config_channels');
         $estructura = Cache::get('estructura');
 
 
-
+        
         
         Cache::forget('estrategias');
         

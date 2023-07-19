@@ -151,15 +151,9 @@ class EstrategiaController extends Controller
             'type' => 2
         ];
 
+
         $estrategiasHistoricoCliente = Http::withBody(json_encode($param))->get(env('API_URL').env('API_ESTRATEGIA').'/tipo');
         $datas = $estrategiasHistoricoCliente->collect()[0];
-
-
-
-        
-
-        
-
 
 
         foreach($estrategia as $value){
@@ -185,18 +179,11 @@ class EstrategiaController extends Controller
             $arr[] = $v['channels'];
         }
 
-
+        // return ($arr);
 
         if (in_array($arr_estrategia['channels'], $arr)) { // Verifico si existe ese canal dentro de los registros que existen
             if (in_array($arr_estrategia['channels'], $arr_key_permitidos)) { // Verifico si ese canal se puede usar multiple veces para el caso positivo, lo paso a prodccion
-                // $estrategia->type = 2;
-                // $estrategia->isActive = 1;
-                // $estrategia->activation_date = date('Y-m-d');
-                // $estrategia->activation_time = date('G:i:s');
-                // $estrategia->save();
-
                 $actived = Http::put("http://apiest.konecsys.com:8080/estrategia/activar/".$arr_estrategia['id']);
-
                 return ['message' => 'Puesto en produccion', 'result' => $actived['status']];
             } else { // Para el caso negativo donde no se puedan registrar multiples mensajes, le aviso al usuario
                 return [
@@ -205,13 +192,6 @@ class EstrategiaController extends Controller
                 ];
             }
         } else { // El caso negativo d que el canal no se encuentre dentro de los registros actuales 
-            // $estrategia->type = 2;
-            // $estrategia->isActive = 1;
-            // $estrategia->activation_date = date('Y-m-d');
-            // $estrategia->activation_time = date('G:i:s');
-            // $estrategia->save();
-
-
             $actived = Http::put("http://apiest.konecsys.com:8080/estrategia/activar/".$arr_estrategia['id']);
 
             return ['message' => 'Puesto en produccion', 'result' => $actived['status']];
