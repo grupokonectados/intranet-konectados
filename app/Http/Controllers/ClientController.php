@@ -94,7 +94,7 @@ class ClientController extends Controller
          $updated = Http::put(env('API_URL').env('API_CLIENT')."/canales", $update);
 
          
-        if($updated['affectedRows'] == 1){
+        if($updated != 'false'){
             return redirect(route('clients.show', $id));
         }else{
             return $updated;
