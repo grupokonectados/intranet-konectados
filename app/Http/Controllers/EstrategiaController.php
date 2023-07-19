@@ -67,7 +67,7 @@ class EstrategiaController extends Controller
                 $saveQuery->registros = json_encode(json_decode($request['registros'], true));
             }
 
-            $save = Http::post(env('API_URL').env('API_ESTRATEGIA'), $saveQuery);
+            $save = Http::post(env('API_URL').env('API_ESTRATEGIAS'), $saveQuery);
             $result = $save->json();
 
             if($result != false){
