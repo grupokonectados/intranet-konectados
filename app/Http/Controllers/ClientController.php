@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Client\Pool;
 use Illuminate\Support\Facades\Cache;
+use LDAP\Result;
 
 class ClientController extends Controller
 {
@@ -35,11 +36,11 @@ class ClientController extends Controller
 
     public function edit($id)
     {
-        $result = $this->getClientData($id);
+        $this->getClientData($id);
 
-        $client = $result[0];
+        $client = Cache::get('cliente');
         $channels =  Cache::get('canales');
-        $channels_config = $result[1];
+        $channels_config = Cache::get('config_channels');
 
         $config_layout = [
             'title-section' => 'Editar: ' . $client->name,
@@ -54,73 +55,54 @@ class ClientController extends Controller
 
     function getClientData($id)
     {
-
-        /**
-         * Funcion para obtener los recursos necesarios para procesar al cliente una uni vez en distintos tiempos de ejecucion. 
-         * 
-         * Vista Editar
-         * Vista Show
-         * vista Disenio
-         * 
-         * Cuando el enpoint que entrega los datos de un cliente unico, cambiar el metodo
-         * de consulta del cliente por el endpoint de la API 
-         */
-
-
-        $client = Client::find($id); // datos del cliente, eliminar cuando exista el endpoint
-
-
-        $config_clients = [];
-        $channels_config = [];
-
-        // Consultamos mediante un pool de peticiones, lo hacemos asi para obtener todos los datos en un solo arreglo de datos y 
-        // no tener que consultar uno a uno los datos del cliente y los canales activos.
+        
         $responses = Http::pool(fn (Pool $pool) => [
-            //  $pool->as('clientes')->get(env('API_URL').env('API_CLIENTS')), 
+            $pool->as('clientes')->get(env('API_URL').env('API_CLIENTS')), 
             $pool->as('canales')->get(env('API_URL') . env('API_CHANNELS')),
+            $pool->as('estructura')->get(env('API_URL') .  env('API_ESTRUCTURA') . '/' . $id),
         ]);
+
+        foreach($responses['clientes']->collect()[0] as $value){
+            if(in_array($id, $value)){
+                $arr = $value;
+            }
+            
+        }
         
         Cache::forget('canales');
+        Cache::forget('cliente');
+        Cache::forget('estructura');
+        Cache::forget('config_channels');
+
         Cache::forever('canales', $responses['canales']->collect()[0]);
+        Cache::forever('cliente', json_decode(json_encode($arr, JSON_FORCE_OBJECT)));
+        Cache::forever('estructura', $responses['estructura']->collect()[0]);
 
+        Cache::forever('config_channels', json_decode($arr['channels'], true));
 
-        
-
-        // Obtengo los canales activos
-        
-
-        // Verifico la configuracion del cliente para conocer los canales habilitados para su uso.
-        $config_clients = DB::table('config_clients')->select('channels_config')->where('client_id', '=', $id)->count();
-
-        //Verificamos que el cliente tenga canales habilitados
-        if ($config_clients > 0) { //Caso positivo
-
-            // la configuracion retornada la almacenamos en un arreglo
-            $channels_config = json_decode(DB::table('config_clients')->select('channels_config')->where('client_id', '=', $id)->get()[0]->channels_config, true);
-        }
-
-        // Retornamos los datos del cliente y los canales de manera general y la configuracion de los canales habilitados para el cliente.
-        return [
-            $client,
-            $channels_config,
-        ];
     }
 
 
     public function update(Request $request, $id)
     {
 
-        /**
-         * Tengo que esperar el Endpoint de update
-         */
+        
 
-        $conf_client = DB::table('config_clients')->where('client_id', '=', $id)->get();
+         $update = [];
+         $update['idClient'] = intval($id);
+         $update['channels'] = json_encode(json_encode($request['channels']));
 
-        if (count($conf_client) === 0) {
-            DB::insert('insert into config_clients (client_id, channels_config) values (?, ?)', [$id, json_encode($request['channels'])]);
-        } else {
-            DB::update('update config_clients set channels_config = ? where client_id = ?', [json_encode($request['channels']), $id]);
+         return $update;
+         
+         $updated = Http::put("http://apiest.konecsys.com:8080/cliente/canales", $update);
+
+         
+        if($updated == 'false'){
+            return 'falso';
         }
+
+
+         return $updated;
 
 
         return redirect(route('clients.show', $id));
@@ -129,31 +111,33 @@ class ClientController extends Controller
     public function disenoEstrategia($id)
     {
 
-        $result = $this->getClientData($id);
+        $this->getClientData($id);
 
-        $client = $result[0];
+        $client = Cache::get('cliente');
         $channels = Cache::get('canales');
-        $channels_config = $result[1];
+        $channels_config = Cache::get('config_channels');
+        $estructura = Cache::get('estructura');
 
+
+
+        
         Cache::forget('estrategias');
-        Cache::forget('estructura');
+        
+
         $responses = Http::pool(fn (Pool $pool) => [
             $pool->as('estrategias')->get(env('API_URL') .  env('API_ESTRATEGIAS') . '/diseno/' . strtoupper($client->prefix)),
-            $pool->as('estructura')->get(env('API_URL') .  env('API_ESTRUCTURA') . '/' . $id),
-
         ]);
+
+        // return $responses['estrategias']->collect()[0];
+
         Cache::forever('estrategias', $responses['estrategias']->collect()[0]);
-        Cache::forever('estructura', $responses['estructura']->collect()[0]);
-
-
-        $estrategias_cache = Cache::get('estrategias');
-        $estructura_cache = Cache::get('estructura');
 
 
 
-        $datas =  $estrategias_cache;
-        $estructura = $estructura_cache;
+        
+        $datas = Cache::get('estrategias');
 
+        
         for ($i = 0; $i < count($datas); $i++) {
             $datas[$i]['registros'] = count(json_decode($datas[$i]['registros'], true));
         }
@@ -193,31 +177,37 @@ class ClientController extends Controller
         } else {
             if ($channels_config != null) {
                 $ch_approve = array_keys($channels_config);
+            }else{
+                $channels_config =[];
             }
         }
+
+
 
         return view('clients/diseno', compact('client', 'datas', 'config_layout', 'channels', 'estructura', 'ch_approve', 'channels_config'));
     }
 
     public function show($id)
     {
-
+        Cache::forget('estrategias');
 
         // Obtenemos datos y configuraciones del cliente. 
-        $result = $this->getClientData($id);
-        $client = $result[0];
+       $this->getClientData($id);
+
+
+        $client = Cache::get('cliente');
         $channels = Cache::get('canales');
-        $channels_config = $result[1];
+        $channels_config = Cache::get('config_channels');
 
 
-        Cache::forget('estrategias');
+
+        
         $responses = Http::pool(fn (Pool $pool) => [
-            $pool->as('estrategias')->get(env('API_URL') .  '/estrategias/' . strtoupper($client->prefix)),
-
+            $pool->as('estrategias')->get(env('API_URL') . env('API_ESTRATEGIAS') . '/' . strtoupper($client->prefix)),
         ]);
-        Cache::forever('estrategias', $responses['estrategias']->collect()[0]);
+        // return $responses['estrategias']->json();
 
-
+        Cache::forever('estrategias', $responses['estrategias']->json()[0]);
         $estrategias_cache = Cache::get('estrategias');
 
         $datas =  $estrategias_cache;

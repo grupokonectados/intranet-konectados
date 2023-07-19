@@ -38,7 +38,7 @@
 
     <x-cards size='4' xtrasclass='mb-3' header="Canales Permitidos" titlecolor='primary'>
         <div class="row">
-            @if (count($channels_config) > 0)
+            @if ($channels_config != null)
                 @foreach ($channels as $key => $val)
                     @if (isset($channels_config[$key]))
                         <div class="col-4">
@@ -110,7 +110,7 @@
                                 <div class="btn-group" role="group" aria-label="Basic example">
 
                                     <x-btn-standar type='a' title='Aceptar' color="success" sm='sm'
-                                        icon='check-circle' onclick="acceptedStrategy('{{ $data['prefix_client'] }}')" />
+                                        icon='check-circle' onclick="acceptedStrategy({{ $data['id'] }})" />
 
                                     <x-btn-standar type='a' title='Eliminar' color="danger" sm='sm'
                                         icon='times-circle' extraclass='eliminar-estrategia'
@@ -418,7 +418,9 @@
             }).then(data => {
                 // Recargar la página actual
 
-                if (data.result === 1) {
+
+
+                if (data.result === 201) {
                     document.querySelector('.alert').classList.remove('d-none');
                     document.querySelector('.alert').classList.add('alert-success')
                     document.querySelector('#messages').innerHTML = data.message

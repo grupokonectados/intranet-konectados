@@ -44,7 +44,7 @@
                         <tr>
                             <td>
                                 {{ Form::checkbox('channels[' . $k . '][seleccionado]', $k, isset($channels_config[$k]) ? true : false, ['id' => 'checkbox_'.$k, 'class' => 'name form-check-input', 'onchange' => 'enableRadio(this, ' . $k . ')']) }}
-                                <label for="checkbox_{{ $k }}" class="form-check-label">{{ $value['name'] }}</label>
+                                <label for="checkbox_{{ $k }}" class="form-check-label">{{ strtoupper($value['name']) }}</label>
                             </td>
                             <td>
                                 {{ Form::checkbox('channels[' . $k . '][multiple]', $k.'_1', isset($channels_config[$k]['multiple']) ? true : false, ['class' => 'name form-check-input', 'id' => 'check_' . $k, 'disabled' => isset($channels_config[$k]['seleccionado']) ? false : true]) }}

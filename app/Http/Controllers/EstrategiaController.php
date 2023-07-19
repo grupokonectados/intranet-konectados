@@ -141,14 +141,36 @@ class EstrategiaController extends Controller
     public function acceptedStrategy(Request $request)
     {
 
+        // return $request;
 
-        $getEstrategiasCliente = Http::get(env('API_URL').'/estrategias/diseno/'.$request->id);
+        $estrategia = Cache::get('estrategias');
+        $permitidos_client = Cache::get('config_channels');
 
-        return $getEstrategiasCliente->collect()[0];
+        $param = [
+            'prefix' => $estrategia[0]['prefix_client'],
+            'type' => 2
+        ];
 
+        $estrategiasHistoricoCliente = Http::withBody(json_encode($param))->get(env('API_URL').env('API_ESTRATEGIA').'/tipo');
+        $datas = $estrategiasHistoricoCliente->collect()[0];
+
+
+
+        
+
+        
+
+
+
+        foreach($estrategia as $value){
+            if(in_array($request->id, $value)){
+                $arr_estrategia = $value;
+            }
+        }
+
+        
         $arr_key_permitidos = [];
 
-        //Esperar el enpoint para activar la estrategia.
 
         foreach ($permitidos_client as $k => $v) {
             if (isset($permitidos_client[$k]['multiple'])) { // Verifico y almaceno la posicion de los canales en los cuales se permite usar varias veces el mismo canal
@@ -159,20 +181,23 @@ class EstrategiaController extends Controller
         // return $arr_key_permitidos;
 
         $arr = [];
-        foreach ($getStrategys as  $v) { // Almaceno los canales que existen actualmente para el cliente
-            $arr[] = $v->channels;
+        foreach ($datas as  $v) { // Almaceno los canales que existen actualmente para el cliente
+            $arr[] = $v['channels'];
         }
 
-        // return $arr;
 
-        if (in_array($estrategia->channels, $arr)) { // Verifico si existe ese canal dentro de los registros que existen
-            if (in_array($estrategia->channels, $arr_key_permitidos)) { // Verifico si ese canal se puede usar multiple veces para el caso positivo, lo paso a prodccion
-                $estrategia->type = 2;
-                $estrategia->isActive = 1;
-                $estrategia->activation_date = date('Y-m-d');
-                $estrategia->activation_time = date('G:i:s');
-                $estrategia->save();
-                return ['message' => 'Puesto en produccion', 'result' => 1];
+
+        if (in_array($arr_estrategia['channels'], $arr)) { // Verifico si existe ese canal dentro de los registros que existen
+            if (in_array($arr_estrategia['channels'], $arr_key_permitidos)) { // Verifico si ese canal se puede usar multiple veces para el caso positivo, lo paso a prodccion
+                // $estrategia->type = 2;
+                // $estrategia->isActive = 1;
+                // $estrategia->activation_date = date('Y-m-d');
+                // $estrategia->activation_time = date('G:i:s');
+                // $estrategia->save();
+
+                $actived = Http::put("http://apiest.konecsys.com:8080/estrategia/activar/".$arr_estrategia['id']);
+
+                return ['message' => 'Puesto en produccion', 'result' => $actived['status']];
             } else { // Para el caso negativo donde no se puedan registrar multiples mensajes, le aviso al usuario
                 return [
                     'message' => 'No se puede registrar, para ese canal ya existe una estrategia y no se pueden activar mas',
@@ -180,12 +205,16 @@ class EstrategiaController extends Controller
                 ];
             }
         } else { // El caso negativo d que el canal no se encuentre dentro de los registros actuales 
-            $estrategia->type = 2;
-            $estrategia->isActive = 1;
-            $estrategia->activation_date = date('Y-m-d');
-            $estrategia->activation_time = date('G:i:s');
-            $estrategia->save();
-            return ['message' => 'Puesto en produccion', 'result' => 1];
+            // $estrategia->type = 2;
+            // $estrategia->isActive = 1;
+            // $estrategia->activation_date = date('Y-m-d');
+            // $estrategia->activation_time = date('G:i:s');
+            // $estrategia->save();
+
+
+            $actived = Http::put("http://apiest.konecsys.com:8080/estrategia/activar/".$arr_estrategia['id']);
+
+            return ['message' => 'Puesto en produccion', 'result' => $actived['status']];
         }
     }
 
