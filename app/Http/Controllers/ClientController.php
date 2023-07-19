@@ -66,7 +66,6 @@ class ClientController extends Controller
             if(in_array($id, $value)){
                 $arr = $value;
             }
-            
         }
         
         
@@ -93,7 +92,7 @@ class ClientController extends Controller
 
          $updated = Http::put(env('API_URL').env('API_CLIENT')."/canales", $update);
 
-return $updated;
+// return $updated;
          
         if($updated != 'false'){
             return redirect(route('clients.show', $id));
