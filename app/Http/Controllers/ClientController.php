@@ -263,16 +263,16 @@ class ClientController extends Controller
 
     $groupedArray = [];
 
-    foreach ($datas as $item) {
+    foreach ($datas as $ki => $item) {
         preg_match("/tipo_cobranza = '([^']+)'/", $item['onlyWhere'], $matches);
         $tipoCobranza = $matches[1] ?? '';
 
         if (!empty($tipoCobranza)) {
             if (!isset($groupedArray[$tipoCobranza])) {
-                $groupedArray[$tipoCobranza] = [];
+                $groupedArray[] = [];
             }
 
-            $groupedArray[$tipoCobranza][] = $item;
+            $groupedArray[][] = $item;
         }
     }
 
