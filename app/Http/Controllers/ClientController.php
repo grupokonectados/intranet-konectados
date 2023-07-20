@@ -279,6 +279,9 @@ class ClientController extends Controller
     // return $arr_k = array_keys($groupedArray);
 
 
+    return $groupedArray[0];
+
+
 
         return view('clients/show', compact('arr_k', 'groupedArray', 'config_layout', 'client', 'datas', 'channels', 'ch_approve', 'porcentaje_total', 'suma_total'));
     }
