@@ -279,7 +279,7 @@ class ClientController extends Controller
     // return $arr_k = array_keys($groupedArray);
 
 
-    return $groupedArray['DA_PR00006'];
+    // return $groupedArray['DA_PR00006'];
 
 
 
