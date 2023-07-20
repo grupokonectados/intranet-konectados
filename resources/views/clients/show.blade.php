@@ -27,7 +27,7 @@
     <x-cards header="Estrategias activas" titlecolor='success'>
         <table class="table table-sm table-bordered mb-0">
             <thead class="table-dark text-uppercase text-center">
-                <th width='10%' class="align-middle">Canal</th>
+                <th width='7%' class="align-middle">Canal</th>
                 <th class="align-middle" width='3%'>Cobertura</th>
                 <th class="align-middle" width='3%'>Registros</th>
                 <th class="align-middle" width='7%'>¿Acepta repetidos?</th>
