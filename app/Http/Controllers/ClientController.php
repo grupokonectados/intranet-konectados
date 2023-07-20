@@ -55,20 +55,20 @@ class ClientController extends Controller
 
     function getClientData($id)
     {
-        
+
         $responses = Http::pool(fn (Pool $pool) => [
-            $pool->as('clientes')->get(env('API_URL').env('API_CLIENTS')), 
+            $pool->as('clientes')->get(env('API_URL') . env('API_CLIENTS')),
             $pool->as('canales')->get(env('API_URL') . env('API_CHANNELS')),
             $pool->as('estructura')->get(env('API_URL') .  env('API_ESTRUCTURA') . '/' . $id),
         ]);
 
-        foreach($responses['clientes']->collect()[0] as $value){
-            if(in_array($id, $value)){
+        foreach ($responses['clientes']->collect()[0] as $value) {
+            if (in_array($id, $value)) {
                 $arr = $value;
             }
         }
-        
-        
+
+
         Cache::forget('canales');
         Cache::forget('cliente');
         Cache::forget('estructura');
@@ -79,68 +79,38 @@ class ClientController extends Controller
         Cache::forever('estructura', $responses['estructura']->collect()[0]);
 
         Cache::forever('config_channels', json_decode($arr['channels'], true));
-
     }
 
 
     public function update(Request $request, $id)
     {
 
-         $update = [];
-         $update['idClient'] = intval($id);
-         $update['channels'] = json_encode($request['channels'], JSON_FORCE_OBJECT);
+        $update = [];
+        $update['idClient'] = intval($id);
+        $update['channels'] = json_encode($request['channels'], JSON_FORCE_OBJECT);
 
-         $updated = Http::put(env('API_URL').env('API_CLIENT')."/canales", $update);
+        $updated = Http::put(env('API_URL') . env('API_CLIENT') . "/canales", $update);
 
-// return $updated;
-         
-        if($updated != 'false'){
+        // return $updated;
+
+        if ($updated != 'false') {
             return redirect(route('clients.show', $id));
-        }else{
+        } else {
             return $updated;
         }
-
-
-
-        
     }
 
     public function disenoEstrategia($id)
     {
 
+        $ch_approve = [];
         $this->getClientData($id);
-
-
-        
 
         $client = Cache::get('cliente');
         $channels = Cache::get('canales');
         $channels_config = Cache::get('config_channels');
         $estructura = Cache::get('estructura');
 
-
-        
-        
-        Cache::forget('estrategias');
-        
-
-        $responses = Http::pool(fn (Pool $pool) => [
-            $pool->as('estrategias')->get(env('API_URL') .  env('API_ESTRATEGIAS') . '/diseno/' . strtoupper($client->prefix)),
-        ]);
-
-        // return $responses['estrategias']->collect()[0];
-
-        Cache::forever('estrategias', $responses['estrategias']->collect()[0]);
-
-
-
-        
-        $datas = Cache::get('estrategias');
-
-        
-        for ($i = 0; $i < count($datas); $i++) {
-            $datas[$i]['registros'] = count(json_decode($datas[$i]['registros'], true));
-        }
 
         //Configuramos la vista
         $config_layout = [
@@ -149,7 +119,22 @@ class ClientController extends Controller
             'btn-back' => 'clients.show'
         ];
 
-        $ch_approve = [];
+        Cache::forget('estrategias');
+
+        $responses = Http::pool(fn (Pool $pool) => [
+            $pool->as('estrategias')->get(env('API_URL') .  env('API_ESTRATEGIAS') . '/diseno/' . strtoupper($client->prefix)),
+        ]);
+
+        Cache::forever('estrategias', $responses['estrategias']->collect()[0]);
+        $datas = Cache::get('estrategias');
+
+        // for ($i = 0; $i < count($datas); $i++) {
+        //     $datas[$i]['registros'] = count(json_decode($datas[$i]['registros'], true));
+        // }
+
+
+        $suma_total = 0;
+        $porcentaje_total = 0;
 
         if (count($datas) > 0) {
             foreach ($datas as $key => $data) {
@@ -161,10 +146,6 @@ class ClientController extends Controller
                     $datas[$key]['canal'] = strtoupper($channels[$data['channels']]['name']);
                 }
 
-                if ($data['repeatUsers'] === 1) {
-                    $datas[$key]['registros_t'] = $data['registros'];
-                }
-
                 if ($channels_config != null) {
                     if ($data['type'] === 0) {
                         $key_active_channels = array_keys($channels_config);
@@ -173,18 +154,26 @@ class ClientController extends Controller
                         $ch_approve = array_keys($channels_config);
                     }
                 }
+
+                if ($data['repeatUsers'] === 0) {
+                    $suma_total += $data['registros_unicos'];
+                } else {
+                    // $data->registros_t = $data['registros'];
+                    $suma_total += $data['total_registros'];
+                }
+                $porcentaje_total += $data['cobertura'];
             }
         } else {
             if ($channels_config != null) {
                 $ch_approve = array_keys($channels_config);
-            }else{
-                $channels_config =[];
+            } else {
+                $channels_config = [];
             }
         }
 
 
 
-        return view('clients/diseno', compact('client', 'datas', 'config_layout', 'channels', 'estructura', 'ch_approve', 'channels_config'));
+        return view('clients/diseno', compact('client', 'datas', 'porcentaje_total',  'suma_total', 'config_layout', 'channels', 'estructura', 'ch_approve', 'channels_config'));
     }
 
     public function show($id)
@@ -192,7 +181,7 @@ class ClientController extends Controller
         Cache::forget('estrategias');
 
         // Obtenemos datos y configuraciones del cliente. 
-       $this->getClientData($id);
+        $this->getClientData($id);
 
 
         $client = Cache::get('cliente');
@@ -201,7 +190,7 @@ class ClientController extends Controller
 
 
 
-        
+
         $responses = Http::pool(fn (Pool $pool) => [
             $pool->as('estrategias')->get(env('API_URL') . env('API_ESTRATEGIAS') . '/' . strtoupper($client->prefix)),
         ]);

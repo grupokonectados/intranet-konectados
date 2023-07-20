@@ -78,20 +78,20 @@
                 @foreach ($datas as $k => $data)
                     @if ($data['type'] === 1)
                         <tr>
-                            <td class="text-center align-middle">{{ $data['id'] }}</td>
+                            <td class="text-center align-middle">{{ ++$k }}</td>
                             <td class="text-center align-middle">
                                 {{ $data['canal'] }}
                             </td>
                             <td class="text-center align-middle">{{ number_format($data['cobertura'], 2, ',', '.') }}%</td>
                             @if ($data['repeatUsers'] == 1)
                                 <td class="text-center align-middle">
-                                    {{ number_format($data['registros_t'], 0, ',', '.') }}
+                                    {{ number_format($data['total_registros'], 0, ',', '.') }}
                                 </td>
                                 <td class="align-middle text-center">
                                     Si
                                 </td>
                                 <td class="text-center align-middle">
-                                    {{ number_format($data['registros_t'], 0, ',', '.') }}
+                                    {{ number_format($data['total_registros'], 0, ',', '.') }}
                                 </td>
                             @else
                                 <td class="text-center align-middle">
@@ -123,6 +123,17 @@
                     @endif
                 @endforeach
             </tbody>
+            @if (isset($suma_total))
+                <tfoot class="text-center">
+                    <tr>
+                        <td></td>
+                        <td></td>
+                        <th>{{ number_format($porcentaje_total, 2, ',', '.') }}%</th>
+                        <th>{{ number_format($suma_total, 0, ',', '.') }}</th>
+                        <td colspan="7"></td>
+                    </tr>
+                </tfoot>
+            @endif
         </table>
     </x-cards>
 
@@ -417,10 +428,8 @@
                 return response.json();
             }).then(data => {
                 // Recargar la página actual
-
-                // console.log(data)
                 if (data.result === '201') {
-                    // alert(data.message)
+                    alert(data.message)
                     location.reload()
                 } else {
                     document.querySelector('.alert').classList.remove('d-none');
