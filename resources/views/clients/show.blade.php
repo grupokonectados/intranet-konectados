@@ -33,8 +33,8 @@
                 <th class="align-middle" width='7%'>¿Acepta repetidos?</th>
                 <th class="align-middle" width='3%'>Repetidos</th>
                 <th class="align-middle">Criterio</th>
-                <th width='15%' class="align-middle">Fecha activación</th>
-                <th width='7%' class="align-middle">Hora activación</th>
+                <th width='13%' class="align-middle">Fecha activación</th>
+                <th width='10%' class="align-middle">Hora activación</th>
                 <th class="align-middle">Avance</th>
                 <th width='5%' class="align-middle">Acciones</th>
             </thead>
