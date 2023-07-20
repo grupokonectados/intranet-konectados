@@ -104,13 +104,15 @@ class ClientController extends Controller
     {
 
         $ch_approve = [];
+        $suma_total = 0;
+        $porcentaje_total = 0;
+
         $this->getClientData($id);
 
         $client = Cache::get('cliente');
         $channels = Cache::get('canales');
         $channels_config = Cache::get('config_channels');
         $estructura = Cache::get('estructura');
-
 
         $param = [
             'prefix' => $client->prefix,
@@ -120,25 +122,13 @@ class ClientController extends Controller
         $estrategiasHistoricoCliente = Http::withBody(json_encode($param))->get(env('API_URL') . env('API_ESTRATEGIA') . '/tipo');
         $datas2 = $estrategiasHistoricoCliente->collect()[0];
 
-        foreach ($datas2 as $d2) {
+        foreach ($datas2 as &$d2) {
             unset($d2['registros']);
+            $suma_total += ($d2['repeatUsers'] === 0) ? $d2['registros_unicos'] : $d2['total_registros'];
+            $porcentaje_total += $d2['cobertura'];
         }
 
-
-        $suma_total = 0;
-        $porcentaje_total = 0;
-
-        foreach ($datas2 as $v) {
-            if ($v['repeatUsers'] === 0) {
-                $suma_total += $v['registros_unicos'];
-            } else {
-                $suma_total += $v['total_registros'];
-            }
-            $porcentaje_total += $v['cobertura'];
-        }
-
-
-        //Configuramos la vista
+        // Configuramos la vista
         $config_layout = [
             'title-section' => 'Diseño de estrategia para: ' . $client->name,
             'breads' => 'Clientes > ' . $client->name . ' > Diseño de estrategia',
@@ -147,26 +137,27 @@ class ClientController extends Controller
 
         Cache::forget('estrategias');
 
-        $responses = Http::pool(fn (Pool $pool) => [
-            $pool->as('estrategias')->get(env('API_URL') .  env('API_ESTRATEGIAS') . '/diseno/' . strtoupper($client->prefix)),
-        ]);
+        $responses = Http::pool(function (Pool $pool) use ($client) {
+            $pool->as('estrategias')->get(env('API_URL') . env('API_ESTRATEGIAS') . '/diseno/' . strtoupper($client->prefix));
+        });
 
+        $estrategias = $responses['estrategias']->collect()[0];
 
-        foreach ($responses['estrategias']->collect()[0] as $d3) {
+        foreach ($estrategias as &$d3) {
             unset($d3['registros']);
         }
 
-        Cache::forever('estrategias', $responses['estrategias']->collect()[0]);
+        Cache::forever('estrategias', $estrategias);
         $datas = Cache::get('estrategias');
 
-
         if (count($datas) > 0) {
+            $canales = [];
             foreach ($datas as $key => $data) {
                 if ($data['type'] === 0) {
                     $canales[] = $data['channels'];
                 }
 
-                if (in_array($data['channels'], array_keys($channels))) {
+                if (isset($channels[$data['channels']])) {
                     $datas[$key]['canal'] = strtoupper($channels[$data['channels']]['name']);
                 }
 
@@ -198,78 +189,76 @@ class ClientController extends Controller
     {
         Cache::forget('estrategias');
 
-// Obtenemos datos y configuraciones del cliente.
-$this->getClientData($id);
-$client = Cache::get('cliente');
-$channels = Cache::get('canales');
-$channels_config = Cache::get('config_channels');
+        // Obtenemos datos y configuraciones del cliente.
+        $this->getClientData($id);
+        $client = Cache::get('cliente');
+        $channels = Cache::get('canales');
+        $channels_config = Cache::get('config_channels');
 
-$responses = Http::get(env('API_URL') . env('API_ESTRATEGIAS') . '/' . strtoupper($client->prefix));
-$x = $responses->json()[0];
+        $responses = Http::get(env('API_URL') . env('API_ESTRATEGIAS') . '/' . strtoupper($client->prefix));
+        $x = $responses->json()[0];
 
-foreach ($x as &$item) {
-    unset($item['registros']);
-}
-
-Cache::forever('estrategias', $x);
-$estrategias_cache = Cache::get('estrategias');
-$datas = $estrategias_cache;
-
-$total_cartera = 0;
-$suma_total = 0;
-$porcentaje_total = 0;
-$ch_approve = [];
-$data_counter = count($datas);
-
-if ($data_counter > 0) {
-    foreach ($datas as $key => $data) {
-        if (isset($channels[$data['channels']])) {
-            $datas[$key]['canal'] = strtoupper($channels[$data['channels']]['name']);
+        foreach ($x as &$item) {
+            unset($item['registros']);
         }
 
-        if ($data['type'] === 2) {
-            if ($data['repeatUsers'] === 0) {
-                $suma_total += $data['registros_unicos'];
-            } else {
-                $suma_total += $data['total_registros'];
+        Cache::forever('estrategias', $x);
+        $estrategias_cache = Cache::get('estrategias');
+        $datas = $estrategias_cache;
+
+        $total_cartera = 0;
+        $suma_total = 0;
+        $porcentaje_total = 0;
+        $ch_approve = [];
+        $groupedArray = [];
+        $data_counter = count($datas);
+
+        if ($data_counter > 0) {
+            foreach ($datas as $key => $data) {
+                if (isset($channels[$data['channels']])) {
+                    $datas[$key]['canal'] = strtoupper($channels[$data['channels']]['name']);
+                }
+
+                if ($data['type'] === 2) {
+                    if ($data['repeatUsers'] === 0) {
+                        $suma_total += $data['registros_unicos'];
+                    } else {
+                        $suma_total += $data['total_registros'];
+                    }
+                    $porcentaje_total += $data['cobertura'];
+                }
             }
 
-            $porcentaje_total += $data['cobertura'];
-        }
-    }
-
-    if ($channels_config != null) {
-        if ($data['type'] === 0) {
-            $key_active_channels = array_keys($channels_config);
-            $ch_approve = array_diff($key_active_channels, $channels);
-        } else {
-            $ch_approve = array_keys($channels_config);
-        }
-    }
-}
-
-$config_layout = [
-    'title-section' => 'Cliente: ' . $client->name,
-    'breads' => 'Clientes > ' . $client->name,
-    'btn-back' => 'clients.index'
-];
-
-$groupedArray = [];
-
-foreach ($datas as $item) {
-    preg_match("/tipo_cobranza = '([^']+)'/", $item['onlyWhere'], $matches);
-    $tipoCobranza = $matches[1] ?? '';
-
-    if (!empty($tipoCobranza)) {
-        if (!isset($groupedArray[$tipoCobranza])) {
-            $groupedArray[$tipoCobranza] = [];
+            if ($channels_config != null) {
+                if ($data['type'] === 0) {
+                    $key_active_channels = array_keys($channels_config);
+                    $ch_approve = array_diff($key_active_channels, $channels);
+                } else {
+                    $ch_approve = array_keys($channels_config);
+                }
+            }
         }
 
-        $groupedArray[$tipoCobranza][] = $item;
-    }
-}
+        $config_layout = [
+            'title-section' => 'Cliente: ' . $client->name,
+            'breads' => 'Clientes > ' . $client->name,
+            'btn-back' => 'clients.index'
+        ];
 
-$arr_k = array_keys($groupedArray);
+        foreach ($datas as $item) {
+            preg_match("/tipo_cobranza = '([^']+)'/", $item['onlyWhere'], $matches);
+            $tipoCobranza = $matches[1] ?? '';
+
+            if (!empty($tipoCobranza)) {
+                if (!isset($groupedArray[$tipoCobranza])) {
+                    $groupedArray[$tipoCobranza] = [];
+                }
+
+                $groupedArray[$tipoCobranza][] = $item;
+            }
+        }
+
+        $arr_k = array_keys($groupedArray);
 
         return view('clients/show', compact('arr_k', 'groupedArray', 'config_layout', 'client', 'datas', 'channels', 'ch_approve', 'porcentaje_total', 'suma_total'));
     }
