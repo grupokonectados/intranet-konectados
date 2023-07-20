@@ -276,10 +276,10 @@ class ClientController extends Controller
         }
     }
     $arr_k = array_keys($groupedArray);
-    return $arr_k = array_keys($groupedArray);
+    // return $arr_k = array_keys($groupedArray);
 
 
-    return $groupedArray[0];
+    return $groupedArray['DA_PR00006'];
 
 
 
