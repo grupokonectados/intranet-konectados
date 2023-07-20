@@ -275,7 +275,7 @@ class ClientController extends Controller
             $groupedArray[$tipoCobranza][] = $item;
         }
     }
-
+    $arr_k = array_keys($groupedArray);
     // return $arr_k = array_keys($groupedArray);
 
 
