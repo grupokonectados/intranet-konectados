@@ -276,7 +276,7 @@ class ClientController extends Controller
         }
     }
 
-    return $groupedArray;
+    return array_keys($groupedArray);
 
 
 
