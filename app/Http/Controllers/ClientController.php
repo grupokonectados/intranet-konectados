@@ -147,13 +147,7 @@ class ClientController extends Controller
 
         Cache::forever('estrategias', $responses['estrategias']->collect()[0]);
         $datas = Cache::get('estrategias');
-
-        // for ($i = 0; $i < count($datas); $i++) {
-        //     $datas[$i]['registros'] = count(json_decode($datas[$i]['registros'], true));
-        // }
-
-
-        
+       
 
         if (count($datas) > 0) {
             foreach ($datas as $key => $data) {
@@ -174,7 +168,7 @@ class ClientController extends Controller
                     }
                 }
 
-                
+                unset($data['registros']);
             }
         } else {
             if ($channels_config != null) {
@@ -233,6 +227,7 @@ class ClientController extends Controller
                 if (in_array($data['channels'], array_keys($channels))) {
                     $datas[$key]['canal'] = strtoupper($channels[$data['channels']]['name']);
                 }
+                unset($data['registros']);
 
                 if ($data['type'] === 2) {
                     if ($data['repeatUsers'] === 0) {
