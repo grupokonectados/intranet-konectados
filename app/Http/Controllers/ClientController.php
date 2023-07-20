@@ -276,10 +276,10 @@ class ClientController extends Controller
         }
     }
 
-    return array_keys($groupedArray);
+    // return $arr_k = array_keys($groupedArray);
 
 
 
-        return view('clients/show', compact('config_layout', 'client', 'datas', 'channels', 'ch_approve', 'porcentaje_total', 'suma_total'));
+        return view('clients/show', compact('arr_k', 'groupedArray', 'config_layout', 'client', 'datas', 'channels', 'ch_approve', 'porcentaje_total', 'suma_total'));
     }
 }
