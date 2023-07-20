@@ -42,7 +42,7 @@
             <tbody class="text-center">
                 @foreach ($datas as $k => $data)
                     @if ($data['type'] == 2)
-                        <tr class="table-danger">
+                        <tr class="@if($data['repeatUsers'] == 1)table-danger@endif">
                             <td class="align-middle">
                                 {{ $data['canal'] }}
                             </td>
