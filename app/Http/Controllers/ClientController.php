@@ -112,6 +112,26 @@ class ClientController extends Controller
         $estructura = Cache::get('estructura');
 
 
+        $param = [
+            'prefix' => $client->prefix,
+            'type' => 1
+        ];
+
+        $estrategiasHistoricoCliente = Http::withBody(json_encode($param))->get(env('API_URL').env('API_ESTRATEGIA').'/tipo');
+        $datas2 = $estrategiasHistoricoCliente->collect()[0];
+        $suma_total = 0;
+        $porcentaje_total = 0;
+
+        foreach($datas2 as $v){
+            if ($v['repeatUsers'] === 0) {
+                $suma_total += $v['registros_unicos'];
+            } else {
+                $suma_total += $v['total_registros'];
+            }
+            $porcentaje_total += $v['cobertura'];
+        }
+
+
         //Configuramos la vista
         $config_layout = [
             'title-section' => 'Diseño de estrategia para: ' . $client->name,
@@ -133,8 +153,7 @@ class ClientController extends Controller
         // }
 
 
-        $suma_total = 0;
-        $porcentaje_total = 0;
+        
 
         if (count($datas) > 0) {
             foreach ($datas as $key => $data) {
@@ -155,13 +174,7 @@ class ClientController extends Controller
                     }
                 }
 
-                if ($data['repeatUsers'] === 0) {
-                    $suma_total += $data['registros_unicos'];
-                } else {
-                    // $data->registros_t = $data['registros'];
-                    $suma_total += $data['total_registros'];
-                }
-                $porcentaje_total += $data['cobertura'];
+                
             }
         } else {
             if ($channels_config != null) {
@@ -187,6 +200,10 @@ class ClientController extends Controller
         $client = Cache::get('cliente');
         $channels = Cache::get('canales');
         $channels_config = Cache::get('config_channels');
+
+
+
+        
 
 
 
