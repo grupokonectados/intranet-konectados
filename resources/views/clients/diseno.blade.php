@@ -77,7 +77,7 @@
             <tbody class="align-middle">
                 @foreach ($datas as $k => $data)
                     @if ($data['type'] === 1)
-                        <tr>
+                        <tr class="table-danger">
                             <td class="text-center align-middle">{{ ++$k }}</td>
                             <td class="text-center align-middle">
                                 {{ $data['canal'] }}
