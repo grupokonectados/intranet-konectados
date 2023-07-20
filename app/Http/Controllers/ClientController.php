@@ -119,6 +119,12 @@ class ClientController extends Controller
 
         $estrategiasHistoricoCliente = Http::withBody(json_encode($param))->get(env('API_URL').env('API_ESTRATEGIA').'/tipo');
         $datas2 = $estrategiasHistoricoCliente->collect()[0];
+
+        foreach($datas2 as $d2){
+            unset($d2['registros']);
+        }
+
+
         $suma_total = 0;
         $porcentaje_total = 0;
 
@@ -144,6 +150,11 @@ class ClientController extends Controller
         $responses = Http::pool(fn (Pool $pool) => [
             $pool->as('estrategias')->get(env('API_URL') .  env('API_ESTRATEGIAS') . '/diseno/' . strtoupper($client->prefix)),
         ]);
+
+
+        foreach($responses['estrategias']->collect()[0] as $d3){
+            unset($d3['registros']);
+        }
 
         Cache::forever('estrategias', $responses['estrategias']->collect()[0]);
         $datas = Cache::get('estrategias');
@@ -196,38 +207,31 @@ class ClientController extends Controller
         $channels_config = Cache::get('config_channels');
 
 
-
-        
-
-
-
-
-        $responses = Http::pool(fn (Pool $pool) => [
-            $pool->as('estrategias')->get(env('API_URL') . env('API_ESTRATEGIAS') . '/' . strtoupper($client->prefix)),
-        ]);
-        // return $responses['estrategias']->json();
-
-        Cache::forever('estrategias', $responses['estrategias']->json()[0]);
+        $responses = Http::get(env('API_URL') . env('API_ESTRATEGIAS') . '/' . strtoupper($client->prefix));
+        $x = $responses->json()[0];
+        for($p=0;$p<count($x); $p++){
+            unset($x[$p]['registros']);
+        }
+        Cache::forever('estrategias', $x);
         $estrategias_cache = Cache::get('estrategias');
-
         $datas =  $estrategias_cache;
 
-        for ($i = 0; $i < count($datas); $i++) {
-            $datas[$i]['registros'] = count(json_decode($datas[$i]['registros'], true));
-        }
+    //    return $datas;
+        
 
+    
         $total_cartera = 0;
         $suma_total = 0;
         $porcentaje_total = 0;
         $ch_approve = [];
         $data_counter = count($datas);
 
+
         if ($data_counter > 0) {
             foreach ($datas as $key => $data) {
                 if (in_array($data['channels'], array_keys($channels))) {
                     $datas[$key]['canal'] = strtoupper($channels[$data['channels']]['name']);
                 }
-                unset($data['registros']);
 
                 if ($data['type'] === 2) {
                     if ($data['repeatUsers'] === 0) {
@@ -255,6 +259,24 @@ class ClientController extends Controller
             'breads' => 'Clientes > ' . $client->name,
             'btn-back' => 'clients.index'
         ];
+
+
+    $groupedArray = [];
+
+    foreach ($datas as $item) {
+        preg_match("/tipo_cobranza = '([^']+)'/", $item['onlyWhere'], $matches);
+        $tipoCobranza = $matches[1] ?? '';
+
+        if (!empty($tipoCobranza)) {
+            if (!isset($groupedArray[$tipoCobranza])) {
+                $groupedArray[$tipoCobranza] = [];
+            }
+
+            $groupedArray[$tipoCobranza][] = $item;
+        }
+    }
+
+    return $groupedArray;
 
 
 
