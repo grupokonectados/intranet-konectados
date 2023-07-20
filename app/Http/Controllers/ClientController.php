@@ -117,10 +117,10 @@ class ClientController extends Controller
             'type' => 1
         ];
 
-        $estrategiasHistoricoCliente = Http::withBody(json_encode($param))->get(env('API_URL').env('API_ESTRATEGIA').'/tipo');
+        $estrategiasHistoricoCliente = Http::withBody(json_encode($param))->get(env('API_URL') . env('API_ESTRATEGIA') . '/tipo');
         $datas2 = $estrategiasHistoricoCliente->collect()[0];
 
-        foreach($datas2 as $d2){
+        foreach ($datas2 as $d2) {
             unset($d2['registros']);
         }
 
@@ -128,7 +128,7 @@ class ClientController extends Controller
         $suma_total = 0;
         $porcentaje_total = 0;
 
-        foreach($datas2 as $v){
+        foreach ($datas2 as $v) {
             if ($v['repeatUsers'] === 0) {
                 $suma_total += $v['registros_unicos'];
             } else {
@@ -152,13 +152,13 @@ class ClientController extends Controller
         ]);
 
 
-        foreach($responses['estrategias']->collect()[0] as $d3){
+        foreach ($responses['estrategias']->collect()[0] as $d3) {
             unset($d3['registros']);
         }
 
         Cache::forever('estrategias', $responses['estrategias']->collect()[0]);
         $datas = Cache::get('estrategias');
-       
+
 
         if (count($datas) > 0) {
             foreach ($datas as $key => $data) {
@@ -198,90 +198,78 @@ class ClientController extends Controller
     {
         Cache::forget('estrategias');
 
-        // Obtenemos datos y configuraciones del cliente. 
-        $this->getClientData($id);
+// Obtenemos datos y configuraciones del cliente.
+$this->getClientData($id);
+$client = Cache::get('cliente');
+$channels = Cache::get('canales');
+$channels_config = Cache::get('config_channels');
 
+$responses = Http::get(env('API_URL') . env('API_ESTRATEGIAS') . '/' . strtoupper($client->prefix));
+$x = $responses->json()[0];
 
-        $client = Cache::get('cliente');
-        $channels = Cache::get('canales');
-        $channels_config = Cache::get('config_channels');
+foreach ($x as &$item) {
+    unset($item['registros']);
+}
 
+Cache::forever('estrategias', $x);
+$estrategias_cache = Cache::get('estrategias');
+$datas = $estrategias_cache;
 
-        $responses = Http::get(env('API_URL') . env('API_ESTRATEGIAS') . '/' . strtoupper($client->prefix));
-        $x = $responses->json()[0];
-        for($p=0;$p<count($x); $p++){
-            unset($x[$p]['registros']);
-        }
-        Cache::forever('estrategias', $x);
-        $estrategias_cache = Cache::get('estrategias');
-        $datas =  $estrategias_cache;
+$total_cartera = 0;
+$suma_total = 0;
+$porcentaje_total = 0;
+$ch_approve = [];
+$data_counter = count($datas);
 
-    //    return $datas;
-        
-
-    
-        $total_cartera = 0;
-        $suma_total = 0;
-        $porcentaje_total = 0;
-        $ch_approve = [];
-        $data_counter = count($datas);
-
-
-        if ($data_counter > 0) {
-            foreach ($datas as $key => $data) {
-                if (in_array($data['channels'], array_keys($channels))) {
-                    $datas[$key]['canal'] = strtoupper($channels[$data['channels']]['name']);
-                }
-
-                if ($data['type'] === 2) {
-                    if ($data['repeatUsers'] === 0) {
-                        $suma_total += $data['registros_unicos'];
-                    } else {
-                        // $data->registros_t = $data['registros'];
-                        $suma_total += $data['total_registros'];
-                    }
-                    $porcentaje_total += $data['cobertura'];
-                }
-            }
-
-            if ($channels_config != null) {
-                if ($data['type'] === 0) {
-                    $key_active_channels = array_keys($channels_config);
-                    $ch_approve = array_diff($key_active_channels, $channels);
-                } else {
-                    $ch_approve = array_keys($channels_config);
-                }
-            }
+if ($data_counter > 0) {
+    foreach ($datas as $key => $data) {
+        if (isset($channels[$data['channels']])) {
+            $datas[$key]['canal'] = strtoupper($channels[$data['channels']]['name']);
         }
 
-        $config_layout = [
-            'title-section' => 'Cliente: ' . $client->name,
-            'breads' => 'Clientes > ' . $client->name,
-            'btn-back' => 'clients.index'
-        ];
-
-
-    $groupedArray = [];
-
-    foreach ($datas as $ki => $item) {
-        preg_match("/tipo_cobranza = '([^']+)'/", $item['onlyWhere'], $matches);
-        $tipoCobranza = $matches[1] ?? '';
-
-        if (!empty($tipoCobranza)) {
-            if (!isset($groupedArray[$tipoCobranza])) {
-                $groupedArray[$tipoCobranza] = [];
+        if ($data['type'] === 2) {
+            if ($data['repeatUsers'] === 0) {
+                $suma_total += $data['registros_unicos'];
+            } else {
+                $suma_total += $data['total_registros'];
             }
 
-            $groupedArray[$tipoCobranza][] = $item;
+            $porcentaje_total += $data['cobertura'];
         }
     }
-    $arr_k = array_keys($groupedArray);
-    // return $arr_k = array_keys($groupedArray);
 
+    if ($channels_config != null) {
+        if ($data['type'] === 0) {
+            $key_active_channels = array_keys($channels_config);
+            $ch_approve = array_diff($key_active_channels, $channels);
+        } else {
+            $ch_approve = array_keys($channels_config);
+        }
+    }
+}
 
-    // return $groupedArray['DA_PR00006'];
+$config_layout = [
+    'title-section' => 'Cliente: ' . $client->name,
+    'breads' => 'Clientes > ' . $client->name,
+    'btn-back' => 'clients.index'
+];
 
+$groupedArray = [];
 
+foreach ($datas as $item) {
+    preg_match("/tipo_cobranza = '([^']+)'/", $item['onlyWhere'], $matches);
+    $tipoCobranza = $matches[1] ?? '';
+
+    if (!empty($tipoCobranza)) {
+        if (!isset($groupedArray[$tipoCobranza])) {
+            $groupedArray[$tipoCobranza] = [];
+        }
+
+        $groupedArray[$tipoCobranza][] = $item;
+    }
+}
+
+$arr_k = array_keys($groupedArray);
 
         return view('clients/show', compact('arr_k', 'groupedArray', 'config_layout', 'client', 'datas', 'channels', 'ch_approve', 'porcentaje_total', 'suma_total'));
     }
