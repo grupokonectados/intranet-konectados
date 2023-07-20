@@ -42,7 +42,7 @@
             <tbody class="text-center">
                 @foreach ($datas as $k => $data)
                     @if ($data['type'] == 2)
-                        <tr>
+                        <tr class="table-danger">
                             <td class="align-middle">
                                 {{ $data['canal'] }}
                             </td>
