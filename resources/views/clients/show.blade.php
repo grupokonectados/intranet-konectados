@@ -40,8 +40,9 @@
             </thead>
             <tbody class="text-center">
                 @foreach ($arr_k as $key_title)
+                <tr><td class="text-uppercase" colspan="10">{{ $key_title }}</td></tr>
                     @foreach ($groupedArray[$key_title] as $k => $data)
-                    <tr><td class="text-uppercase" colspan="10">{{ $key_title }}</td></tr>
+                    
                         @if ($data['type'] == 2)
                             <tr class="@if ($data['repeatUsers'] == 1) table-danger @endif">
                                 <td class="align-middle">
