@@ -269,10 +269,10 @@ class ClientController extends Controller
 
         if (!empty($tipoCobranza)) {
             if (!isset($groupedArray[$tipoCobranza])) {
-                $groupedArray[$ki] = [];
+                $groupedArray[$tipoCobranza] = [];
             }
 
-            $groupedArray[$ki][] = $item;
+            $groupedArray[$tipoCobranza][] = $item;
         }
     }
 
