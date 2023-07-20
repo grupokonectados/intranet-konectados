@@ -51,13 +51,13 @@
                             </td>
                             @if ($data['repeatUsers'] == 1)
                                 <td class="align-middle">
-                                    {{ number_format($data['registros_t'], 0, ',', '.') }}
+                                    {{ number_format($data['total_registros'], 0, ',', '.') }}
                                 </td>
                                 <td class="align-middle">
                                     Si
                                 </td>
                                 <td class="align-middle">
-                                    {{ number_format($data['registros_t'], 0, ',', '.') }}
+                                    {{ number_format($data['total_registros'], 0, ',', '.') }}
                                 </td>
                             @else
                                 <td class="align-middle">

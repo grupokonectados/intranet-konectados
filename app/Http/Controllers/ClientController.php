@@ -221,8 +221,8 @@ class ClientController extends Controller
                     if ($data['repeatUsers'] === 0) {
                         $suma_total += $data['registros_unicos'];
                     } else {
-                        $data->registros_t = $data['registros'];
-                        $suma_total += $data['registros_t'];
+                        // $data->registros_t = $data['registros'];
+                        $suma_total += $data['total_registros'];
                     }
                     $porcentaje_total += $data['cobertura'];
                 }
