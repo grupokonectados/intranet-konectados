@@ -169,8 +169,6 @@ class ClientController extends Controller
                         $ch_approve = array_keys($channels_config);
                     }
                 }
-
-                unset($data['registros']);
             }
         } else {
             if ($channels_config != null) {
@@ -195,7 +193,7 @@ class ClientController extends Controller
         $channels = Cache::get('canales');
         $channels_config = Cache::get('config_channels');
 
-        $responses = Http::get(env('API_URL') . env('API_ESTRATEGIAS') . '/' . strtoupper($client->prefix));
+        $responses = Http::timeout(120)->get(env('API_URL') . env('API_ESTRATEGIAS') . '/' . strtoupper($client->prefix));
         $x = $responses->json()[0];
 
         foreach ($x as &$item) {
@@ -245,21 +243,7 @@ class ClientController extends Controller
             'btn-back' => 'clients.index'
         ];
 
-        foreach ($datas as $item) {
-            preg_match("/tipo_cobranza = '([^']+)'/", $item['onlyWhere'], $matches);
-            $tipoCobranza = $matches[1] ?? '';
 
-            if (!empty($tipoCobranza)) {
-                if (!isset($groupedArray[$tipoCobranza])) {
-                    $groupedArray[$tipoCobranza] = [];
-                }
-
-                $groupedArray[$tipoCobranza][] = $item;
-            }
-        }
-
-        $arr_k = array_keys($groupedArray);
-
-        return view('clients/show', compact('arr_k', 'groupedArray', 'config_layout', 'client', 'datas', 'channels', 'ch_approve', 'porcentaje_total', 'suma_total'));
+        return view('clients/show', compact('config_layout', 'client', 'datas', 'channels', 'ch_approve', 'porcentaje_total', 'suma_total'));
     }
 }

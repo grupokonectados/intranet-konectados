@@ -39,62 +39,58 @@
                 <th width='5%' class="align-middle">Acciones</th>
             </thead>
             <tbody class="text-center">
-                @foreach ($arr_k as $key_title)
-                <tr class="table-secondary"><td class="text-uppercase" colspan="10">{{ $key_title }}</td></tr>
-                    @foreach ($groupedArray[$key_title] as $k => $data)
-                        @if ($data['type'] == 2)
-                            <tr>
+                @foreach ($datas as $k => $data)
+                    @if ($data['type'] == 2)
+                        <tr class="@if($data['repeatUsers'] == 1)table-danger @endif">
+                            <td class="align-middle">
+                                {{ $data['canal'] }}
+                            </td>
+                            <td class="align-middle">
+                                {{ number_format($data['cobertura'], 2, ',', '.') }}%
+                            </td>
+                            @if ($data['repeatUsers'] == 1)
                                 <td class="align-middle">
-                                    {{ $data['canal'] }}
+                                    {{ number_format($data['total_registros'], 0, ',', '.') }}
                                 </td>
                                 <td class="align-middle">
-                                    {{ number_format($data['cobertura'], 2, ',', '.') }}%
-                                </td>
-                                @if ($data['repeatUsers'] == 1)
-                                    <td class="align-middle">
-                                        {{ number_format($data['total_registros'], 0, ',', '.') }}
-                                    </td>
-                                    <td class="align-middle">
-                                        Si
-                                    </td>
-                                    <td class="align-middle">
-                                        {{ number_format($data['total_registros'], 0, ',', '.') }}
-                                    </td>
-                                @else
-                                    <td class="align-middle">
-                                        {{ number_format($data['registros_unicos'], 0, ',', '.') }}
-                                    </td>
-                                    <td class="align-middle">
-                                        No
-                                    </td>
-                                    <td class="align-middle">
-                                        {{ number_format($data['registros_repetidos'], 0, ',', '.') }}
-                                    </td>
-                                @endif
-                                <td>{{ $data['onlyWhere'] }}</td>
-                                <td class="align-middle">
-                                    {{ $data['activation_date'] === null ? 'Sin Activar' : date('d-m-Y', strtotime($data['activation_date'])) }}
+                                    Si
                                 </td>
                                 <td class="align-middle">
-                                    {{ $data['activation_time'] === null ? 'Sin Activar' : date('G:i:m', strtotime($data['activation_time'])) }}
+                                    {{ number_format($data['total_registros'], 0, ',', '.') }}
                                 </td>
-                                <td class="align-middle ">
-                                    <div class="progress" role="progressbar" aria-label="Animated striped example"
-                                        aria-valuenow="75" aria-valuemin="0" aria-valuemax="100">
-                                        <div class="progress-bar progress-bar-striped progress-bar-animated" id="progres"
-                                            style="width: 75%"><span id="texto_progress"></span></div>
-                                    </div>
+                            @else
+                                <td class="align-middle">
+                                    {{ number_format($data['registros_unicos'], 0, ',', '.') }}
                                 </td>
                                 <td class="align-middle">
-                                    <x-btn-standar type='a' title='Detener' extraclass='detener-estrategia'
-                                        color="danger" sm='sm' icon='stop-circle' dataid="{{ $data['id'] }}" />
+                                    No
+                                </td>
+                                <td class="align-middle">
+                                    {{ number_format($data['registros_repetidos'], 0, ',', '.') }}
+                                </td>
+                            @endif
+                            <td>{{ $data['onlyWhere'] }}</td>
+                            <td class="align-middle">
+                                {{ $data['activation_date'] === null ? 'Sin Activar' : date('d-m-Y', strtotime($data['activation_date'])) }}
+                            </td>
+                            <td class="align-middle">
+                                {{ $data['activation_time'] === null ? 'Sin Activar' : date('G:i:m', strtotime($data['activation_time'])) }}
+                            </td>
+                            <td class="align-middle ">
+                                <div class="progress" role="progressbar" aria-label="Animated striped example"
+                                    aria-valuenow="75" aria-valuemin="0" aria-valuemax="100">
+                                    <div class="progress-bar progress-bar-striped progress-bar-animated" id="progres"
+                                        style="width: 75%"><span id="texto_progress"></span></div>
+                                </div>
+                            </td>
+                            <td class="align-middle">
+                                <x-btn-standar type='a' title='Detener' extraclass='detener-estrategia' color="danger"
+                                    sm='sm' icon='stop-circle' dataid="{{ $data['id'] }}" />
 
-                                </td>
-                            </tr>
-                        @endif
-                    @endforeach
+                            </td>
+                        </tr>
+                    @endif
                 @endforeach
-
             </tbody>
             @if (isset($suma_total))
                 <tfoot class="text-center">
@@ -113,8 +109,8 @@
     <x-cards header="Estrategias historico" titlecolor='danger' xtrasclass="my-3">
         <div class="row">
             <div class="col-4 mb-3">
-                <select class="form-select form-select-sm" name="selectFiltro"
-                    onchange="filtroCanales(this.value, '{{ $client->prefix }}')" id="selectFiltro">
+                <select class="form-select form-select-sm" name="selectFiltro" onchange="filtroCanales(this.value, '{{ $client->prefix }}')"
+                    id="selectFiltro">
                     <option value="">Seleccione</option>
                     @for ($i = 0; $i < count($channels); $i++)
                         @if (in_array($i, $ch_approve))
@@ -210,7 +206,7 @@
 
 
         function filtroCanales(value, client) {
-
+            
             fetch('{{ route('estrategia.filter-strategy') }}', {
                 method: 'POST',
                 body: JSON.stringify({
