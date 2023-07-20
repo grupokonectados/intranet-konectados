@@ -40,8 +40,8 @@
             </thead>
             <tbody class="text-center">
                 @foreach ($arr_k as $key_title)
-                    @foreach ($groupedArray as $k => $data)
-                        @if ($data[$key_title]['type'] == 2)
+                    @foreach ($groupedArray[$key_title] as $k => $data)
+                        @if ($data['type'] == 2)
                             <tr class="@if ($data['repeatUsers'] == 1) table-danger @endif">
                                 <td class="align-middle">
                                     {{ $data['canal'] }}
