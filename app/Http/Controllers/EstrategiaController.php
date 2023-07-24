@@ -99,6 +99,9 @@ class EstrategiaController extends Controller
     {
         $estrategias_cache = Cache::get('estrategias');
 
+
+        // return $estrategias_cache;
+
         $param = [
             "idCliente" =>$request->id_cliente,
             "cartera"=> $request->table_name,

@@ -62,7 +62,7 @@ class ClientController extends Controller
             $pool->as('estructura')->get(env('API_URL') .  env('API_ESTRUCTURA') . '/' . $id),
         ]);
 
-        foreach ($responses['clientes']->collect()[0] as $value) {
+        foreach ($responses['clientes']->json()[0] as $value) {
             if (in_array($id, $value)) {
                 $arr = $value;
             }
@@ -141,14 +141,16 @@ class ClientController extends Controller
             $pool->as('estrategias')->get(env('API_URL') . env('API_ESTRATEGIAS') . '/diseno/' . strtoupper($client->prefix));
         });
 
-        $estrategias = $responses['estrategias']->collect()[0];
+        $estrategias = $responses['estrategias']->json()[0];
+
+        
+
+        Cache::forever('estrategias', $estrategias);
+        $datas = Cache::get('estrategias');
 
         foreach ($estrategias as &$d3) {
             unset($d3['registros']);
         }
-
-        Cache::forever('estrategias', $estrategias);
-        $datas = Cache::get('estrategias');
 
         if (count($datas) > 0) {
             $canales = [];
