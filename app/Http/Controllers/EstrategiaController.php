@@ -112,6 +112,9 @@ class EstrategiaController extends Controller
         }
 
 
+        // return in_array($request->channel, $tipos_masivos) ? 'si' : 'no';
+
+
 
         $param = [
             "idCliente" =>$request->id_cliente,
@@ -152,12 +155,14 @@ class EstrategiaController extends Controller
                 'total_repetidos' => count($iguales),
                 'total_r' => $coleccion[0]['total_records'],
                 'percent_cober' => $cobertura,
-                'total_enc' => $response_ruts
+                'total_enc' => $response_ruts,
             ];
 
         }else{
             for($i = 0; $i<count($estrategias_cache); $i++){
-                $full_merge = array_merge($full_merge, json_decode($estrategias_cache[$i]['registros'], true));
+                if(!in_array($estrategias_cache[$i]['channels'], $tipos_masivos)){
+                    $full_merge = array_merge($full_merge, json_decode($estrategias_cache[$i]['registros'], true));
+                }
             }
 
             $unicos = array_diff($response_ruts, $full_merge);
@@ -175,7 +180,7 @@ class EstrategiaController extends Controller
                 'total_repetidos' => count($iguales),
                 'total_r' => $coleccion[0]['total_records'],
                 'percent_cober' => $cobertura,
-                'total_enc' => $response_ruts
+                'total_enc' => $response_ruts,
             ];
         }
 
