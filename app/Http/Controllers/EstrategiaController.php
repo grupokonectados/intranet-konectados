@@ -103,7 +103,7 @@ class EstrategiaController extends Controller
         $estrategias_cache = Cache::get('estrategias');
 
         $config_channels = Cache::get('config_channels');
-
+        $tipos_masivos = [];
 
         foreach($config_channels['channels'] as $o => $value){
             if(isset($value['tipo'])){
