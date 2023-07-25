@@ -397,7 +397,7 @@
         }
 
         function acceptedStrategy(id) {
-
+            spinner.removeAttribute('hidden');
             fetch('{{ route('estrategia.accepted-strategy') }}', {
                 method: 'POST',
                 body: JSON.stringify({
@@ -413,6 +413,7 @@
                 // Recargar la página actual
                 if (data.result === '201') {
                     alert(data.message)
+                    spinner.setAttribute('hidden', '');
                     location.reload()
                 } else {
                     document.querySelector('.alert').classList.remove('d-none');
