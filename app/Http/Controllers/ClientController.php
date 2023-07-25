@@ -41,6 +41,7 @@ class ClientController extends Controller
         $client = Cache::get('cliente');
         $channels =  Cache::get('canales');
         $channels_config = Cache::get('config_channels');
+        $estructura = Cache::get('estructura');
 
         $config_layout = [
             'title-section' => 'Editar: ' . $client->name,
@@ -48,7 +49,24 @@ class ClientController extends Controller
             'btn-back' => 'clients.show'
         ];
 
-        return view('clients/edit', compact('client', 'config_layout', 'channels', 'channels_config'));
+        return view('clients/edit', compact('client', 'config_layout', 'channels', 'channels_config', 'estructura'));
+    }
+
+
+    public function update(Request $request, $id)
+    {
+        
+        $update = [];
+        $update['idClient'] = intval($id);
+        $update['channels'] = json_encode($request['configuracion'], JSON_FORCE_OBJECT);
+
+        // return $update;
+        $updated = Http::put(env('API_URL') . env('API_CLIENT') . "/canales", $update);
+        if ($updated != 'false') {
+            return redirect(route('clients.show', $id));
+        } else {
+            return $updated;
+        }
     }
 
 
@@ -82,23 +100,7 @@ class ClientController extends Controller
     }
 
 
-    public function update(Request $request, $id)
-    {
-
-        $update = [];
-        $update['idClient'] = intval($id);
-        $update['channels'] = json_encode($request['channels'], JSON_FORCE_OBJECT);
-
-        $updated = Http::put(env('API_URL') . env('API_CLIENT') . "/canales", $update);
-
-        // return $updated;
-
-        if ($updated != 'false') {
-            return redirect(route('clients.show', $id));
-        } else {
-            return $updated;
-        }
-    }
+    
 
     public function disenoEstrategia($id)
     {
@@ -114,6 +116,20 @@ class ClientController extends Controller
         $channels_config = Cache::get('config_channels');
         $estructura = Cache::get('estructura');
 
+        $estrc = [];
+
+        foreach($estructura as $ki => $vi){
+            if(in_array($vi['COLUMN_NAME'], array_keys($channels_config['estructura']))){
+                if(isset($channels_config['estructura'][$vi['COLUMN_NAME']]['utilizar'])){
+                    $vi['NAME'] = $channels_config['estructura'][$vi['COLUMN_NAME']]['nombre'];
+                    $estrc[] = $vi;
+                }
+            }
+            
+        }
+        
+        // return $estrc;
+
         $param = [
             'prefix' => $client->prefix,
             'type' => 1
@@ -123,7 +139,7 @@ class ClientController extends Controller
         $datas2 = $estrategiasHistoricoCliente->collect()[0];
 
         foreach ($datas2 as &$d2) {
-            unset($d2['registros']);
+            // unset($d2['registros']);
             $suma_total += ($d2['repeatUsers'] === 0) ? $d2['registros_unicos'] : $d2['total_registros'];
             $porcentaje_total += $d2['cobertura'];
         }
@@ -165,16 +181,16 @@ class ClientController extends Controller
 
                 if ($channels_config != null) {
                     if ($data['type'] === 0) {
-                        $key_active_channels = array_keys($channels_config);
+                        $key_active_channels = array_keys($channels_config['channels']);
                         $ch_approve = array_diff($key_active_channels, $canales);
                     } else {
-                        $ch_approve = array_keys($channels_config);
+                        $ch_approve = array_keys($channels_config['channels']);
                     }
                 }
             }
         } else {
-            if ($channels_config != null) {
-                $ch_approve = array_keys($channels_config);
+            if ($channels_config['channels'] != null) {
+                $ch_approve = array_keys($channels_config['channels']);
             } else {
                 $channels_config = [];
             }
@@ -182,7 +198,7 @@ class ClientController extends Controller
 
 
 
-        return view('clients/diseno', compact('client', 'datas', 'porcentaje_total',  'suma_total', 'config_layout', 'channels', 'estructura', 'ch_approve', 'channels_config'));
+        return view('clients/diseno', compact('client', 'datas', 'porcentaje_total',  'suma_total', 'config_layout', 'channels', 'estrc', 'ch_approve', 'channels_config'));
     }
 
     public function show($id)
@@ -201,6 +217,11 @@ class ClientController extends Controller
         foreach ($x as &$item) {
             unset($item['registros']);
         }
+
+
+
+
+
 
         Cache::forever('estrategias', $x);
         $estrategias_cache = Cache::get('estrategias');
@@ -229,12 +250,12 @@ class ClientController extends Controller
                 }
             }
 
-            if ($channels_config != null) {
+            if ($channels_config['channels'] != null) {
                 if ($data['type'] === 0) {
-                    $key_active_channels = array_keys($channels_config);
+                    $key_active_channels = array_keys($channels_config['channels']);
                     $ch_approve = array_diff($key_active_channels, $channels);
                 } else {
-                    $ch_approve = array_keys($channels_config);
+                    $ch_approve = array_keys($channels_config['channels']);
                 }
             }
         }

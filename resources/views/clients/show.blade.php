@@ -30,7 +30,6 @@
                 <th width='5%' class="align-middle">Canal</th>
                 <th class="align-middle" width='3%'>Cobertura</th>
                 <th class="align-middle" width='3%'>Registros</th>
-                <th class="align-middle" width='7%'>¿Acepta repetidos?</th>
                 <th class="align-middle" width='3%'>Repetidos</th>
                 <th class="align-middle">Criterio</th>
                 <th width='10%' class="align-middle">Fecha activación</th>
@@ -48,27 +47,13 @@
                             <td class="align-middle">
                                 {{ number_format($data['cobertura'], 2, ',', '.') }}%
                             </td>
-                            @if ($data['repeatUsers'] == 1)
-                                <td class="align-middle">
-                                    {{ number_format($data['total_registros'], 0, ',', '.') }}
-                                </td>
-                                <td class="align-middle">
-                                    Si
-                                </td>
-                                <td class="align-middle">
-                                    {{ number_format($data['total_registros'], 0, ',', '.') }}
-                                </td>
-                            @else
+                            
                                 <td class="align-middle">
                                     {{ number_format($data['registros_unicos'], 0, ',', '.') }}
                                 </td>
                                 <td class="align-middle">
-                                    No
-                                </td>
-                                <td class="align-middle">
                                     {{ number_format($data['registros_repetidos'], 0, ',', '.') }}
                                 </td>
-                            @endif
                             <td>{{ $data['onlyWhere'] }}</td>
                             <td class="align-middle">
                                 {{ $data['activation_date'] === null ? 'Sin Activar' : date('d-m-Y', strtotime($data['activation_date'])) }}

@@ -10,6 +10,7 @@
 
 
 @section('content')
+    <div hidden id="spinner"></div>
     @if ($message = Session::get('message'))
         <div class="col-12 mb-3">
             <div class="alert alert-{{ $message['type'] }} alert-dismissible show mb-0" role="alert" id='alerta'>
@@ -40,7 +41,7 @@
         <div class="row">
             @if ($channels_config != null)
                 @foreach ($channels as $key => $val)
-                    @if (isset($channels_config[$key]))
+                    @if (isset($channels_config['channels'][$key]))
                         <div class="col-4">
                             <i class="fas fa-check text-success"></i>&nbsp;
                             {{ strtoupper($val['name']) }}
@@ -69,7 +70,6 @@
                 <th width='7%' class="align-middle ">Canal</th>
                 <th class="align-middle" width='3%'>Cobertura</th>
                 <th class="align-middle" width='3%'>Registros</th>
-                <th width='15%'>¿Acepta repetidos?</th>
                 <th class="align-middle" width='3%'>Repetidos</th>
                 <th class="align-middle">Criterio</th>
                 <th width='3%' class="align-middle">Acciones</th>
@@ -83,28 +83,15 @@
                                 {{ $data['canal'] }}
                             </td>
                             <td class="text-center align-middle">{{ number_format($data['cobertura'], 2, ',', '.') }}%</td>
-                            @if ($data['repeatUsers'] == 1)
-                                <td class="text-center align-middle">
-                                    {{ number_format($data['total_registros'], 0, ',', '.') }}
-                                </td>
-                                <td class="align-middle text-center">
-                                    Si
-                                </td>
-                                <td class="text-center align-middle">
-                                    {{ number_format($data['total_registros'], 0, ',', '.') }}
-                                </td>
-                            @else
+                            
                                 <td class="text-center align-middle">
                                     {{ number_format($data['registros_unicos'], 0, ',', '.') }}
 
                                 </td>
-                                <td class="align-middle text-center">
-                                    No
-                                </td>
+                                
                                 <td class="text-center align-middle">
                                     {{ number_format($data['registros_repetidos'], 0, ',', '.') }}
                                 </td>
-                            @endif
                             <td>{{ $data['onlyWhere'] }}</td>
                             <td class="text-center align-middle">
                                 <div class="btn-group" role="group" aria-label="Basic example">
@@ -149,8 +136,8 @@
                     <tr>
                         <th class="text-uppercase align-middle" scope="col">Canal: </th>
                         <th>
-                            <select onchange='aceptaRepetidos(this.value)' class="form-select form-select-sm"
-                                name="channels" id="canalsito">
+                            <select onchange='aceptaRepetidos()' class="form-select form-select-sm" name="channels"
+                                id="canalsito">
                                 <option value="">Seleccione</option>
                                 @for ($i = 0; $i < count($channels); $i++)
                                     @if (in_array($i, $ch_approve))
@@ -161,15 +148,7 @@
                             </select>
                         </th>
                     </tr>
-                    <tr>
-                        <th width='25%' class="text-uppercase  align-middle" scope="col">¿Desea que para la estrategia
-                            se
-                            repitan los usuarios?</th>
-                        <th class="text-uppercase align-middle" scope="col">
-                            {{ Form::checkbox('repeatUsers', 1, '', ['disabled' => 'true', 'id' => 'check', 'class' => 'name form-check-input']) }}
-                            <label class="form-check-label">Si</label>
-                        </th>
-                    </tr>
+
                     <tr>
                         <th class="text-uppercase align-middle" scope="col">
                             <a type="button" class="btn btn-success btn-sm" id='btnNuevo'
@@ -210,10 +189,11 @@
                     <tr>
                         <th class="text-uppercase align-middle" scope="col">
                             <div class="btn-group" role="group">
-                                <x-btn-standar type='submit' id='guard' disabled='true' name='Guardar' extraclass="mb-0" title='Guardar'
-                                    color="success" sm='sm' icon='save' />
+                                <x-btn-standar type='submit' id='guard' disabled='true' name='Guardar'
+                                    extraclass="mb-0" title='Guardar' color="success" sm='sm' icon='save' />
                                 <x-btn-standar type='a' name='Probar' title='Probar' extraclass="mb-0"
-                                    color="primary" sm='sm' id='probar' disabled='true' icon='play-circle' onclick="probarConsulta()" />
+                                    color="primary" sm='sm' id='probar' disabled='true' icon='play-circle'
+                                    onclick="probarConsulta()" />
                             </div>
                         </th>
                     </tr>
@@ -253,6 +233,8 @@
         document.getElementById("myForm").addEventListener('submit', validar);
 
         const enlacesElement = document.querySelectorAll('.eliminar-estrategia');
+
+        const spinner = document.getElementById("spinner");
 
 
         if (enlacesElement !== null) {
@@ -328,14 +310,13 @@
 
         function probarConsulta() {
             document.getElementById('guard').disabled = true;
+            spinner.removeAttribute('hidden');
             var query = document.getElementById('showQue').value;
             var prefix = document.getElementById('prefix').value;
             var table_name = document.getElementById('table_name2').value;
             var id_cliente = document.getElementById('id_cliente').value;
 
-            if (document.getElementById('check').checked === true) {
-                var check = document.getElementById('check').value
-            }
+
 
             let opciones = {
                 style: "decimal",
@@ -349,8 +330,9 @@
                     query: query,
                     prefix: prefix,
                     table_name: table_name,
-                    check: check,
+                    check: 1,
                     id_cliente: id_cliente,
+                    channel: document.querySelector('#canalsito').value,
                 }),
                 headers: {
                     'content-type': 'application/json',
@@ -359,7 +341,7 @@
             }).then(response => {
                 return response.json();
             }).then(data => {
-
+                spinner.setAttribute('hidden', '');
                 document.getElementById('cobertura').innerHTML =
                     `${data.percent_cober.toLocaleString("de-DE", opciones)}%`
                 document.getElementById('unicos').innerHTML = data.total_unicos.toLocaleString("de-DE")
@@ -372,11 +354,8 @@
                 document.getElementById('repe').value = data.total_repetidos
                 document.getElementById('tota').value = data.total_r
 
-                if (check === '1') {
-                    document.getElementById('registros').value = JSON.stringify(data.total_enc)
-                } else {
-                    document.getElementById('registros').value = JSON.stringify(data.unicos)
-                }
+
+                document.getElementById('registros').value = JSON.stringify(data.unicos)
 
                 document.getElementById('guard').disabled = false;
 
@@ -384,15 +363,19 @@
         }
 
 
-        function aceptaRepetidos(value) {
+        function aceptaRepetidos() {
 
-            var canales_cliente = @json($channels_config)
+            document.getElementById('guard').disabled = true;
 
-            if ('multiple' in canales_cliente[value]) {
-                document.getElementById("check").disabled = false;
-            } else {
-                document.getElementById("check").disabled = true;
-            }
+            document.getElementById('cobertura').innerHTML = `0,00%`
+            document.getElementById('unicos').innerHTML = `0`
+            document.getElementById('repetidos').innerHTML = `0`
+            document.getElementById('total').innerHTML = `0`
+
+            document.getElementById('cober').value = 0
+            document.getElementById('unic').value = 0
+            document.getElementById('repe').value = 0
+            document.getElementById('tota').value = 0
         }
 
         function validar(e) {
@@ -444,9 +427,13 @@
 
         function addRow() {
 
-            var estructura = @json($estructura);
+            var estructura = @json($estrc);
 
             var table = document.getElementById("myTable");
+            aceptaRepetidos()
+
+            document.getElementById('guard').disabled = true;
+
             var row = table.insertRow(-1);
             row.id = 'tr_' + i
 
@@ -456,11 +443,11 @@
                 var cell4 = row.insertCell(-1);
 
                 lines = `
-                    <select id="my-select" class='form-select form-select-sm' onchange="selectInputType(this.value, ${i}, event, document.getElementById('operator_${i}'))">
+                    <select id="my-select" class='form-select form-select-sm campo' onchange="selectInputType(this.value, ${i}, event, document.getElementById('operator_${i}'))">
                     <option>Seleccione</option>`
                 for (let d in estructura) {
                     lines +=
-                        `<option value='${estructura[d].COLUMN_TYPE}-${estructura[d].TABLE_NAME}'>${estructura[d].COLUMN_NAME}</option>`
+                        `<option value='${estructura[d].COLUMN_TYPE}-${estructura[d].TABLE_NAME}-${estructura[d].COLUMN_NAME}'>${estructura[d].NAME}</option>`
                 }
                 lines += `</select>`
 
@@ -475,14 +462,11 @@
                 cell4.innerHTML = `
                     <select class='form-select form-select-sm operator' id='operator_${i}'>
                         <option>Seleccione</option>
-                        <option value="=" > = </option>
-                        <option value=">=" > >= </option>
-                        <option value="<=" > <= </option>
-                        <option value=">" > > </option>
-                        <option value="<" > < </option>
-                        <option value="!=" > != </option>
-                        <option value="dh" > Desde-Hasta</option>
-                        <option value="like" > Like </option>
+                        <option value="=" > Igual </option>
+                        <option value=">=" > Mayor ó igual </option>
+                        <option value="<=" > Menor ó igual </option>
+                        <option value=">" > Mayor qué </option>
+                        <option value="<" > Menor qué </option>
                         </select>`
             }
             i++
@@ -491,13 +475,14 @@
         function borrarRow(x) {
             var i = x.parentNode.parentNode.rowIndex;
             document.getElementById("myTable").deleteRow(i);
+            aceptaRepetidos()
         }
 
 
         function showQuery() {
             document.getElementById('guard').disabled = true;
             document.getElementById('probar').disabled = false;
-            
+
             var query = "";
             var queryParts = [];
             const valoresElements = document.querySelectorAll('.valores');
@@ -505,7 +490,13 @@
             const op = document.querySelectorAll('.operator');
             const valoresObj = {};
 
+
+            const campo = document.querySelectorAll('.campo');
+
             valoresElements.forEach((element, i) => {
+
+                var dato = campo[i].value
+                var openingParenIndex3 = dato.split("-");
 
                 if (element.name === 'monto_min' && element.value !== '') { //Verificamos el campo monto
                     const montoMin = parseFloat(element.value);
@@ -528,24 +519,25 @@
                     }
                 } else {
                     if (op[i].value === 'like') {
-                        queryParts.push(`${element.name} like '%${element.value}%'`); // 
+                        queryParts.push(`${openingParenIndex3[2]} like '%${element.value}%'`); // 
                     } else if (element.type === 'date' || element.type === 'text') {
-                        queryParts.push(`${element.name} ${op[i].value} '${element.value}'`); // 
+                        queryParts.push(`${openingParenIndex3[2]} ${op[i].value} '${element.value}'`); // 
                     } else {
-                        queryParts.push(`${element.name} ${op[i].value} ${element.value}`); // 
+                        queryParts.push(`${openingParenIndex3[2]} ${op[i].value} ${element.value}`); // 
                     }
 
                 }
             });
 
             query = queryParts.join(' and '); //añadimos los and a la consulta
-            var query2 = 'select * from ' + name_table.value + ' where ' + queryParts.join(' and ');
             document.getElementById('showQue').value = query; // muestro en el textarea el codigo
             document.getElementById('onlyWhere').value = query; // muestro en el textarea el codigo
             document.getElementById('table_name2').value = name_table.value; // muestro en el textarea el codigo
         }
 
         function selectInputType(value, i, e, op = '') {
+
+            document.getElementById('guard').disabled = true;
 
             const pattern = /\((\d+)\)/;
             const matches = value.match(pattern);
@@ -557,10 +549,8 @@
             } else {
                 text = value
             }
-
-            const openingParenIndex2 = value.indexOf("-");
-            const text2 = value.slice(openingParenIndex2 + 1);
-            document.getElementById("name_table").value = text2;
+            var openingParenIndex2 = value.split("-");
+            document.getElementById("name_table").value = openingParenIndex2[1];
             var table = document.getElementById("myTable");
             nuevoTd = document.createElement("td");
             var nuevoDiv = document.createElement("div");

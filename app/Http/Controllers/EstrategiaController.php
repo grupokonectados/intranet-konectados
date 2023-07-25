@@ -21,7 +21,10 @@ class EstrategiaController extends Controller
     }
 
     public function saveEstrategia(Request $request)
-    {
+    {   
+
+
+        // return $request;
 
         $getEstrategiasCliente = Http::get(env('API_URL').env('API_ESTRATEGIAS').'/diseno/'.$request->prefix);
         $data = $getEstrategiasCliente->collect()[0];
@@ -99,8 +102,16 @@ class EstrategiaController extends Controller
     {
         $estrategias_cache = Cache::get('estrategias');
 
+        $config_channels = Cache::get('config_channels');
 
-        // return $estrategias_cache;
+
+        foreach($config_channels['channels'] as $o => $value){
+            if(isset($value['tipo'])){
+                $tipos_masivos[$o] = $o;
+            }
+        }
+
+
 
         $param = [
             "idCliente" =>$request->id_cliente,
@@ -108,34 +119,102 @@ class EstrategiaController extends Controller
             "criterio"=> $request['query'],
         ];
 
+
+
+
         $result_query = Http::withBody(json_encode($param))->get(env('API_URL').env('API_ESTRATEGIA')."/records");
         $coleccion = $result_query->collect()[0];
         $response_ruts = array_values(json_decode($coleccion[0]['detail_records'], true));
 
         $full_merge = [];
-
-        for($i = 0; $i<count($estrategias_cache); $i++){
-            $full_merge = array_merge($full_merge, json_decode($estrategias_cache[$i]['registros'],true));        
-        }
-
-        $unicos = array_diff($response_ruts, $full_merge);
-        $iguales = array_intersect($response_ruts, $full_merge);
+        $full_merge_masivo = [];
 
 
-        if(isset($request->check)){
-            $cobertura = ($coleccion[0]['total_records'] / $coleccion[0]['total_cartera'])*100;
+        if(in_array($request->channel, $tipos_masivos)){
+            for($i = 0; $i<count($estrategias_cache); $i++){
+                if(in_array($estrategias_cache[$i]['channels'], $tipos_masivos)){
+                    $full_merge = array_merge($full_merge, json_decode($estrategias_cache[$i]['registros'], true));
+                }
+            }
+
+            $unicos = array_diff($response_ruts, $full_merge);
+            $iguales = array_intersect($response_ruts, $full_merge);
+
+            if(isset($request->check)){
+                $cobertura = ($coleccion[0]['total_records'] / $coleccion[0]['total_cartera'])*100;
+            }else{
+                $cobertura = (count($unicos) / $coleccion[0]['total_cartera'])*100;
+            }
+    
+            return $result = [
+                'unicos' => $unicos,
+                'total_unicos' => count($unicos),
+                'total_repetidos' => count($iguales),
+                'total_r' => $coleccion[0]['total_records'],
+                'percent_cober' => $cobertura,
+                'total_enc' => $response_ruts
+            ];
+
         }else{
-            $cobertura = (count($unicos) / $coleccion[0]['total_cartera'])*100;
+            for($i = 0; $i<count($estrategias_cache); $i++){
+                $full_merge = array_merge($full_merge, json_decode($estrategias_cache[$i]['registros'], true));
+            }
+
+            $unicos = array_diff($response_ruts, $full_merge);
+            $iguales = array_intersect($response_ruts, $full_merge);
+
+            if(isset($request->check)){
+                $cobertura = ($coleccion[0]['total_records'] / $coleccion[0]['total_cartera'])*100;
+            }else{
+                $cobertura = (count($unicos) / $coleccion[0]['total_cartera'])*100;
+            }
+    
+            return $result = [
+                'unicos' => $unicos,
+                'total_unicos' => count($unicos),
+                'total_repetidos' => count($iguales),
+                'total_r' => $coleccion[0]['total_records'],
+                'percent_cober' => $cobertura,
+                'total_enc' => $response_ruts
+            ];
         }
 
-        return $result = [
-            'unicos' => $unicos,
-            'total_unicos' => count($unicos),
-            'total_repetidos' => count($iguales),
-            'total_r' => $coleccion[0]['total_records'],
-            'percent_cober' => $cobertura,
-            'total_enc' => $response_ruts
-        ];
+
+        // for($i = 0; $i<count($estrategias_cache); $i++){
+        //     if(in_array($estrategias_cache[$i]['channels'], $tipos_masivos)){
+        //         $full_merge_masivo = array_merge($full_merge_masivo, json_decode($estrategias_cache[$i]['registros'], true));
+        //     }else{
+                
+        //     }
+             
+        // }
+
+
+        // // return $full_merge;
+
+        // if(in_array($request->channel, $tipos_masivos)){
+        //     $unicos = array_diff($response_ruts, $full_merge_masivo);
+        //     $iguales = array_intersect($response_ruts, $full_merge_masivo);
+
+        //     if(isset($request->check)){
+        //         $cobertura = ($coleccion[0]['total_records'] / $coleccion[0]['total_cartera'])*100;
+        //     }else{
+        //         $cobertura = (count($unicos) / $coleccion[0]['total_cartera'])*100;
+        //     }
+    
+        //     return $result = [
+        //         'unicos' => $unicos,
+        //         'total_unicos' => count($unicos),
+        //         'total_repetidos' => count($iguales),
+        //         'total_r' => $coleccion[0]['total_records'],
+        //         'percent_cober' => $cobertura,
+        //         'total_enc' => $response_ruts
+        //     ];
+        // }else{
+            
+        // }
+
+        
 
     }
 
