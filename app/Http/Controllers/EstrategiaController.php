@@ -228,7 +228,7 @@ class EstrategiaController extends Controller
     public function acceptedStrategy(Request $request)
     {
 
-        // return ;
+        // return $request;
 
         // $estrategia = Cache::get('estrategias');
         // $permitidos_client = Cache::get('config_channels');
@@ -282,7 +282,40 @@ class EstrategiaController extends Controller
         //     return ['message' => 'Puesto en produccion', 'result' => $actived['status']];
         // }
 
-        $actived = Http::put("http://apiest.konecsys.com:8080/estrategia/activar/".$request->id);
+        // $actived = Http::put("http://apiest.konecsys.com:8080/estrategia/activar/".$request->id);
+
+
+        switch ($request->channels) {
+            case '1':
+                $arr = [
+                    'prefix' => $request->prefix,
+                    ['1465254-K', 'RUY ENRIQUE BARBOSA', 'jehfebles@gmail.com'], 
+                    ['1511211-5', 'LUIS MARCELINO MORENO SÁNCHEZ', 'jehefebles@gmail.com'], 
+                    ['1702532-5', 'JOSE SANTOS MALDONADO TAPIA', 'jehfebles1@gmail.com'], 
+                    ['1705969-6', 'AIDA CACERES', 'jesus@grupokonectados.cl']
+                ];
+
+
+                return (new MailNotifyController)->send_notify($arr);
+
+
+
+                break;
+            
+            default:
+                # code...
+                break;
+        }
+
+
+        
+
+
+
+
+
+
+
         return ['message' => 'Puesto en produccion', 'result' => $actived['status']];
     }
 

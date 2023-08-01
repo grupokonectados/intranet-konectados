@@ -4,11 +4,13 @@ use App\Http\Controllers\{
     ClientController,
     EstrategiaController,
     HomeController,
+    MailNotifyController,
 };
 use App\Http\Controllers\Auth\{
     ExpiredPasswordController,
 };
 use App\Http\Controllers\Config\{
+    MailConfigController,
     UserController,
 };
 use Illuminate\Support\Facades\Auth;
@@ -64,6 +66,13 @@ Route::group(['middleware' => ['auth']], function () {
         //Usuarios
         Route::resource('/mantenice/users', UserController::class);
         route::get('/mantenice/users/reset-password/{id}', [UserController::class, 'resetPassword'])->name('users.reset-password');
+
+
+
+        //MailConfig
+
+        Route::resource('/mantenice/mail-config', MailConfigController::class);
+        route::get('/mail/send_notify', [MailNotifyController::class, 'send_notify'])->name('mail.send_notify');
     
         /**
          * End mantenimientos

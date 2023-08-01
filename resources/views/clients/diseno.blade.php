@@ -97,7 +97,7 @@
                                 <div class="btn-group" role="group" aria-label="Basic example">
 
                                     <x-btn-standar type='a' title='Aceptar' color="success" sm='sm'
-                                        icon='check-circle' onclick="acceptedStrategy({{ $data['id'] }})" />
+                                        icon='check-circle' onclick="acceptedStrategy({{ $data['id'] }}, {{ $data['channels'] }}, '{{ $client->prefix }}')" />
 
                                     <x-btn-standar type='a' title='Eliminar' color="danger" sm='sm'
                                         icon='times-circle' extraclass='eliminar-estrategia'
@@ -396,12 +396,14 @@
             }
         }
 
-        function acceptedStrategy(id) {
-            spinner.removeAttribute('hidden');
+        function acceptedStrategy(id, channels, prefix) {
+            // spinner.removeAttribute('hidden');
             fetch('{{ route('estrategia.accepted-strategy') }}', {
                 method: 'POST',
                 body: JSON.stringify({
-                    id: id
+                    id: id,
+                    channels: channels,
+                    prefix: prefix,
                 }),
                 headers: {
                     'content-type': 'application/json',

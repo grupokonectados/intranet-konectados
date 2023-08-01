@@ -3,13 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Config\UserController;
-use App\Models\Client;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Client\Pool;
 use Illuminate\Support\Facades\Cache;
-use LDAP\Result;
 
 class ClientController extends Controller
 {
@@ -196,7 +193,7 @@ class ClientController extends Controller
             }
         }
 
-
+        // return $datas;
 
         return view('clients/diseno', compact('client', 'datas', 'porcentaje_total',  'suma_total', 'config_layout', 'channels', 'estrc', 'ch_approve', 'channels_config'));
     }

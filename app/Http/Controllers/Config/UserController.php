@@ -41,8 +41,10 @@ class UserController extends Controller
     public function create()
     {
         $roles = Role::pluck('name', 'name')->all();
-
-        $clients = DB::table('clients')->pluck('name', 'id');
+        $clientes = Http::get(env('API_URL') . env('API_CLIENTS'));
+        foreach($clientes->json()[0] as $cliente){
+            $data[$cliente['id']] =  $cliente['name'];
+        }
 
         $config_layout = [
             'title-section' => 'Usuarios > Nuevo Usuario',
@@ -50,7 +52,7 @@ class UserController extends Controller
             'btn-back' => 'users.index'
         ];
 
-        return view('config.users.create', compact('roles', 'config_layout', 'clients'));
+        return view('config.users.create', compact('roles', 'config_layout', 'data'));
     }
 
     public function store(Request $request)
