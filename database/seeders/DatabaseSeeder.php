@@ -15,13 +15,8 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
 
-        $this->call(DataSeeder::class);
         $this->call(PermissionTableSeeder::class);
         $this->call(CreateAdminUserSeeder::class);
 
-        \DB::insert("INSERT INTO canales(name) VALUES ('AGENTES SC'),  ('AGENTES CD'), ('AGENTES PP'), ('EMAIL') ,('IVR'), ('SMS'), ('VOICE BOT'), ('WHATSAPP');");
-
-        
-         //
     }
 }
