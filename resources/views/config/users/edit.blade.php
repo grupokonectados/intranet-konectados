@@ -54,15 +54,15 @@
                 <div class="border p-2">
                     <div class="row">
                         @for ($i = 0; $i < count($clients); $i++)
-                            @if (in_array($clients[$i]->id, $user->ve_clientes))
+                            @if (in_array($clients[$i]['id'], $user->ve_clientes))
                                 <div class="col-4">
-                                    {{ Form::checkbox('ve_clientes[]', $clients[$i]->id, true, ['class' => 'form-check-input']) }}
-                                    <label class="form-check-label">{{ $clients[$i]->name }}</label>
+                                    {{ Form::checkbox('ve_clientes[]', $clients[$i]['id'], true, ['class' => 'form-check-input']) }}
+                                    <label class="form-check-label">{{ $clients[$i]['name'] }}</label>
                                 </div>
                             @else
                                 <div class="col-4">
-                                    {{ Form::checkbox('ve_clientes[]', $clients[$i]->id, false, ['class' => 'form-check-input']) }}
-                                    <label class="form-check-label">{{ $clients[$i]->name }}</label>
+                                    {{ Form::checkbox('ve_clientes[]', $clients[$i]['id'], false, ['class' => 'form-check-input']) }}
+                                    <label class="form-check-label">{{ $clients[$i]['name'] }}</label>
                                 </div>
                             @endif
                         @endfor

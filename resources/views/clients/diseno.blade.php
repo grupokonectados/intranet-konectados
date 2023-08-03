@@ -134,9 +134,9 @@
                         'id' => 'myForm',
                     ]) !!}
                     <tr>
-                        <th class="text-uppercase align-middle" scope="col">Canal: </th>
+                        <th width='20%' class="text-uppercase align-middle" scope="col">Canal: </th>
                         <th>
-                            <select onchange='aceptaRepetidos()' class="form-select form-select-sm" name="channels"
+                            <select onchange='aceptaRepetidos(this)' class="form-select form-select-sm" name="channels"
                                 id="canalsito">
                                 <option value="">Seleccione</option>
                                 @for ($i = 0; $i < count($channels); $i++)
@@ -147,12 +147,25 @@
                                 @endfor
                             </select>
                         </th>
+                        
+                    </tr>
+                    <tr>
+                        <th class="text-uppercase align-middle" scope="col">Template: </th>
+                        <th>
+                            <select disabled class="form-select form-select-sm" name="template"
+                                id="template">
+                                <option value="">Seleccione</option>
+                                <option value="2">EJEMPLO</option>
+                                
+                            </select>
+                        </th>
+                        
                     </tr>
 
                     <tr>
                         <th class="text-uppercase align-middle" scope="col">
                             <a type="button" class="btn btn-success btn-sm" id='btnNuevo'
-                                onclick="addRow('{{ $client->prefix }}')">
+                                onclick="addRow()">
                                 <i class="fas fa-plus-circle"></i>
                                 Agregar nuevo campo
                             </a>
@@ -363,7 +376,16 @@
         }
 
 
-        function aceptaRepetidos() {
+        function aceptaRepetidos(select = '') {
+
+            // console.log()
+
+            if(select.selectedOptions[0].text === 'EMAIL'){
+                document.getElementById('template').disabled = false;
+            }else{
+                document.getElementById('template').disabled = true;
+                document.getElementById('template').value = '';
+            }
 
             document.getElementById('guard').disabled = true;
 
@@ -376,6 +398,8 @@
             document.getElementById('unic').value = 0
             document.getElementById('repe').value = 0
             document.getElementById('tota').value = 0
+
+
         }
 
         function validar(e) {
@@ -432,8 +456,9 @@
 
             var estructura = @json($estrc);
 
+
             var table = document.getElementById("myTable");
-            aceptaRepetidos()
+            aceptaRepetidos(document.getElementById('canalsito'))
 
             document.getElementById('guard').disabled = true;
 

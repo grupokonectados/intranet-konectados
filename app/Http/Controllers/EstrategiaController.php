@@ -14,10 +14,8 @@ class EstrategiaController extends Controller
 
     function __construct()
     {
-        $this->middleware('permission:root-list|strategy-list', ['only' => ['index', 'show', 'queryResults', 'probarStrategy']]);
-        $this->middleware('permission:root-create|strategy-create', ['only' => ['create', 'store', 'saveEstrategia', 'acceptedStrategy']]);
-        $this->middleware('permission:root-edit', ['only' => ['edit', 'update']]);
-        $this->middleware('permission:root-delete|strategy-delete', ['only' => ['destroy']]);
+        $this->middleware('permission:root-list|strategy-list', ['only' => ['probarStrategy']]);
+        $this->middleware('permission:root-create|strategy-create', ['only' => ['saveEstrategia', 'acceptedStrategy']]);
     }
 
     public function saveEstrategia(Request $request)
@@ -50,29 +48,31 @@ class EstrategiaController extends Controller
         }else{
             $onlyWhere = $request->onlyWhere;
 
-            $saveQuery = new Estrategia();
-            $saveQuery->onlyWhere = str_replace("'","''", $onlyWhere);
-            $saveQuery->channels = $request->channels;
-            $saveQuery->table_name = $request->table_name;
-            $saveQuery->prefix_client = $request->prefix;
-            $saveQuery->registros_unicos = $request->unic;
-            $saveQuery->registros_repetidos = $request->repe;
-            $saveQuery->total_registros = $request->total;
-            $saveQuery->cobertura = $request->cober;
-            $saveQuery->type = 1;
-
-            
-            
-    
-            if (isset($request->repeatUsers)) {
-                $saveQuery->repeatUsers = $request->repeatUsers;
-                $saveQuery->registros = json_encode(json_decode($request['registros'], true));
-            } else {
-                $saveQuery->repeatUsers = 0;
-                $saveQuery->registros = json_encode(json_decode($request['registros'], true));
+            $saveQuery = [];
+            $saveQuery['onlyWhere'] = str_replace("'","''", $onlyWhere);
+            $saveQuery['channels'] = $request->channels;
+            $saveQuery['table_name'] = $request->table_name;
+            $saveQuery['prefix_client'] = $request->prefix;
+            $saveQuery['registros_unicos'] = $request->unic;
+            $saveQuery['registros_repetidos'] = $request->repe;
+            $saveQuery['total_registros'] = $request->total;
+            $saveQuery['cobertura'] = $request->cober;
+            $saveQuery['type'] = 1;
+            if (isset($request->template)) {
+                $saveQuery['template'] = (int) $request->template;
+            }else{
+                $saveQuery['template'] = null;
             }
+
+
+            $saveQuery['registros'] = json_encode(json_decode($request['registros'], true));
+
+            return $saveQuery;
             $save = Http::post(env('API_URL').env('API_ESTRATEGIA'), $saveQuery);
             $result = $save->json();
+
+            // return $result;
+            
 
             if($result != false){
                 if($result['protocol41'] === true){
@@ -223,8 +223,6 @@ class EstrategiaController extends Controller
 
     }
 
-    
-
     public function acceptedStrategy(Request $request)
     {
 
@@ -295,15 +293,12 @@ class EstrategiaController extends Controller
                     ['1705969-6', 'AIDA CACERES', 'jesus@grupokonectados.cl']
                 ];
 
-
                 return (new MailNotifyController)->send_notify($arr);
-
-
-
                 break;
             
             default:
-                # code...
+                
+                $actived = Http::put(env('API_URL').env('API_ESTRATEGIA')."/activar/".$request->id);
                 break;
         }
 

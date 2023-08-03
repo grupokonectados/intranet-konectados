@@ -20,7 +20,6 @@
                     <th class="text-white" scope="col">Estado</th>
                     <th class="text-white" scope="col" width="280px">Acciones</th>
                 </tr>
-
             </thead>
             <tbody class="text-center">
                 @foreach ($data as $key => $user)

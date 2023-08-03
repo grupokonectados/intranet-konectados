@@ -21,6 +21,13 @@ class UserController extends Controller
         $this->middleware('permission:root-create', ['only' => ['create', 'store']]);
         $this->middleware('permission:root-edit', ['only' => ['edit', 'update']]);
         $this->middleware('permission:root-delete', ['only' => ['destroy']]);
+
+        
+    }
+
+    public function getClentesCache(){
+        $getApiClients = Http::get(env('API_URL') . env('API_CLIENTS'));
+        return $getApiClients->json()[0];
     }
 
 
@@ -41,10 +48,12 @@ class UserController extends Controller
     public function create()
     {
         $roles = Role::pluck('name', 'name')->all();
-        $clientes = Http::get(env('API_URL') . env('API_CLIENTS'));
-        foreach($clientes->json()[0] as $cliente){
+        $clientes = $this->getClentesCache();
+        foreach($clientes as $cliente){
             $data[$cliente['id']] =  $cliente['name'];
         }
+        
+        // return $data;
 
         $config_layout = [
             'title-section' => 'Usuarios > Nuevo Usuario',
@@ -77,18 +86,18 @@ class UserController extends Controller
         $user->assignRole($request->input('roles'));
 
         return redirect()->route('users.index')
-            ->with('success', 'User created successfully');
+            ->with('success', 'Creado con exito');
     }
 
     public function show($id)
     {
+
         $user = User::find($id);
+        $clientes = $this->getClentesCache();
 
         if (Gate::check('root-list') && $user->ve_clientes === null) {
-            $clients = DB::table('clients')->select('name', 'id')->get();
             $user->ve_clientes = [];
         } else {
-            $clients = DB::table('clients')->select('name', 'id')->get();
             $user->ve_clientes = json_decode($user->ve_clientes, true);
         }
 
@@ -99,7 +108,7 @@ class UserController extends Controller
             'btn-edit' => 'users.edit',
         ];
 
-        return view('config.users.show', compact('user', 'config_layout', 'clients'));
+        return view('config.users.show', compact('user', 'config_layout', 'clientes'));
     }
 
     public function edit($id)
@@ -107,12 +116,11 @@ class UserController extends Controller
         $user = User::find($id);
         $roles = Role::pluck('name', 'name')->all();
         $userRole = $user->roles->pluck('name', 'name')->all();
+        $clients = $this->getClentesCache();
 
         if (Gate::check('root-list') && $user->ve_clientes === null) {
-            $clients = DB::table('clients')->select('name', 'id')->get();
             $user->ve_clientes = [];
         } else {
-            $clients = DB::table('clients')->select('name', 'id')->get();
             $user->ve_clientes = json_decode($user->ve_clientes, true);
         }
 
@@ -167,7 +175,7 @@ class UserController extends Controller
         $user->assignRole($request->input('roles'));
 
         return redirect()->route('users.index')
-            ->with('success', 'User updated successfully');
+            ->with('success', 'Editado con exito');
     }
 
     public function destroy($id)

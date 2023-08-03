@@ -42,10 +42,10 @@
             <tr>
                 <td class="text-uppercase bg-dark text-white w-25"><strong>Clientes:</strong></td>
                 <td class="align-middle">
-                    @if (count($clients) > 0)
-                        @for ($i = 0; $i < count($clients); $i++)
-                            @if (in_array($clients[$i]->id, $user->ve_clientes))
-                                <span class="mx-3">{{ $clients[$i]->name }}</span>
+                    @if (count($clientes) > 0)
+                        @for ($i = 0; $i < count($clientes); $i++)
+                            @if (in_array($clientes[$i]['id'], $user->ve_clientes))
+                                <span class="mx-3">{{ $clientes[$i]['name'] }}</span>
                             @endif
                         @endfor
                     @else

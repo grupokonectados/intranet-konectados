@@ -15,7 +15,7 @@
 
     @if (count($errors) > 0)
         <div class="alert alert-danger">
-            <strong>Whoops!</strong>Something went wrong.<br><br>
+            <strong>Whoops!</strong>Ha ocurrido un error.<br><br>
             <ul>
                 @foreach ($errors->all() as $error)
                     <li>{{ $error }}</li>
@@ -65,7 +65,7 @@
                 <strong>Clientes:</strong>
                 <div class="border p-2">
                     <div class="row">
-                        @foreach ($clients as $key => $value)
+                        @foreach ($data as $key => $value)
                             <div class="col-4">
                                 {{ Form::checkbox('ve_clientes[]', $key, '', ['class' => 'form-check-input']) }}
                                 <label class="form-check-label">{{ $value }}</label>

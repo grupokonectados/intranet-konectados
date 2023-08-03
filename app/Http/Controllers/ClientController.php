@@ -30,7 +30,6 @@ class ClientController extends Controller
         return view('clients/index', compact('data', 'config_layout'));
     }
 
-
     public function edit($id)
     {
         $this->getClientData($id);
@@ -49,7 +48,6 @@ class ClientController extends Controller
         return view('clients/edit', compact('client', 'config_layout', 'channels', 'channels_config', 'estructura'));
     }
 
-
     public function update(Request $request, $id)
     {
         
@@ -65,8 +63,6 @@ class ClientController extends Controller
             return $updated;
         }
     }
-
-
 
     function getClientData($id)
     {
@@ -95,9 +91,6 @@ class ClientController extends Controller
 
         Cache::forever('config_channels', json_decode($arr['channels'], true));
     }
-
-
-    
 
     public function disenoEstrategia($id)
     {
