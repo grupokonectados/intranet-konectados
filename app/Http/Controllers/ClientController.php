@@ -207,7 +207,7 @@ class ClientController extends Controller
 
         Cache::forever('estrategias', $datas);
 
-        return $datas;
+        // return $datas;
 
         $total_cartera = 0;
         $suma_total = 0;
