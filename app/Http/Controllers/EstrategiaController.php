@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Estrategia;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
 
@@ -14,42 +13,129 @@ class EstrategiaController extends Controller
 
     function __construct()
     {
-        $this->middleware('permission:root-list|strategy-list', ['only' => ['probarStrategy']]);
+        $this->middleware('permission:root-list|strategy-list', ['only' => ['probarStrategy', 'show']]);
         $this->middleware('permission:root-create|strategy-create', ['only' => ['saveEstrategia', 'acceptedStrategy']]);
     }
 
+
+    public function avance($id)
+    {
+
+        $resultRequest = Http::get("http://apiest.konecsys.com:8080/email/log/" . $id);
+        $datas = $resultRequest->collect()[0];
+
+
+        return $resultRequest;
+
+
+        $estados = [
+            1 => 'Email no enviado, error casilla mal escrita',
+            2 => 'Email no enviado, casilla registrada como inexistente',
+            3 => 'Email no enviado, usuario se des inscribió de Avisos',
+            4 => 'Email enviado',
+            5 => 'Email rechazado por casilla inexistente',
+            6 => 'Email rechazado por bloqueo',
+            7 => 'Email rechazado por Casilla Llena',
+            8 => 'Email rechazado DNS',
+            9 => 'Email rechazado',
+            10 => 'Registra Lectura del email',
+            11 => 'Usuario solicita Des-inscripción',
+        ];
+
+        foreach ($datas as $sub_arr_log) {
+
+            $request_param = '<?xml version="1.0" encoding="utf-8"?>
+                        <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+                        <soap:Body>
+                            <Consulta  xmlns="' . $_ENV['WS_URL_CONSULTA_ACTION'] . '">
+                            <Usuario>' . $_ENV['USUARIO'] . '</Usuario>
+                            <CodigoMensaje>' . $sub_arr_log['idMessage'] . '</CodigoMensaje>
+                            <IdCampana>' . $_ENV['IDCAMP'] . '</IdCampana>
+                            </Consulta>
+                        </soap:Body>
+                        </soap:Envelope>';
+
+            $headers = [
+                'Content-Type: text/xml; charset=utf-8',
+                'Content-Length: ' . strlen($request_param),
+                'SOAPAction: "' . $_ENV['WS_URL_CONSULTA_SOAP_ACTION'] . '"'
+            ];
+
+            $ch = curl_init($_ENV['WS_URL_CONSULTA']);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $request_param);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+
+            $data = curl_exec($ch);
+            $httpCode2 = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+            if ($httpCode2 !== 404) {
+                $result = $data;
+                if ($result === FALSE) {
+                    printf(
+                        "CURL error (#%d): %s<br>\n",
+                        curl_errno($ch),
+                        htmlspecialchars(curl_error($ch))
+                    );
+                }
+                $xml = simplexml_load_string($data);
+                $array_xml = $xml->xpath("//soap:Body/*")[0];
+                $resp = json_decode(json_encode($array_xml), true);
+                if (!array_key_exists('faultcode',  $resp)) {
+                    $arrrr['idMessage'] = $sub_arr_log['idMessage'];
+                    $arrrr['id_gestion'] = $resp['ConsultaResult']['ID_gestion'];
+                    if (array_key_exists($resp['ConsultaResult']['ID_gestion'], $estados)) {
+                        $arrrr['estado'] = $estados[$resp['ConsultaResult']['ID_gestion']];
+                    }
+                    $arrrr['fecha_update'] = $resp['ConsultaResult']['Fecha'];
+
+                    $arrrr2[] = $arrrr;
+                } else {
+                    $arrrr[] = 'error';
+                }
+            }
+            curl_close($ch);
+        }
+
+
+        // return $datas;
+
+
+
+        return view('estrategias.avance', compact('datas', 'arrrr2'));
+        return $datas;
+    }
+
     public function saveEstrategia(Request $request)
-    {   
-
-
+    {
         // return $request;
-
-        $getEstrategiasCliente = Http::get(env('API_URL').env('API_ESTRATEGIAS').'/diseno/'.$request->prefix);
+        $getEstrategiasCliente = Http::get(env('API_URL') . env('API_ESTRATEGIAS') . '/diseno/' . $request->prefix);
         $data = $getEstrategiasCliente->collect()[0];
-
         $exist_record = [];
-
         foreach ($data as $key => $value) {
             if ($value['onlyWhere'] === $request->onlyWhere) {
-                if($value['channels'] === (int)$request->channels){
-                    if(date('Y-m-d', strtotime($data[$key]['created_at'])) == date('Y-m-d')){
+                if ($value['channels'] === (int)$request->channels) {
+                    if (date('Y-m-d', strtotime($data[$key]['created_at'])) == date('Y-m-d')) {
                         $exist_record[] = 1;
                     }
                 }
-            } 
+            }
         }
 
-        if(count($exist_record) > 0){
+        if (count($exist_record) > 0) {
             $message = [
                 'type' => 'danger',
                 'message' => 'Error! existe un criterio creado el dia de hoy para ese canal, con las mismas caracteristicas. Por favor, verifíquelo e inténtelo nuevamente.',
             ];
             return back()->with('message', $message);
-        }else{
+        } else {
             $onlyWhere = $request->onlyWhere;
 
             $saveQuery = [];
-            $saveQuery['onlyWhere'] = str_replace("'","''", $onlyWhere);
+            $saveQuery['onlyWhere'] = str_replace("'", "''", $onlyWhere);
             $saveQuery['channels'] = $request->channels;
             $saveQuery['table_name'] = $request->table_name;
             $saveQuery['prefix_client'] = $request->prefix;
@@ -58,37 +144,37 @@ class EstrategiaController extends Controller
             $saveQuery['total_registros'] = $request->total;
             $saveQuery['cobertura'] = $request->cober;
             $saveQuery['type'] = 1;
-            if (isset($request->template)) {
-                $saveQuery['template'] = (int) $request->template;
-            }else{
-                $saveQuery['template'] = null;
-            }
-
 
             $saveQuery['registros'] = json_encode(json_decode($request['registros'], true));
 
-            return $saveQuery;
-            $save = Http::post(env('API_URL').env('API_ESTRATEGIA'), $saveQuery);
+            if (isset($request->template)) {
+                $saveQuery['idEmailTemplate'] = (int) $request->template;
+            } else {
+                $saveQuery['idEmailTemplate'] = 0;
+            }
+
+            // return $saveQuery;
+            $save = Http::post(env('API_URL') . env('API_ESTRATEGIA'), $saveQuery);
             $result = $save->json();
 
-            // return $result;
-            
+            // return var_dump($result);
 
-            if($result != false){
-                if($result['protocol41'] === true){
+
+            if ($result != false) {
+                if ($result['serverStatus'] === 2) {
                     $message = [
                         'type' => 'success',
                         'message' => 'Exito! Se registro la estrategia con exito',
                     ];
                     return back()->with('message', $message);
-                }else{
+                } else {
                     $message = [
                         'type' => 'danger',
                         'message' => 'Error! Hubo un problema y su estrategia no se registro correctamente. Por favor, verifíquelo e inténtelo nuevamente.',
                     ];
                     return back()->with('message', $message);
                 }
-            }else{
+            } else {
                 $message = [
                     'type' => 'danger',
                     'message' => 'Error! Alguno de los campos de la estrategia no estan correctamente llenado. Por favor, verifíquelo e inténtelo nuevamente.',
@@ -101,41 +187,37 @@ class EstrategiaController extends Controller
     public function probarStrategy(Request $request)
     {
         $estrategias_cache = Cache::get('estrategias');
-
         $config_channels = Cache::get('config_channels');
         $tipos_masivos = [];
 
-        foreach($config_channels['channels'] as $o => $value){
-            if(isset($value['tipo'])){
+        foreach ($config_channels['channels'] as $o => $value) {
+            if (isset($value['tipo'])) {
                 $tipos_masivos[$o] = $o;
             }
         }
 
-
-        // return in_array($request->channel, $tipos_masivos) ? 'si' : 'no';
-
-
-
         $param = [
-            "idCliente" =>$request->id_cliente,
-            "cartera"=> $request->table_name,
-            "criterio"=> $request['query'],
+            "idCliente" => $request->id_cliente,
+            "cartera" => $request->table_name,
+            "criterio" => $request['query'],
         ];
 
+        $result_query = Http::withBody(json_encode($param))->get(env('API_URL') . env('API_ESTRATEGIA') . "/records");
 
-
-
-        $result_query = Http::withBody(json_encode($param))->get(env('API_URL').env('API_ESTRATEGIA')."/records");
         $coleccion = $result_query->collect()[0];
-        $response_ruts = array_values(json_decode($coleccion[0]['detail_records'], true));
+        if ($coleccion[0]['total_records'] !== 0) {
+            $response_ruts = array_values(json_decode($coleccion[0]['detail_records'], true));
+        } else {
+            return response()->json(['error' => 'No se encontraron registros.'], 404);
+        }
+
+        // return $response_ruts;
 
         $full_merge = [];
-        $full_merge_masivo = [];
 
-
-        if(in_array($request->channel, $tipos_masivos)){
-            for($i = 0; $i<count($estrategias_cache); $i++){
-                if(in_array($estrategias_cache[$i]['channels'], $tipos_masivos)){
+        if (in_array($request->channel, $tipos_masivos)) {
+            for ($i = 0; $i < count($estrategias_cache); $i++) {
+                if (in_array($estrategias_cache[$i]['channels'], $tipos_masivos)) {
                     $full_merge = array_merge($full_merge, json_decode($estrategias_cache[$i]['registros'], true));
                 }
             }
@@ -143,24 +225,23 @@ class EstrategiaController extends Controller
             $unicos = array_diff($response_ruts, $full_merge);
             $iguales = array_intersect($response_ruts, $full_merge);
 
-            if(isset($request->check)){
-                $cobertura = ($coleccion[0]['total_records'] / $coleccion[0]['total_cartera'])*100;
-            }else{
-                $cobertura = (count($unicos) / $coleccion[0]['total_cartera'])*100;
+            if (isset($request->check)) {
+                $cobertura = ($coleccion[0]['total_records'] / $coleccion[0]['total_cartera']) * 100;
+            } else {
+                $cobertura = (count($unicos) / $coleccion[0]['total_cartera']) * 100;
             }
-    
+
             return $result = [
-                'unicos' => $unicos,
+                'unicos' => array_values($unicos),
                 'total_unicos' => count($unicos),
                 'total_repetidos' => count($iguales),
                 'total_r' => $coleccion[0]['total_records'],
                 'percent_cober' => $cobertura,
                 'total_enc' => $response_ruts,
             ];
-
-        }else{
-            for($i = 0; $i<count($estrategias_cache); $i++){
-                if(!in_array($estrategias_cache[$i]['channels'], $tipos_masivos)){
+        } else {
+            for ($i = 0; $i < count($estrategias_cache); $i++) {
+                if (!in_array($estrategias_cache[$i]['channels'], $tipos_masivos)) {
                     $full_merge = array_merge($full_merge, json_decode($estrategias_cache[$i]['registros'], true));
                 }
             }
@@ -168,14 +249,14 @@ class EstrategiaController extends Controller
             $unicos = array_diff($response_ruts, $full_merge);
             $iguales = array_intersect($response_ruts, $full_merge);
 
-            if(isset($request->check)){
-                $cobertura = ($coleccion[0]['total_records'] / $coleccion[0]['total_cartera'])*100;
-            }else{
-                $cobertura = (count($unicos) / $coleccion[0]['total_cartera'])*100;
+            if (isset($request->check)) {
+                $cobertura = ($coleccion[0]['total_records'] / $coleccion[0]['total_cartera']) * 100;
+            } else {
+                $cobertura = (count($unicos) / $coleccion[0]['total_cartera']) * 100;
             }
-    
+
             return $result = [
-                'unicos' => $unicos,
+                'unicos' => array_values($unicos),
                 'total_unicos' => count($unicos),
                 'total_repetidos' => count($iguales),
                 'total_r' => $coleccion[0]['total_records'],
@@ -185,42 +266,11 @@ class EstrategiaController extends Controller
         }
 
 
-        // for($i = 0; $i<count($estrategias_cache); $i++){
-        //     if(in_array($estrategias_cache[$i]['channels'], $tipos_masivos)){
-        //         $full_merge_masivo = array_merge($full_merge_masivo, json_decode($estrategias_cache[$i]['registros'], true));
-        //     }else{
-                
-        //     }
-             
-        // }
+    }
 
 
-        // // return $full_merge;
-
-        // if(in_array($request->channel, $tipos_masivos)){
-        //     $unicos = array_diff($response_ruts, $full_merge_masivo);
-        //     $iguales = array_intersect($response_ruts, $full_merge_masivo);
-
-        //     if(isset($request->check)){
-        //         $cobertura = ($coleccion[0]['total_records'] / $coleccion[0]['total_cartera'])*100;
-        //     }else{
-        //         $cobertura = (count($unicos) / $coleccion[0]['total_cartera'])*100;
-        //     }
-    
-        //     return $result = [
-        //         'unicos' => $unicos,
-        //         'total_unicos' => count($unicos),
-        //         'total_repetidos' => count($iguales),
-        //         'total_r' => $coleccion[0]['total_records'],
-        //         'percent_cober' => $cobertura,
-        //         'total_enc' => $response_ruts
-        //     ];
-        // }else{
-            
-        // }
-
-        
-
+    public function show($id)
+    {
     }
 
     public function acceptedStrategy(Request $request)
@@ -247,7 +297,7 @@ class EstrategiaController extends Controller
         //     }
         // }
 
-        
+
         // $arr_key_permitidos = [];
 
 
@@ -267,7 +317,7 @@ class EstrategiaController extends Controller
 
         // if (in_array($arr_estrategia['channels'], $arr)) { // Verifico si existe ese canal dentro de los registros que existen
         //     if (in_array($arr_estrategia['channels'], $arr_key_permitidos)) { // Verifico si ese canal se puede usar multiple veces para el caso positivo, lo paso a prodccion
-                
+
         //     } else { // Para el caso negativo donde no se puedan registrar multiples mensajes, le aviso al usuario
         //         return [
         //             'message' => 'No se puede registrar, para ese canal ya existe una estrategia y no se pueden activar mas',
@@ -280,36 +330,28 @@ class EstrategiaController extends Controller
         //     return ['message' => 'Puesto en produccion', 'result' => $actived['status']];
         // }
 
-        // $actived = Http::put("http://apiest.konecsys.com:8080/estrategia/activar/".$request->id);
+        $actived = Http::put("http://apiest.konecsys.com:8080/estrategia/activar/" . $request->id);
+        return ['message' => 'Puesto en produccion', 'result' => $actived['status']];
 
 
         switch ($request->channels) {
             case '1':
                 $arr = [
                     'prefix' => $request->prefix,
-                    ['1465254-K', 'RUY ENRIQUE BARBOSA', 'jehfebles@gmail.com'], 
-                    ['1511211-5', 'LUIS MARCELINO MORENO SÁNCHEZ', 'jehefebles@gmail.com'], 
-                    ['1702532-5', 'JOSE SANTOS MALDONADO TAPIA', 'jehfebles1@gmail.com'], 
+                    ['1465254-K', 'RUY ENRIQUE BARBOSA', 'jehfebles@gmail.com'],
+                    ['1511211-5', 'LUIS MARCELINO MORENO SÁNCHEZ', 'jehefebles@gmail.com'],
+                    ['1702532-5', 'JOSE SANTOS MALDONADO TAPIA', 'jehfebles1@gmail.com'],
                     ['1705969-6', 'AIDA CACERES', 'jesus@grupokonectados.cl']
                 ];
 
                 return (new MailNotifyController)->send_notify($arr);
                 break;
-            
+
             default:
-                
-                $actived = Http::put(env('API_URL').env('API_ESTRATEGIA')."/activar/".$request->id);
+
+                $actived = Http::put(env('API_URL') . env('API_ESTRATEGIA') . "/activar/" . $request->id);
                 break;
         }
-
-
-        
-
-
-
-
-
-
 
         return ['message' => 'Puesto en produccion', 'result' => $actived['status']];
     }
@@ -317,7 +359,7 @@ class EstrategiaController extends Controller
     // Filtro 
 
     public function filterStrategy(Request $request)
-    {      
+    {
         // return $request;
 
         if ($request->canal !== 'refresh') {
@@ -325,7 +367,7 @@ class EstrategiaController extends Controller
                 'prefix' => $request->client,
                 'canal' => $request->canal
             ];
-            $estrategiasHistoricoCliente = Http::withBody(json_encode($param))->get(env('API_URL').env('API_ESTRATEGIA').'/historico');
+            $estrategiasHistoricoCliente = Http::withBody(json_encode($param))->get(env('API_URL') . env('API_ESTRATEGIA') . '/historico');
             $datas = $estrategiasHistoricoCliente->collect()[0];
         } else {
             $param = [
@@ -333,7 +375,7 @@ class EstrategiaController extends Controller
                 'type' => 3
             ];
 
-            $estrategiasHistoricoCliente = Http::withBody(json_encode($param))->get(env('API_URL').env('API_ESTRATEGIA').'/tipo');
+            $estrategiasHistoricoCliente = Http::withBody(json_encode($param))->get(env('API_URL') . env('API_ESTRATEGIA') . '/tipo');
             $datas = $estrategiasHistoricoCliente->collect()[0];
         }
 
@@ -344,7 +386,7 @@ class EstrategiaController extends Controller
             }
         }
 
-        
+
 
         return $datas;
     }

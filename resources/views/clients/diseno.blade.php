@@ -155,7 +155,9 @@
                             <select disabled class="form-select form-select-sm" name="template"
                                 id="template">
                                 <option value="">Seleccione</option>
-                                <option value="2">EJEMPLO</option>
+                                @foreach ($config_mail as $template)
+                                <option value="{{ $template['id'] }}">{{ $template['nombreTemplate'] }}</option>
+                                @endforeach
                                 
                             </select>
                         </th>
@@ -234,6 +236,9 @@
                 </tr>
             </tbody>
         </table>
+        <div id="alerts-registros-no" class="alert alert-danger alert-dismissible show mb-0 mt-3 d-none " role="alert">
+            <span id="alert_registros"></span>
+        </div>
     </x-cards>
 @endsection
 
@@ -328,6 +333,7 @@
             var prefix = document.getElementById('prefix').value;
             var table_name = document.getElementById('table_name2').value;
             var id_cliente = document.getElementById('id_cliente').value;
+            document.getElementById('alerts-registros-no').classList.add("d-none")
 
 
 
@@ -354,8 +360,9 @@
             }).then(response => {
                 return response.json();
             }).then(data => {
-                spinner.setAttribute('hidden', '');
-                document.getElementById('cobertura').innerHTML =
+                // console.log(data)
+                if(!data.error){
+                    document.getElementById('cobertura').innerHTML =
                     `${data.percent_cober.toLocaleString("de-DE", opciones)}%`
                 document.getElementById('unicos').innerHTML = data.total_unicos.toLocaleString("de-DE")
                 document.getElementById('repetidos').innerHTML = data.total_repetidos.toLocaleString(
@@ -371,6 +378,22 @@
                 document.getElementById('registros').value = JSON.stringify(data.unicos)
 
                 document.getElementById('guard').disabled = false;
+                }else{
+                    document.getElementById('cobertura').innerHTML = `0,00%`
+                    document.getElementById('unicos').innerHTML = `0`
+                    document.getElementById('repetidos').innerHTML = `0`
+                    document.getElementById('total').innerHTML = `0`
+                    document.getElementById('cober').value = 0
+                    document.getElementById('unic').value = 0
+                    document.getElementById('repe').value = 0
+                    document.getElementById('tota').value = 0
+                    document.getElementById('alerts-registros-no').classList.remove("d-none")
+                    document.getElementById('alert_registros').innerHTML = data.error
+                    console.log(data.error)
+                }
+                spinner.setAttribute('hidden', '');
+                
+                
 
             });
         }
@@ -421,7 +444,7 @@
         }
 
         function acceptedStrategy(id, channels, prefix) {
-            // spinner.removeAttribute('hidden');
+            spinner.removeAttribute('hidden');
             fetch('{{ route('estrategia.accepted-strategy') }}', {
                 method: 'POST',
                 body: JSON.stringify({

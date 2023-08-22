@@ -79,17 +79,21 @@ class ClientController extends Controller
             }
         }
 
+        $getConfigMails = Http::get(env('API_URL') . env('API_EMAILS').$arr['prefix']);
+        $config_mail = $getConfigMails->json()[0];
 
         Cache::forget('canales');
         Cache::forget('cliente');
         Cache::forget('estructura');
         Cache::forget('config_channels');
+        Cache::forget('config_mail');
 
         Cache::forever('canales', $responses['canales']->collect()[0]);
         Cache::forever('cliente', json_decode(json_encode($arr, JSON_FORCE_OBJECT)));
         Cache::forever('estructura', $responses['estructura']->collect()[0]);
 
         Cache::forever('config_channels', json_decode($arr['channels'], true));
+        Cache::forever('config_mail', $config_mail);
     }
 
     public function disenoEstrategia($id)
@@ -105,6 +109,17 @@ class ClientController extends Controller
         $channels = Cache::get('canales');
         $channels_config = Cache::get('config_channels');
         $estructura = Cache::get('estructura');
+        $config_mail_cache = Cache::get('config_mail');
+
+
+        $config_mail = [];
+        for($count = 0 ; $count < count($config_mail_cache); $count++){
+            $config_mail[$count]['id'] = $config_mail_cache[$count]['id'];
+            $config_mail[$count]['nombreTemplate'] = $config_mail_cache[$count]['nombreTemplate'];
+        }
+
+
+        // return $config_mail;
 
         $estrc = [];
 
@@ -118,21 +133,10 @@ class ClientController extends Controller
             
         }
         
-        // return $estrc;
-
         $param = [
             'prefix' => $client->prefix,
             'type' => 1
         ];
-
-        $estrategiasHistoricoCliente = Http::withBody(json_encode($param))->get(env('API_URL') . env('API_ESTRATEGIA') . '/tipo');
-        $datas2 = $estrategiasHistoricoCliente->collect()[0];
-
-        foreach ($datas2 as &$d2) {
-            // unset($d2['registros']);
-            $suma_total += ($d2['repeatUsers'] === 0) ? $d2['registros_unicos'] : $d2['total_registros'];
-            $porcentaje_total += $d2['cobertura'];
-        }
 
         // Configuramos la vista
         $config_layout = [
@@ -147,14 +151,11 @@ class ClientController extends Controller
             $pool->as('estrategias')->get(env('API_URL') . env('API_ESTRATEGIAS') . '/diseno/' . strtoupper($client->prefix));
         });
 
-        $estrategias = $responses['estrategias']->json()[0];
 
-        
-
-        Cache::forever('estrategias', $estrategias);
+        Cache::forever('estrategias', $responses['estrategias']->json()[0]);
         $datas = Cache::get('estrategias');
 
-        foreach ($estrategias as &$d3) {
+        foreach ($datas as &$d3) {
             unset($d3['registros']);
         }
 
@@ -188,7 +189,7 @@ class ClientController extends Controller
 
         // return $datas;
 
-        return view('clients/diseno', compact('client', 'datas', 'porcentaje_total',  'suma_total', 'config_layout', 'channels', 'estrc', 'ch_approve', 'channels_config'));
+        return view('clients/diseno', compact('config_mail', 'client', 'datas', 'porcentaje_total',  'suma_total', 'config_layout', 'channels', 'estrc', 'ch_approve', 'channels_config'));
     }
 
     public function show($id)
@@ -202,20 +203,11 @@ class ClientController extends Controller
         $channels_config = Cache::get('config_channels');
 
         $responses = Http::timeout(120)->get(env('API_URL') . env('API_ESTRATEGIAS') . '/' . strtoupper($client->prefix));
-        $x = $responses->json()[0];
+        $datas = $responses->json()[0];
 
-        foreach ($x as &$item) {
-            unset($item['registros']);
-        }
+        Cache::forever('estrategias', $datas);
 
-
-
-
-
-
-        Cache::forever('estrategias', $x);
-        $estrategias_cache = Cache::get('estrategias');
-        $datas = $estrategias_cache;
+        return $datas;
 
         $total_cartera = 0;
         $suma_total = 0;
@@ -259,4 +251,7 @@ class ClientController extends Controller
 
         return view('clients/show', compact('config_layout', 'client', 'datas', 'channels', 'ch_approve', 'porcentaje_total', 'suma_total'));
     }
+
+
+
 }

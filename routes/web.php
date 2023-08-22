@@ -54,6 +54,7 @@ Route::group(['middleware' => ['auth']], function () {
         route::post('/estrategia/accepted-strategy', [EstrategiaController::class, 'acceptedStrategy'])->name('estrategia.accepted-strategy');
         route::post('/estrategia/probar-strategy', [EstrategiaController::class, 'probarStrategy'])->name('estrategia.probar-strategy');
         route::post('/estrategia/filter-strategy', [EstrategiaController::class, 'filterStrategy'])->name('estrategia.filter-strategy');
+        route::get('/estrategia/avance/{id}', [EstrategiaController::class, 'avance'])->name('estrategia.avance');
 
         /**
          * End estrategias
@@ -72,6 +73,17 @@ Route::group(['middleware' => ['auth']], function () {
         //MailConfig
 
         Route::resource('/mantenice/mail-config', MailConfigController::class);
+
+
+
+
+
+
+
+
+
+
+
         route::get('/mail/send_notify', [MailNotifyController::class, 'send_notify'])->name('mail.send_notify');
     
         /**

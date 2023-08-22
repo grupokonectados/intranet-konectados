@@ -29,56 +29,77 @@
         <div class="row">
             <div class="col-6 mb-3">
                 <div class="form-group">
-                    <strong>Descripcion:</strong>
-                    {!! Form::text('name', null, ['placeholder' => 'Descripcion', 'class' => 'form-control form-control-sm']) !!}
-                </div>
-            </div>
-
-            <div class="col-6 mb-3">
-                <div class="form-group">
                     <strong>Cliente:</strong>
-                    {!! Form::select('prefix', $data, null, ['placeholder' => 'Seleccione', 'class' => 'form-select form-select-sm']) !!}
+                    {!! Form::text('no', $data['prefix'], ['disabled', 'class' => 'form-control form-control-sm']) !!}
+                    <input type="hidden" name="prefix" id="prefix" value="{{ $data['prefix'] }}">
+                </div>
+            </div>
+            <div class="col-6 mb-3">
+                <div class="form-group">
+                    <strong>Nombre:</strong>
+                    {!! Form::text('nombreTemplate', null, ['placeholder' => 'Nombre del template', 'class' => 'form-control form-control-sm']) !!}
+                </div>
+            </div>
+            <div class="col-6 mb-3">
+                <div class="form-group">
+                    <strong>Email del cliente que envia:</strong>
+                    {!! Form::text('emailfrom', null, ['placeholder' => 'Email del cliente que envia', 'class' => 'form-control form-control-sm']) !!}
                 </div>
             </div>
 
             <div class="col-6 mb-3">
                 <div class="form-group">
-                    <strong>emailfrom:</strong>
-                    {!! Form::text('emailfrom', null, ['placeholder' => 'Nombre', 'class' => 'form-control form-control-sm']) !!}
+                    <strong>Nombre del cliente que envia:</strong>
+                    {!! Form::text('nombrefrom', null, ['placeholder' => 'Nombre del cliente que envia', 'class' => 'form-control form-control-sm']) !!}
                 </div>
             </div>
 
             <div class="col-6 mb-3">
                 <div class="form-group">
-                    <strong>nombrefrom:</strong>
-                    {!! Form::text('nombrefrom', null, ['placeholder' => 'Nombre', 'class' => 'form-control form-control-sm']) !!}
+                    <strong>Asunto del email:</strong>
+                    {!! Form::text('asunto', null, ['placeholder' => 'Asunto del email', 'class' => 'form-control form-control-sm']) !!}
+                </div>
+            </div>
+            <div class="col-6 mb-3">
+                <div class="form-group">
+                    <strong>Email de respuesta:</strong>
+                    {!! Form::text('emailReply', null, ['placeholder' => 'Email de respuesta', 'class' => 'form-control form-control-sm']) !!}
+                </div>
+            </div>
+            <div class="col-6 mb-3">
+                <div class="form-group">
+                    <strong>Columnas:</strong>
+                    @foreach ($columnas as $columna)
+
+                    <div class="form-check">
+                        {{ Form::checkbox('columnas[]', $columna, false, array('class' => 'form-check-input')) }}
+                        <label class="form-check-label" for="flexCheckChecked">
+                            {{ $columna }}
+                        </label>
+                      </div>
+                    @endforeach
                 </div>
             </div>
 
-            <div class="col-6 mb-3">
-                <div class="form-group">
-                    <strong>asunto:</strong>
-                    {!! Form::text('asunto', null, ['placeholder' => 'Nombre', 'class' => 'form-control form-control-sm']) !!}
-                </div>
-            </div>
-
 
             <div class="col-6 mb-3">
                 <div class="form-group">
-                    <strong>emailReply:</strong>
-                    {!! Form::text('emailReply', null, ['placeholder' => 'Nombre', 'class' => 'form-control form-control-sm']) !!}
-                </div>
-            </div>
+                    <strong>Otras columnas:</strong>
+                    @foreach ($columnas_calculadas as $columna2)
 
-            <div class="col-6 mb-3">
-                <div class="form-group">
-                    <strong>Tipo:</strong>
-                    {!! Form::select('type', ['0' => 'castigo', '1' => 'infractor', '2' => 'peaje', '3' => 'vencido'], null, ['placeholder' => 'Seleccione', 'class' => 'form-select form-select-sm']) !!}
+                    <div class="form-check">
+                        {{ Form::checkbox('columnas_calculadas[]', $columna2, false, array('class' => 'form-check-input')) }}
+                        <label class="form-check-label" for="flexCheckChecked">
+                            {{ $columna2 }}
+                        </label>
+                      </div>
+                    @endforeach
                 </div>
             </div>
 
 
             
+
             <div class="col-6 mb-3">
                 <div class="form-group">
                     <strong>Plantilla:</strong>
@@ -89,18 +110,6 @@
                     class="form-control form-control-sm ">
                 </div>
             </div>
-            
-           
-
-            {{-- <div class="col-6 mb-3">               
-                <div class="form-group">
-                    <strong>Estado:</strong>
-                    {!! Form::select('isActive', ['0' => 'Inactiva', '1' => 'Activa'], null, ['placeholder' => 'Seleccione', 'class' => 'form-select form-select-sm']) !!}
-                </div>
-            </div> --}}
-
-
-            
             
             <div class="col-12 mb-0">
                 <x-btn-standar type='submit' name='Guardar' color="success" sm='sm' icon='save' />

@@ -9,6 +9,8 @@
     @can('clients-edit')
         <x-btn-standar type='a' name='Editar cliente' title='Editar cliente' extraclass='ml-auto' color="warning" sm='sm'
             icon='edit' href="{{ route('clients.edit', $client->id) }}" />
+        <x-btn-standar type='a' name='Configurar mail' title='Configurar mail' extraclass='ml-auto' color="secondary" sm='sm'
+            icon='edit' href="{{ route('mail-config.index', 'prefix='.$client->prefix) }}" />
     @endcan
     <x-btn-standar type='a' name='Diseñar estrategia' title='Diseñar estrategia' color="success" sm='sm' icon='plus-circle'
         href="{{ route('clients.diseno', $client->id) }}" />
@@ -25,7 +27,7 @@
 @section('content')
 
     <x-cards header="Estrategias activas" titlecolor='success'>
-        <table class="table table-sm table-bordered mb-0">
+        <table class="table table-sm table-bordered mb-0 table-hover">
             <thead class="table-dark text-uppercase text-center">
                 <th width='5%' class="align-middle">Canal</th>
                 <th class="align-middle" width='3%'>Cobertura</th>
@@ -40,20 +42,20 @@
             <tbody class="text-center">
                 @foreach ($datas as $k => $data)
                     @if ($data['type'] == 2)
-                        <tr class="@if($data['repeatUsers'] == 1)table-danger @endif">
+                        <tr style="cursor: pointer" onclick="window.location='{{ route('estrategia.avance', $data['id']) }}';" >
                             <td class="align-middle">
                                 {{ $data['canal'] }}
                             </td>
                             <td class="align-middle">
                                 {{ number_format($data['cobertura'], 2, ',', '.') }}%
                             </td>
-                            
-                                <td class="align-middle">
-                                    {{ number_format($data['registros_unicos'], 0, ',', '.') }}
-                                </td>
-                                <td class="align-middle">
-                                    {{ number_format($data['registros_repetidos'], 0, ',', '.') }}
-                                </td>
+
+                            <td class="align-middle">
+                                {{ number_format($data['registros_unicos'], 0, ',', '.') }}
+                            </td>
+                            <td class="align-middle">
+                                {{ number_format($data['registros_repetidos'], 0, ',', '.') }}
+                            </td>
                             <td>{{ $data['onlyWhere'] }}</td>
                             <td class="align-middle">
                                 {{ $data['activation_date'] === null ? 'Sin Activar' : date('d-m-Y', strtotime($data['activation_date'])) }}
@@ -94,8 +96,8 @@
     <x-cards header="Estrategias historico" titlecolor='danger' xtrasclass="my-3">
         <div class="row">
             <div class="col-4 mb-3">
-                <select class="form-select form-select-sm" name="selectFiltro" onchange="filtroCanales(this.value, '{{ $client->prefix }}')"
-                    id="selectFiltro">
+                <select class="form-select form-select-sm" name="selectFiltro"
+                    onchange="filtroCanales(this.value, '{{ $client->prefix }}')" id="selectFiltro">
                     <option value="">Seleccione</option>
                     @for ($i = 0; $i < count($channels); $i++)
                         @if (in_array($i, $ch_approve))
@@ -191,7 +193,7 @@
 
 
         function filtroCanales(value, client) {
-            
+
             fetch('{{ route('estrategia.filter-strategy') }}', {
                 method: 'POST',
                 body: JSON.stringify({
