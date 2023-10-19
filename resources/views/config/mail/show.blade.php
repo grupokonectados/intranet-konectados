@@ -52,12 +52,6 @@
 
 
 
-        <div class="row text-center justify-content-center mt-4 overflow-scroll" style="height: 450px">
-            <div class="col-8">
-                {!! $data['body'] !!}
-            </div>
-        </div>
-
 
 
 

@@ -9,12 +9,11 @@
     @can('clients-edit')
         <x-btn-standar type='a' name='Editar cliente' title='Editar cliente' extraclass='ml-auto' color="warning" sm='sm'
             icon='edit' href="{{ route('clients.edit', $client->id) }}" />
-        <x-btn-standar type='a' name='Configurar mail' title='Configurar mail' extraclass='ml-auto' color="secondary" sm='sm'
-            icon='edit' href="{{ route('mail-config.index', 'prefix='.$client->prefix) }}" />
+        <x-btn-standar type='a' name='Configurar mail' title='Configurar mail' extraclass='ml-auto' color="secondary"
+            sm='sm' icon='edit' href="{{ route('mail-config.index', 'prefix=' . $client->prefix) }}" />
     @endcan
-    <x-btn-standar type='a' name='Diseñar estrategia' title='Diseñar estrategia' color="success" sm='sm' icon='plus-circle'
-        href="{{ route('clients.diseno', $client->id) }}" />
-
+    <x-btn-standar type='a' name='Diseñar estrategia' title='Diseñar estrategia' color="success" sm='sm'
+        icon='plus-circle' href="{{ route('clients.diseno', $client->id) }}" />
 @endsection
 
 @section('btn-back')
@@ -41,8 +40,8 @@
             </thead>
             <tbody class="text-center">
                 @foreach ($datas as $k => $data)
-                    @if ($data['type'] == 2)
-                        <tr style="cursor: pointer" onclick="window.location='{{ route('estrategia.avance', $data['id']) }}';" >
+                    @if ($data['type'] == 2 && $data['inProcess'] == 1)
+                        <tr>
                             <td class="align-middle">
                                 {{ $data['canal'] }}
                             </td>
@@ -73,7 +72,6 @@
                             <td class="align-middle">
                                 <x-btn-standar type='a' title='Detener' extraclass='detener-estrategia' color="danger"
                                     sm='sm' icon='stop-circle' dataid="{{ $data['id'] }}" />
-
                             </td>
                         </tr>
                     @endif
@@ -121,7 +119,7 @@
                     </thead>
                     <tbody class="text-center">
                         @foreach ($datas as $k => $data)
-                            @if ($data['type'] == 3)
+                            @if ($data['type'] == 3 && $data['inProcess'])
                                 <tr>
                                     <td class="align-middle">
                                         {{ $data['canal'] }}

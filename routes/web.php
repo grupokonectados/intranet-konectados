@@ -10,6 +10,7 @@ use App\Http\Controllers\Auth\{
     ExpiredPasswordController,
 };
 use App\Http\Controllers\Config\{
+    ListConfigController,
     MailConfigController,
     UserController,
 };
@@ -73,6 +74,10 @@ Route::group(['middleware' => ['auth']], function () {
         //MailConfig
 
         Route::resource('/mantenice/mail-config', MailConfigController::class);
+
+        //ListConfig
+
+        Route::resource('/mantenice/list-config', ListConfigController::class);
 
 
 

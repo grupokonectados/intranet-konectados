@@ -24,8 +24,9 @@
         </div>
     @endif
 
+
     <x-cards header="Nueva configuracion" titlecolor='success'>
-        {!! Form::open(['route' => 'mail-config.store', 'method' => 'POST', 'enctype' => 'multipart/form-data']) !!}
+        {!! Form::model($data, ['method' => 'PATCH', 'route' => ['mail-config.update', $data['id']]]) !!}
         <div class="row">
             <div class="col-6 mb-3">
                 <div class="form-group">
@@ -78,12 +79,14 @@
                     ]) !!}
                 </div>
             </div>
+
+            {{-- @dd($data['columnas']) --}}
             <div class="col-6 mb-3">
                 <div class="form-group">
                     <strong>Columnas:</strong>
                     @foreach ($columnas as $columna)
                         <div class="form-check">
-                            {{ Form::checkbox('columnas[]', $columna, false, ['class' => 'form-check-input']) }}
+                            {{ Form::checkbox('columnas[]', $columna, in_array($columna, $data['columnas']) ? true : false, ['class' => 'form-check-input']) }}
                             <label class="form-check-label" for="flexCheckChecked">
                                 {{ $columna }}
                             </label>

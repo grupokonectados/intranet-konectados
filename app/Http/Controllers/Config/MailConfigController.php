@@ -25,14 +25,14 @@ class MailConfigController extends Controller
 
     public function index(Request $request)
     {
-       
+
         $config_layout = [
             'title-section' => 'Configuracion > Emails',
             'breads' => 'Configuracion > Emails',
             'btn-create' => 'mail-config.create',
             'btn-back' => 'clients.show'
         ];
-        $getConfigMails = Http::get(env('API_URL') . env('API_EMAILS').$request->prefix);
+        $getConfigMails = Http::get(env('API_URL') . env('API_EMAILS') . $request->prefix);
         $data = $getConfigMails->json()[0];
         $id_cliente = Cache::get('cliente')->id;
         return view('config.mail.index', compact('data', 'config_layout', 'request', 'id_cliente'));
@@ -47,9 +47,10 @@ class MailConfigController extends Controller
         ];
         $columnas = ['@NOMBRE@', '@MONTO@'];
         $columnas_calculadas = ['@FECHA@'];
-        $clientes = (new UserController)->getClienteUser();
         $data['prefix'] = $request->prefix;
-        
+
+        // return $data;
+
         return view('config.mail.create', compact('config_layout', 'data', 'columnas', 'columnas_calculadas'));
     }
 
@@ -60,44 +61,34 @@ class MailConfigController extends Controller
             'prefix' => $request->prefix,
             'columnas' => json_encode($request->columnas),
             'body' => (file_get_contents($request->file('template'))),
-            'emailFrom' => $request->emailfrom,
-            'nombreFrom' => $request->nombrefrom,
+            'emailFrom' => $request->emailFrom,
+            'nombreFrom' => $request->nombreFrom,
             'asunto' => $request->asunto,
             'emailReply' => $request->emailReply,
             'columnasCalc' => json_encode($request->columnas_calculadas),
-
         ];
-
-
-        // return $saveConfig;
 
 
         $getConfigMails = Http::post(env('API_URL') . env('API_EMAILS'), $saveConfig);
         $result = $getConfigMails->json();
 
-
-        // return [
-        //     'resultado' => $result,
-        //     'verifico' => $result === false ? 'si': 'no',
-        // ];
-
-        // // return 
-        if($result !== 0){
-                return redirect()->route('mail-config.index', 'prefix='.$request->prefix);
-        }else{
-            return redirect()->route('mail-config.create', 'prefix='.$request->prefix)->with('error','Se produjo un error al registrar la configuracion.');
-        }        
+        if ($result !== 0) {
+            return redirect()->route('mail-config.index', 'prefix=' . $request->prefix);
+        } else {
+            return redirect()->route('mail-config.create', 'prefix=' . $request->prefix)->with('error', 'Se produjo un error al registrar la configuracion.');
+        }
     }
 
-    public function show($id){
+    public function show($id)
+    {
 
-        $getConfigMail = Http::get(env('API_URL') . env('API_EMAIL').$id);
+        $getConfigMail = Http::get(env('API_URL') . env('API_EMAIL') . $id);
         $data = $getConfigMail->collect()[0];
         $data = $data[0];
         $data['columnas'] = json_decode($data['columnas'], true);
         $config_layout = [
-            'title-section' => 'Emails > Ver configuracion: '.$data['nombreTemplate'],
-            'breads' => 'Configuracion > Ver configuracion: '.$data['nombreTemplate'],
+            'title-section' => 'Emails > Ver configuracion: ' . $data['nombreTemplate'],
+            'breads' => 'Configuracion > Ver configuracion: ' . $data['nombreTemplate'],
             'btn-back' => 'mail-config.index',
         ];
 
@@ -107,4 +98,38 @@ class MailConfigController extends Controller
         return view('config.mail.show', compact('data', 'config_layout'));
     }
 
+
+    public function edit($id)
+    {
+
+
+        $getConfigMail = Http::get(env('API_URL') . env('API_EMAIL') . $id);
+        $data = $getConfigMail->collect()[0];
+        $data = $data[0];
+        $data['columnas'] = json_decode($data['columnas'], true);
+
+        $config_layout = [
+            'title-section' => 'Emails > Ver configuracion: ' . $data['nombreTemplate'],
+            'breads' => 'Configuracion > Ver configuracion: ' . $data['nombreTemplate'],
+            'btn-back' => 'mail-config.index',
+        ];
+
+
+
+        $columnas = ['@NOMBRE@', '@MONTO@'];
+
+
+
+        $columnas_calculadas = ['@FECHA@'];
+
+        // return $data;
+
+        return view('config.mail.edit', compact('data', 'config_layout', 'columnas', 'columnas_calculadas'));
+    }
+
+    public function update(Request $request, $id)
+    {
+
+        return $request;
+    }
 }

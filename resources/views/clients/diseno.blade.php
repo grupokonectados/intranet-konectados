@@ -82,28 +82,26 @@
                             <td class="text-center align-middle">
                                 {{ $data['canal'] }}
                             </td>
-                            <td class="text-center align-middle">{{ number_format($data['cobertura'], 2, ',', '.') }}%</td>
-                            
-                                <td class="text-center align-middle">
-                                    {{ number_format($data['registros_unicos'], 0, ',', '.') }}
-
-                                </td>
-                                
-                                <td class="text-center align-middle">
-                                    {{ number_format($data['registros_repetidos'], 0, ',', '.') }}
-                                </td>
-                            <td>{{ $data['onlyWhere'] }}</td>
+                            <td class="text-center align-middle">
+                                {{ number_format($data['cobertura'], 2, ',', '.') }}%
+                            </td>
+                            <td class="text-center align-middle">
+                                {{ number_format($data['registros_unicos'], 0, ',', '.') }}
+                            </td>
+                            <td class="text-center align-middle">
+                                {{ number_format($data['registros_repetidos'], 0, ',', '.') }}
+                            </td>
+                            <td>
+                                {{ $data['onlyWhere'] }}
+                            </td>
                             <td class="text-center align-middle">
                                 <div class="btn-group" role="group" aria-label="Basic example">
-
                                     <x-btn-standar type='a' title='Aceptar' color="success" sm='sm'
-                                        icon='check-circle' onclick="acceptedStrategy({{ $data['id'] }}, {{ $data['channels'] }}, '{{ $client->prefix }}')" />
-
+                                        icon='check-circle'
+                                        onclick="acceptedStrategy({{ $data['id'] }}, {{ $data['channels'] }}, '{{ $client->prefix }}')" />
                                     <x-btn-standar type='a' title='Eliminar' color="danger" sm='sm'
                                         icon='times-circle' extraclass='eliminar-estrategia'
                                         dataid="{{ $data['id'] }}" />
-
-
                                 </div>
                             </td>
                         </tr>
@@ -147,27 +145,20 @@
                                 @endfor
                             </select>
                         </th>
-                        
                     </tr>
                     <tr>
-                        <th class="text-uppercase align-middle" scope="col">Template: </th>
+                        <th class="text-uppercase align-middle" scope="col"><span id="lblTemplate">Template</span>:
+                        </th>
                         <th>
-                            <select disabled class="form-select form-select-sm" name="template"
-                                id="template">
+                            <select disabled class="form-select form-select-sm" name="template" id="template">
                                 <option value="">Seleccione</option>
-                                @foreach ($config_mail as $template)
-                                <option value="{{ $template['id'] }}">{{ $template['nombreTemplate'] }}</option>
-                                @endforeach
-                                
+
                             </select>
                         </th>
-                        
                     </tr>
-
                     <tr>
                         <th class="text-uppercase align-middle" scope="col">
-                            <a type="button" class="btn btn-success btn-sm" id='btnNuevo'
-                                onclick="addRow()">
+                            <a type="button" class="btn btn-success btn-sm" id='btnNuevo' onclick="addRow()">
                                 <i class="fas fa-plus-circle"></i>
                                 Agregar nuevo campo
                             </a>
@@ -262,7 +253,7 @@
                     if (!confirmacion) {
                         event.preventDefault();
                     } else {
-                        fetch(`http://apiest.konecsys.com:8080/estrategia/eliminar/${enlaceElement.dataset.identificador}`, {
+                        fetch(`{{ env('API_URL') . env('API_ESTRATEGIA') }}/eliminar/${enlaceElement.dataset.identificador}`, {
                                 method: 'DELETE',
                             })
                             .then(response => {
@@ -327,6 +318,9 @@
 
 
         function probarConsulta() {
+
+            // console.log(document.getElementById('template'))
+
             document.getElementById('guard').disabled = true;
             spinner.removeAttribute('hidden');
             var query = document.getElementById('showQue').value;
@@ -361,24 +355,20 @@
                 return response.json();
             }).then(data => {
                 // console.log(data)
-                if(!data.error){
+                if (!data.error) {
                     document.getElementById('cobertura').innerHTML =
-                    `${data.percent_cober.toLocaleString("de-DE", opciones)}%`
-                document.getElementById('unicos').innerHTML = data.total_unicos.toLocaleString("de-DE")
-                document.getElementById('repetidos').innerHTML = data.total_repetidos.toLocaleString(
-                    "de-DE")
-                document.getElementById('total').innerHTML = data.total_r.toLocaleString("de-DE")
-
-                document.getElementById('cober').value = data.percent_cober.toFixed(2)
-                document.getElementById('unic').value = data.total_unicos
-                document.getElementById('repe').value = data.total_repetidos
-                document.getElementById('tota').value = data.total_r
-
-
-                document.getElementById('registros').value = JSON.stringify(data.unicos)
-
-                document.getElementById('guard').disabled = false;
-                }else{
+                        `${data.percent_cober.toLocaleString("de-DE", opciones)}%`
+                    document.getElementById('unicos').innerHTML = data.total_unicos.toLocaleString("de-DE")
+                    document.getElementById('repetidos').innerHTML = data.total_repetidos.toLocaleString(
+                        "de-DE")
+                    document.getElementById('total').innerHTML = data.total_r.toLocaleString("de-DE")
+                    document.getElementById('cober').value = data.percent_cober.toFixed(2)
+                    document.getElementById('unic').value = data.total_unicos
+                    document.getElementById('repe').value = data.total_repetidos
+                    document.getElementById('tota').value = data.total_r
+                    document.getElementById('registros').value = JSON.stringify(data.unicos)
+                    document.getElementById('guard').disabled = false;
+                } else {
                     document.getElementById('cobertura').innerHTML = `0,00%`
                     document.getElementById('unicos').innerHTML = `0`
                     document.getElementById('repetidos').innerHTML = `0`
@@ -392,8 +382,8 @@
                     console.log(data.error)
                 }
                 spinner.setAttribute('hidden', '');
-                
-                
+
+
 
             });
         }
@@ -401,13 +391,48 @@
 
         function aceptaRepetidos(select = '') {
 
-            // console.log()
+            prefix = document.getElementById('prefix').value
 
-            if(select.selectedOptions[0].text === 'EMAIL'){
-                document.getElementById('template').disabled = false;
-            }else{
-                document.getElementById('template').disabled = true;
-                document.getElementById('template').value = '';
+
+            temp = document.getElementById('template')
+            lblTemplate = document.getElementById('lblTemplate')
+            temp.innerHTML = '<option value="">Seleccione</option>'
+
+
+
+            if (select.selectedOptions[0].text === 'EMAIL') {
+
+
+                opciones = @json($config_mail);
+
+
+                for (var clave in opciones) {
+                    var opcion = document.createElement("option");
+                    opcion.value = opciones[clave].id;
+                    opcion.text = opciones[clave].nombreTemplate;
+                    lblTemplate.innerHTML = "Template"
+                    temp.appendChild(opcion);
+                }
+                temp.disabled = false;
+            } else if (select.selectedOptions[0].text === 'AGENTE') {
+
+
+                objLista = @json($lista_discadores);
+
+
+                for (var clave in objLista) {
+                    var opcion = document.createElement("option");
+                    opcion.value = objLista[clave].idlista;
+                    opcion.text = objLista[clave].descripcion + ' ' + objLista[clave].discador;
+                    lblTemplate.innerHTML = "Lista"
+                    temp.appendChild(opcion);
+                }
+                temp.disabled = false;
+
+
+            } else {
+                temp.disabled = true;
+                temp.value = '';
             }
 
             document.getElementById('guard').disabled = true;
@@ -481,7 +506,7 @@
 
 
             var table = document.getElementById("myTable");
-            aceptaRepetidos(document.getElementById('canalsito'))
+            // aceptaRepetidos(document.getElementById('canalsito'))
 
             document.getElementById('guard').disabled = true;
 
@@ -526,7 +551,6 @@
         function borrarRow(x) {
             var i = x.parentNode.parentNode.rowIndex;
             document.getElementById("myTable").deleteRow(i);
-            aceptaRepetidos()
         }
 
 

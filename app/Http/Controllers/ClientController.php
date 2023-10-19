@@ -50,12 +50,13 @@ class ClientController extends Controller
 
     public function update(Request $request, $id)
     {
-        
+
         $update = [];
         $update['idClient'] = intval($id);
         $update['channels'] = json_encode($request['configuracion'], JSON_FORCE_OBJECT);
 
-        // return $update;
+
+        return $update;
         $updated = Http::put(env('API_URL') . env('API_CLIENT') . "/canales", $update);
         if ($updated != 'false') {
             return redirect(route('clients.show', $id));
@@ -79,14 +80,18 @@ class ClientController extends Controller
             }
         }
 
-        $getConfigMails = Http::get(env('API_URL') . env('API_EMAILS').$arr['prefix']);
+        $getConfigMails = Http::get(env('API_URL') . env('API_EMAILS') . $arr['prefix']);
         $config_mail = $getConfigMails->json()[0];
+
+        $getList = Http::get(env('API_URL') . '/listasdiscador/' . $arr['prefix']);
+        $list_disc = $getList->json()[0];
 
         Cache::forget('canales');
         Cache::forget('cliente');
         Cache::forget('estructura');
         Cache::forget('config_channels');
         Cache::forget('config_mail');
+        Cache::forget('list_discador');
 
         Cache::forever('canales', $responses['canales']->collect()[0]);
         Cache::forever('cliente', json_decode(json_encode($arr, JSON_FORCE_OBJECT)));
@@ -94,6 +99,7 @@ class ClientController extends Controller
 
         Cache::forever('config_channels', json_decode($arr['channels'], true));
         Cache::forever('config_mail', $config_mail);
+        Cache::forever('list_discador', $list_disc);
     }
 
     public function disenoEstrategia($id)
@@ -103,36 +109,39 @@ class ClientController extends Controller
         $suma_total = 0;
         $porcentaje_total = 0;
 
-        $this->getClientData($id);
+
+
+        // return $this->getClientData($id);
 
         $client = Cache::get('cliente');
         $channels = Cache::get('canales');
         $channels_config = Cache::get('config_channels');
         $estructura = Cache::get('estructura');
         $config_mail_cache = Cache::get('config_mail');
+        $lista_discadores = Cache::get('list_discador');
+
 
 
         $config_mail = [];
-        for($count = 0 ; $count < count($config_mail_cache); $count++){
+        for ($count = 0; $count < count($config_mail_cache); $count++) {
             $config_mail[$count]['id'] = $config_mail_cache[$count]['id'];
             $config_mail[$count]['nombreTemplate'] = $config_mail_cache[$count]['nombreTemplate'];
         }
 
 
-        // return $config_mail;
+        // return $lista_discadores;
 
         $estrc = [];
 
-        foreach($estructura as $ki => $vi){
-            if(in_array($vi['COLUMN_NAME'], array_keys($channels_config['estructura']))){
-                if(isset($channels_config['estructura'][$vi['COLUMN_NAME']]['utilizar'])){
+        foreach ($estructura as $ki => $vi) {
+            if (in_array($vi['COLUMN_NAME'], array_keys($channels_config['estructura']))) {
+                if (isset($channels_config['estructura'][$vi['COLUMN_NAME']]['utilizar'])) {
                     $vi['NAME'] = $channels_config['estructura'][$vi['COLUMN_NAME']]['nombre'];
                     $estrc[] = $vi;
                 }
             }
-            
         }
-        
+
         $param = [
             'prefix' => $client->prefix,
             'type' => 1
@@ -189,7 +198,7 @@ class ClientController extends Controller
 
         // return $datas;
 
-        return view('clients/diseno', compact('config_mail', 'client', 'datas', 'porcentaje_total',  'suma_total', 'config_layout', 'channels', 'estrc', 'ch_approve', 'channels_config'));
+        return view('clients/diseno', compact('lista_discadores', 'config_mail', 'client', 'datas', 'porcentaje_total',  'suma_total', 'config_layout', 'channels', 'estrc', 'ch_approve', 'channels_config'));
     }
 
     public function show($id)
@@ -197,7 +206,7 @@ class ClientController extends Controller
         Cache::forget('estrategias');
 
         // Obtenemos datos y configuraciones del cliente.
-        $this->getClientData($id);
+        // $this->getClientData($id);
         $client = Cache::get('cliente');
         $channels = Cache::get('canales');
         $channels_config = Cache::get('config_channels');
@@ -251,7 +260,4 @@ class ClientController extends Controller
 
         return view('clients/show', compact('config_layout', 'client', 'datas', 'channels', 'ch_approve', 'porcentaje_total', 'suma_total'));
     }
-
-
-
 }

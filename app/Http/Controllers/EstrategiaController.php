@@ -18,101 +18,14 @@ class EstrategiaController extends Controller
     }
 
 
-    public function avance($id)
-    {
 
-        $resultRequest = Http::get("http://apiest.konecsys.com:8080/email/log/" . $id);
-        $datas = $resultRequest->collect()[0];
-
-
-        return $resultRequest;
-
-
-        $estados = [
-            1 => 'Email no enviado, error casilla mal escrita',
-            2 => 'Email no enviado, casilla registrada como inexistente',
-            3 => 'Email no enviado, usuario se des inscribió de Avisos',
-            4 => 'Email enviado',
-            5 => 'Email rechazado por casilla inexistente',
-            6 => 'Email rechazado por bloqueo',
-            7 => 'Email rechazado por Casilla Llena',
-            8 => 'Email rechazado DNS',
-            9 => 'Email rechazado',
-            10 => 'Registra Lectura del email',
-            11 => 'Usuario solicita Des-inscripción',
-        ];
-
-        foreach ($datas as $sub_arr_log) {
-
-            $request_param = '<?xml version="1.0" encoding="utf-8"?>
-                        <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-                        <soap:Body>
-                            <Consulta  xmlns="' . $_ENV['WS_URL_CONSULTA_ACTION'] . '">
-                            <Usuario>' . $_ENV['USUARIO'] . '</Usuario>
-                            <CodigoMensaje>' . $sub_arr_log['idMessage'] . '</CodigoMensaje>
-                            <IdCampana>' . $_ENV['IDCAMP'] . '</IdCampana>
-                            </Consulta>
-                        </soap:Body>
-                        </soap:Envelope>';
-
-            $headers = [
-                'Content-Type: text/xml; charset=utf-8',
-                'Content-Length: ' . strlen($request_param),
-                'SOAPAction: "' . $_ENV['WS_URL_CONSULTA_SOAP_ACTION'] . '"'
-            ];
-
-            $ch = curl_init($_ENV['WS_URL_CONSULTA']);
-            curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $request_param);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-
-            $data = curl_exec($ch);
-            $httpCode2 = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-
-            if ($httpCode2 !== 404) {
-                $result = $data;
-                if ($result === FALSE) {
-                    printf(
-                        "CURL error (#%d): %s<br>\n",
-                        curl_errno($ch),
-                        htmlspecialchars(curl_error($ch))
-                    );
-                }
-                $xml = simplexml_load_string($data);
-                $array_xml = $xml->xpath("//soap:Body/*")[0];
-                $resp = json_decode(json_encode($array_xml), true);
-                if (!array_key_exists('faultcode',  $resp)) {
-                    $arrrr['idMessage'] = $sub_arr_log['idMessage'];
-                    $arrrr['id_gestion'] = $resp['ConsultaResult']['ID_gestion'];
-                    if (array_key_exists($resp['ConsultaResult']['ID_gestion'], $estados)) {
-                        $arrrr['estado'] = $estados[$resp['ConsultaResult']['ID_gestion']];
-                    }
-                    $arrrr['fecha_update'] = $resp['ConsultaResult']['Fecha'];
-
-                    $arrrr2[] = $arrrr;
-                } else {
-                    $arrrr[] = 'error';
-                }
-            }
-            curl_close($ch);
-        }
-
-
-        // return $datas;
-
-
-
-        return view('estrategias.avance', compact('datas', 'arrrr2'));
-        return $datas;
-    }
 
     public function saveEstrategia(Request $request)
     {
+
         // return $request;
         $getEstrategiasCliente = Http::get(env('API_URL') . env('API_ESTRATEGIAS') . '/diseno/' . $request->prefix);
+
         $data = $getEstrategiasCliente->collect()[0];
         $exist_record = [];
         foreach ($data as $key => $value) {
@@ -153,11 +66,9 @@ class EstrategiaController extends Controller
                 $saveQuery['idEmailTemplate'] = 0;
             }
 
-            // return $saveQuery;
             $save = Http::post(env('API_URL') . env('API_ESTRATEGIA'), $saveQuery);
             $result = $save->json();
 
-            // return var_dump($result);
 
 
             if ($result != false) {
@@ -264,8 +175,6 @@ class EstrategiaController extends Controller
                 'total_enc' => $response_ruts,
             ];
         }
-
-
     }
 
 
