@@ -122,6 +122,7 @@ class ClientController extends Controller
 
 
 
+
         $config_mail = [];
         for ($count = 0; $count < count($config_mail_cache); $count++) {
             $config_mail[$count]['id'] = $config_mail_cache[$count]['id'];
@@ -168,6 +169,8 @@ class ClientController extends Controller
             unset($d3['registros']);
         }
 
+        // return $datas;
+
         if (count($datas) > 0) {
             $canales = [];
             foreach ($datas as $key => $data) {
@@ -176,8 +179,10 @@ class ClientController extends Controller
                 }
 
                 if (isset($channels[$data['channels']])) {
-                    $datas[$key]['canal'] = strtoupper($channels[$data['channels']]['name']);
+                    $datas[$channels[$data['channels']]['id']]['canal'] = strtoupper($channels[$data['channels']]['name']);
                 }
+
+
 
                 if ($channels_config != null) {
                     if ($data['type'] === 0) {
@@ -196,7 +201,7 @@ class ClientController extends Controller
             }
         }
 
-        // return $datas;
+        // return $canales;
 
         return view('clients/diseno', compact('lista_discadores', 'config_mail', 'client', 'datas', 'porcentaje_total',  'suma_total', 'config_layout', 'channels', 'estrc', 'ch_approve', 'channels_config'));
     }
