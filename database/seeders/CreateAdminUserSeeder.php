@@ -37,7 +37,7 @@ class CreateAdminUserSeeder extends Seeder
             'password_changed_at' => Carbon::now()->toDateTimeString()
         ]);
 
-        $user3 = User::create([
+        $user4 = User::create([
             'name' => 'Denis',
             'email' => 'denis@1.com',
             'password' => bcrypt('123'),
@@ -56,5 +56,6 @@ class CreateAdminUserSeeder extends Seeder
         $user->assignRole([$role->id]);
         $user3->assignRole([$role->id]);
         $user2->assignRole([$role2->id]);
+        $user4->assignRole([$role->id]);
     }
 }
