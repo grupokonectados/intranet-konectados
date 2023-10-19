@@ -111,7 +111,11 @@ class EstrategiaController extends Controller
             "idCliente" => $request->id_cliente,
             "cartera" => $request->table_name,
             "criterio" => $request['query'],
+            "template" => $request->template,
+            'canal' => $request->channel,
         ];
+
+        // return $param;
 
         $result_query = Http::withBody(json_encode($param))->get(env('API_URL') . env('API_ESTRATEGIA') . "/records");
 

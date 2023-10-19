@@ -327,6 +327,12 @@
             var prefix = document.getElementById('prefix').value;
             var table_name = document.getElementById('table_name2').value;
             var id_cliente = document.getElementById('id_cliente').value;
+
+
+            var template = document.getElementById('template').value;
+
+
+
             document.getElementById('alerts-registros-no').classList.add("d-none")
 
 
@@ -345,6 +351,7 @@
                     table_name: table_name,
                     check: 1,
                     id_cliente: id_cliente,
+                    template: template,
                     channel: document.querySelector('#canalsito').value,
                 }),
                 headers: {
