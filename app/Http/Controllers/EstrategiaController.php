@@ -129,7 +129,6 @@ class EstrategiaController extends Controller
         // }
 
         $coleccion = $result_query->collect()[0];
-        // return $coleccion[0]['total_records'];
         if ($coleccion[0]['total_records'] !== 0) {
             $response_ruts = array_values(json_decode($coleccion[0]['detail_records'], true));
         } else {
