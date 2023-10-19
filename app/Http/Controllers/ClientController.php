@@ -56,7 +56,7 @@ class ClientController extends Controller
         $update['channels'] = json_encode($request['configuracion'], JSON_FORCE_OBJECT);
 
 
-        return $update;
+        // return $update;
         $updated = Http::put(env('API_URL') . env('API_CLIENT') . "/canales", $update);
         if ($updated != 'false') {
             return redirect(route('clients.show', $id));
