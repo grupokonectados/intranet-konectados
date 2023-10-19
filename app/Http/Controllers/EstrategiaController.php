@@ -115,16 +115,25 @@ class EstrategiaController extends Controller
             'canal' => $request->channel,
         ];
 
-        // return $param;
+
 
         $result_query = Http::withBody(json_encode($param))->get(env('API_URL') . env('API_ESTRATEGIA') . "/records");
 
-        $coleccion = $result_query->collect()[0];
-        if ($coleccion[0]['total_records'] !== 0) {
-            $response_ruts = array_values(json_decode($coleccion[0]['detail_records'], true));
-        } else {
-            return response()->json(['error' => 'No se encontraron registros.'], 404);
+        try {
+            $coleccion = $result_query->collect()[0];
+            if ($coleccion[0]['total_records'] !== 0) {
+                $response_ruts = array_values(json_decode($coleccion[0]['detail_records'], true));
+            }
+        } catch (\Throwable $th) {
+            return response()->json(['error' => 'Error en la consulta'], 404);
         }
+
+
+        // if ($coleccion[0]['total_records'] !== 0) {
+        //     $response_ruts = array_values(json_decode($coleccion[0]['detail_records'], true));
+        // } else {
+
+        // }
 
         // return $response_ruts;
 
