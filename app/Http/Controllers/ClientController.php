@@ -179,7 +179,7 @@ class ClientController extends Controller
                 }
 
                 if (isset($channels[$data['channels']])) {
-                    $datas[$channels[$data['channels']]['id']]['canal'] = strtoupper($channels[$data['channels']]['name']);
+                    $datas[$key]['canal'] = strtoupper($channels[$data['channels']]['name']);
                 }
 
 
@@ -201,7 +201,7 @@ class ClientController extends Controller
             }
         }
 
-        // return $canales;
+        // return $datas;
 
         return view('clients/diseno', compact('lista_discadores', 'config_mail', 'client', 'datas', 'porcentaje_total',  'suma_total', 'config_layout', 'channels', 'estrc', 'ch_approve', 'channels_config'));
     }
@@ -221,7 +221,7 @@ class ClientController extends Controller
 
         Cache::forever('estrategias', $datas);
 
-        // return $datas;
+
 
         $total_cartera = 0;
         $suma_total = 0;
