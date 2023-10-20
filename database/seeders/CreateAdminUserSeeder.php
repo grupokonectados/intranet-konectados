@@ -19,27 +19,27 @@ class CreateAdminUserSeeder extends Seeder
     {
         $user = User::create([
             'name' => 'Administrador',
-            'email' => 'admin@1.com',
+            'email' => 'admin@grupokonectados.com',
             'password' => bcrypt('123'),
             'password_changed_at' => Carbon::now()->toDateTimeString()
         ]);
 
         $user2 = User::create([
             'name' => 'supervisor',
-            'email' => 'sp@1.com',
+            'email' => 'sp@grupokonectados.com',
             'password' => bcrypt('123')
         ]);
 
         $user3 = User::create([
             'name' => 'Danny',
-            'email' => 'danny@1.com',
+            'email' => 'danny@grupokonectados.com',
             'password' => bcrypt('123'),
             'password_changed_at' => Carbon::now()->toDateTimeString()
         ]);
 
         $user4 = User::create([
             'name' => 'Denis',
-            'email' => 'denis@1.com',
+            'email' => 'denis@grupokonectados.com',
             'password' => bcrypt('123'),
         ]);
 
