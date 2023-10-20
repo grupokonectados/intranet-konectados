@@ -139,7 +139,7 @@
                                 <option value="">Seleccione</option>
                                 @for ($i = 0; $i < count($channels); $i++)
                                     @if (in_array($i, $ch_approve))
-                                        <option value="{{ ++$i }}">{{ strtoupper($channels[$i]['name']) }}
+                                        <option value="{{ $i }}">{{ strtoupper($channels[$i]['name']) }}
                                         </option>
                                     @endif
                                 @endfor
