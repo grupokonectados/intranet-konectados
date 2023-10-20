@@ -135,7 +135,7 @@ class EstrategiaController extends Controller
         if ($coleccion[0]['total_records'] !== 0) {
             $response_ruts = array_values(json_decode($coleccion[0]['detail_records'], true));
         } else {
-            return response()->json(['error' => 'Error en la consulta'], 404);
+            return response()->json(['error' => 'No existen registros con ese criterio de busqueda'], 404);
         }
 
         // return $response_ruts;
