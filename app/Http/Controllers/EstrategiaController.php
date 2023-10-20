@@ -119,21 +119,24 @@ class EstrategiaController extends Controller
 
         $result_query = Http::withBody(json_encode($param))->get(env('API_URL') . env('API_ESTRATEGIA') . "/records");
 
-        // try {
-        //     $coleccion = $result_query->collect()[0];
-        //     if ($coleccion[0]['total_records'] !== 0) {
-        //         $response_ruts = array_values(json_decode($coleccion[0]['detail_records'], true));
-        //     }
-        // } catch (\Throwable $th) {
-        //     return response()->json(['error' => 'Error en la consulta'], 404);
-        // }
-
-        $coleccion = $result_query->collect()[0];
-        if ($coleccion[0]['total_records'] !== 0) {
-            $response_ruts = array_values(json_decode($coleccion[0]['detail_records'], true));
-        } else {
+        try {
+            $coleccion = $result_query->collect()[0];
+            if ($coleccion[0]['total_records'] !== 0) {
+                $response_ruts = array_values(json_decode($coleccion[0]['detail_records'], true));
+            }
+        } catch (\Throwable $th) {
             return response()->json(['error' => 'Error en la consulta'], 404);
         }
+
+        // $coleccion = $result_query->collect()[0];
+
+        // return $coleccion[0];
+
+        // if ($coleccion[0]['total_records'] !== 0) {
+        //     $response_ruts = array_values(json_decode($coleccion[0]['detail_records'], true));
+        // } else {
+        //     return response()->json(['error' => 'Error en la consulta'], 404);
+        // }
 
         // return $response_ruts;
 
