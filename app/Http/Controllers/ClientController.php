@@ -27,6 +27,8 @@ class ClientController extends Controller
             'breads' => 'Clientes',
         ];
 
+        // return $data;
+
         return view('clients/index', compact('data', 'config_layout'));
     }
 
@@ -58,6 +60,10 @@ class ClientController extends Controller
 
         // return $update;
         $updated = Http::put(env('API_URL') . env('API_CLIENT') . "/canales", $update);
+
+
+
+
         if ($updated != 'false') {
             return redirect(route('clients.show', $id));
         } else {
@@ -67,6 +73,7 @@ class ClientController extends Controller
 
     function getClientData($id)
     {
+
 
         $responses = Http::pool(fn (Pool $pool) => [
             $pool->as('clientes')->get(env('API_URL') . env('API_CLIENTS')),
@@ -79,6 +86,8 @@ class ClientController extends Controller
                 $arr = $value;
             }
         }
+
+
 
         $getConfigMails = Http::get(env('API_URL') . env('API_EMAILS') . $arr['prefix']);
         $config_mail = $getConfigMails->json()[0];
@@ -111,7 +120,7 @@ class ClientController extends Controller
 
 
 
-        // return $this->getClientData($id);
+        $this->getClientData($id);
 
         $client = Cache::get('cliente');
         $channels = Cache::get('canales');
@@ -124,23 +133,26 @@ class ClientController extends Controller
 
 
         $config_mail = [];
-        for ($count = 0; $count < count($config_mail_cache); $count++) {
-            $config_mail[$count]['id'] = $config_mail_cache[$count]['id'];
-            $config_mail[$count]['nombreTemplate'] = $config_mail_cache[$count]['nombreTemplate'];
+        if (count($config_mail_cache) > 0) {
+
+            for ($count = 0; $count < count($config_mail_cache); $count++) {
+                $config_mail[$count]['id'] = $config_mail_cache[$count]['id'];
+                $config_mail[$count]['nombreTemplate'] = $config_mail_cache[$count]['nombreTemplate'];
+            }
         }
 
-
-        // return $lista_discadores;
-
         $estrc = [];
-
-        foreach ($estructura as $ki => $vi) {
-            if (in_array($vi['COLUMN_NAME'], array_keys($channels_config['estructura']))) {
-                if (isset($channels_config['estructura'][$vi['COLUMN_NAME']]['utilizar'])) {
-                    $vi['NAME'] = $channels_config['estructura'][$vi['COLUMN_NAME']]['nombre'];
-                    $estrc[] = $vi;
+        if (isset($channels_config['estructura'])) {
+            foreach ($estructura as $ki => $vi) {
+                if (in_array($vi['COLUMN_NAME'], array_keys($channels_config['estructura']))) {
+                    if (isset($channels_config['estructura'][$vi['COLUMN_NAME']]['utilizar'])) {
+                        $vi['NAME'] = $channels_config['estructura'][$vi['COLUMN_NAME']]['nombre'];
+                        $estrc[] = $vi;
+                    }
                 }
             }
+        } else {
+            $estrc = null;
         }
 
         $param = [
@@ -182,8 +194,6 @@ class ClientController extends Controller
                     $datas[$key]['canal'] = strtoupper($channels[$data['channels']]['name']);
                 }
 
-
-
                 if ($channels_config != null) {
                     if ($data['type'] === 0) {
                         $key_active_channels = array_keys($channels_config['channels']);
@@ -194,14 +204,17 @@ class ClientController extends Controller
                 }
             }
         } else {
-            if ($channels_config['channels'] != null) {
+            if (isset($channels_config['channels'])) {
                 $ch_approve = array_keys($channels_config['channels']);
             } else {
                 $channels_config = [];
             }
+            $datas = [];
         }
 
         // return $datas;
+
+
 
         return view('clients/diseno', compact('lista_discadores', 'config_mail', 'client', 'datas', 'porcentaje_total',  'suma_total', 'config_layout', 'channels', 'estrc', 'ch_approve', 'channels_config'));
     }
@@ -209,9 +222,15 @@ class ClientController extends Controller
     public function show($id)
     {
         Cache::forget('estrategias');
+        // Cache::forget('canales');
+        // Cache::forget('cliente');
+        // Cache::forget('estructura');
+        // Cache::forget('config_channels');
+        // Cache::forget('config_mail');
+        // Cache::forget('list_discador');
 
         // Obtenemos datos y configuraciones del cliente.
-        // $this->getClientData($id);
+        $this->getClientData($id);
         $client = Cache::get('cliente');
         $channels = Cache::get('canales');
         $channels_config = Cache::get('config_channels');
