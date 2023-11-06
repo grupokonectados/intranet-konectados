@@ -61,6 +61,7 @@
                 </tr>
             </thead>
             <tbody class="align-middle">
+
                 @foreach ($estructura as $ke => $estruc)
                     <tr>
                         <td>
@@ -79,19 +80,20 @@
                                             class="form-control form-control-sm"
                                             name="configuracion[estructura][{{ $estruc['COLUMN_NAME'] }}][nombre]" />
                                     @endif
+                                @else
+                                    <input type="text" placeholder="Ingrese un nombre"
+                                        class="form-control form-control-sm"
+                                        name="configuracion[estructura][{{ $estruc['COLUMN_NAME'] }}][nombre]" />
                                 @endif
                             @else
                                 <input class="form-control form-control-sm" placeholder="Ingrese un nombre" type="text"
                                     name="configuracion[estructura][{{ $estruc['COLUMN_NAME'] }}][nombre]" />
                             @endif
-                            {{-- 
-                        <input type="text"
-                                placeholder="Ingrese un nombre"
-                                class="form-control form-control-sm"
-                                    name="configuracion[estructura][{{ $estruc['COLUMN_NAME'] }}][nombre]" /> --}}
+
                         </td>
 
                         <td class="text-center">
+
                             @if (isset($channels_config['estructura']))
                                 @if (in_array($estruc['COLUMN_NAME'], array_keys($channels_config['estructura'])))
                                     @if (isset($channels_config['estructura'][$estruc['COLUMN_NAME']]['utilizar']))
@@ -103,6 +105,9 @@
                                         <input type="checkbox"
                                             name="configuracion[estructura][{{ $estruc['COLUMN_NAME'] }}][utilizar]" />
                                     @endif
+                                @else
+                                    <input type="checkbox"
+                                        name="configuracion[estructura][{{ $estruc['COLUMN_NAME'] }}][utilizar]" />
                                 @endif
                             @else
                                 <input type="checkbox"
