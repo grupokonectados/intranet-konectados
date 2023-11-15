@@ -61,3 +61,11 @@ y vaya a su navegador coloque
 
 http://localhost:8000
 
+
+
+### usuarios
+
+
+los genericos, los puedes encontrar en la carpeta 
+
+app/database/seeders/CreateUserAdminSeeder.php
