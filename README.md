@@ -69,3 +69,24 @@ http://localhost:8000
 los genericos, los puedes encontrar en la carpeta 
 
 app/database/seeders/CreateUserAdminSeeder.php
+
+
+### Para que les funcione el API deben pegar el siguiente codigo a lo ultimo del .env
+
+```
+
+# API
+
+API_URL=http://apiest.konecsys.com:8080
+
+#ENDPOINTS
+
+API_CLIENTS=/clientes
+API_CLIENT=/cliente
+API_CHANNELS=/canales
+API_ESTRUCTURA=/estructura
+API_ESTRATEGIAS=/estrategias
+API_ESTRATEGIA=/estrategia
+API_EMAILS=/email/templates/
+API_EMAIL=/email/template/
+```
