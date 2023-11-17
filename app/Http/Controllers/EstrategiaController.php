@@ -107,6 +107,8 @@ class EstrategiaController extends Controller
             }
         }
 
+
+
         $param = [
             "idCliente" => $request->id_cliente,
             "cartera" => $request->table_name,
@@ -115,9 +117,17 @@ class EstrategiaController extends Controller
             'canal' => $request->channel,
         ];
 
+        // return $param;
+
 
 
         $result_query = Http::withBody(json_encode($param))->get(env('API_URL') . env('API_ESTRATEGIA') . "/records");
+
+        if ($result_query == 'false') {
+            return response()->json(['error' => 'Error de timeout', 'param' => $param], 404);
+        }
+
+        // return $result_query;
 
         // try {
         //     $coleccion = $result_query->collect()[0];
