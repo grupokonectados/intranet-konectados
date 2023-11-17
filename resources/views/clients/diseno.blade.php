@@ -10,7 +10,7 @@
 
 
 @section('content')
-    <div hidden id="spinner"></div>
+    {{-- <div hidden id="spinner"></div> --}}
     @if ($message = Session::get('message'))
         <div class="col-12 mb-3">
             <div class="alert alert-{{ $message['type'] }} alert-dismissible show mb-0" role="alert" id='alerta'>
@@ -169,6 +169,7 @@
                     <thead class="text-center">
                         <tr>
                             <th class="align-middle" width='3%'>Eliminar</th>
+                            <th class="align-middle" width='5%'>Condicion</th>
                             <th class="align-middle" width='15%'>Campo</th>
                             <th class="align-middle" width='20%'>Operador</th>
                             <th class="align-middle">Valor</th>
@@ -322,7 +323,7 @@
             // console.log(document.getElementById('template'))
 
             document.getElementById('guard').disabled = true;
-            spinner.removeAttribute('hidden');
+            // spinner.removeAttribute('hidden');
             var query = document.getElementById('showQue').value;
             var prefix = document.getElementById('prefix').value;
             var table_name = document.getElementById('table_name2').value;
@@ -388,7 +389,7 @@
                     document.getElementById('alert_registros').innerHTML = data.error
                     console.log(data.error)
                 }
-                spinner.setAttribute('hidden', '');
+                // spinner.setAttribute('hidden', '');
 
 
 
@@ -476,7 +477,7 @@
         }
 
         function acceptedStrategy(id, channels, prefix) {
-            spinner.removeAttribute('hidden');
+            // spinner.removeAttribute('hidden');
             fetch('{{ route('estrategia.accepted-strategy') }}', {
                 method: 'POST',
                 body: JSON.stringify({
@@ -494,7 +495,7 @@
                 // Recargar la página actual
                 if (data.result === '201') {
                     alert(data.message)
-                    spinner.setAttribute('hidden', '');
+                    // spinner.setAttribute('hidden', '');
                     location.reload()
                 } else {
                     document.querySelector('.alert').classList.remove('d-none');
@@ -522,6 +523,7 @@
 
             if (estructura.length > 0) {
                 var cell2 = row.insertCell(-1);
+                var cell5 = row.insertCell(-1);
                 var cell3 = row.insertCell(-1);
                 var cell4 = row.insertCell(-1);
 
@@ -538,6 +540,12 @@
                     `<input type="hidden" id="name_table" />
                     <a onclick="borrarRow(this)" class="btn btn-sm btn-block mb-0 btn-danger mb-0"><i class="fas fa-minus-circle"></i></a>`;
                 cell2.className = "text-center align-middle bg-danger p-0"
+                cell5.innerHTML = `
+                    <select class='form-select form-select-sm condition' id='condition_${i}'>
+                        <option>Seleccione</option>
+                        <option value="and" > Y </option>
+                        <option value="or" > O </option>
+                        </select>`
 
                 cell3.innerHTML = lines
                 cell3.id = "td_" + i
@@ -561,7 +569,7 @@
         }
 
 
-        function showQuery() {
+        function showQuery(ind) {
             document.getElementById('guard').disabled = true;
             document.getElementById('probar').disabled = false;
 
@@ -570,8 +578,7 @@
             const valoresElements = document.querySelectorAll('.valores');
             const name_table = document.querySelector('#name_table');
             const op = document.querySelectorAll('.operator');
-            const valoresObj = {};
-
+            const cond = document.querySelectorAll('.condition');
 
             const campo = document.querySelectorAll('.campo');
 
@@ -585,7 +592,7 @@
                     const montoMax = parseFloat(document.querySelector('[name="monto_max"]').value);
                     if (!isNaN(montoMin) && !isNaN(montoMax)) {
                         const betweenClause =
-                            `monto BETWEEN ${montoMin} AND ${montoMax}`; //crearmos la linea del between
+                            `monto BETWEEN ${montoMin}  ${montoMax}`; //crearmos la linea del between
                         if (!queryParts.includes(betweenClause)) {
                             queryParts.push(betweenClause); // lo metemos en el objeto
                         }
@@ -594,24 +601,28 @@
                     const montoMin = parseFloat(document.querySelector('[name="monto_min"]').value);
                     const montoMax = parseFloat(element.value);
                     if (!isNaN(montoMin) && !isNaN(montoMax)) {
-                        const betweenClause = `monto BETWEEN ${montoMin} AND ${montoMax}`;
+                        const betweenClause = `monto BETWEEN ${montoMin}  ${montoMax}`;
                         if (!queryParts.includes(betweenClause)) {
                             queryParts.push(betweenClause);
                         }
                     }
                 } else {
                     if (op[i].value === 'like') {
-                        queryParts.push(`${openingParenIndex3[2]} like '%${element.value}%'`); // 
+                        queryParts.push(`${openingParenIndex3[2]} like '%${element.value}%'  ${cond[i].value}`); // 
                     } else if (element.type === 'date' || element.type === 'text') {
-                        queryParts.push(`${openingParenIndex3[2]} ${op[i].value} '${element.value}'`); // 
+                        queryParts.push(
+                            `${openingParenIndex3[2]} ${op[i].value} '${element.value}' ${cond[i].value}`); // 
                     } else {
-                        queryParts.push(`${openingParenIndex3[2]} ${op[i].value} ${element.value}`); // 
+                        queryParts.push(
+                            `${openingParenIndex3[2]} ${op[i].value} ${element.value} ${cond[i].value}`); // 
                     }
 
                 }
+
             });
 
-            query = queryParts.join(' and '); //añadimos los and a la consulta
+            //añadimos los and a la consulta
+            query = queryParts.join(' ');
             document.getElementById('showQue').value = query; // muestro en el textarea el codigo
             document.getElementById('onlyWhere').value = query; // muestro en el textarea el codigo
             document.getElementById('table_name2').value = name_table.value; // muestro en el textarea el codigo
@@ -659,7 +670,7 @@
                     nuevoInput.name = e.target.selectedOptions[0].text + '_min'
                     nuevoInput.className = 'form-control form-control-sm valores limite-input'
                     nuevoInput.setAttribute("data-limite", matches[1]);
-                    nuevoInput.setAttribute("onkeyup", 'showQuery()');
+                    nuevoInput.setAttribute("onkeyup", 'showQuery(' + i + ')');
 
                     const nuevoInput2 = document.createElement("input");
                     nuevoInput2.type = "number";
@@ -668,7 +679,7 @@
                     nuevoInput2.setAttribute("data-limite", matches[1]);
                     nuevoInput.setAttribute("placeholder", 'minimo');
                     nuevoInput2.setAttribute("placeholder", 'maximo');
-                    nuevoInput2.setAttribute("onkeyup", 'showQuery()');
+                    nuevoInput2.setAttribute("onkeyup", 'showQuery(' + i + ')');
                     if (document.getElementById('td2_' + i)) {
                         document.getElementById('td2_' + i).innerHTML = ''
                         nuevoDiv.appendChild(nuevoInput)
@@ -693,7 +704,7 @@
                     nuevoInput.name = e.target.selectedOptions[0].text
                     nuevoInput.className = 'form-control form-control-sm valores limite-input'
                     nuevoInput.setAttribute("data-limite", matches[1]);
-                    nuevoInput.setAttribute("onkeyup", 'showQuery()');
+                    nuevoInput.setAttribute("onkeyup", 'showQuery(' + i + ')');
 
                     if (document.getElementById('td2_' + i)) {
                         document.getElementById('td2_' + i).innerHTML = ''
@@ -708,7 +719,7 @@
 
             } else if (e.target.selectedOptions[0].text === 'comuna') {
                 var selectComuna =
-                    `<select class="form-select valores" onchange="showQuery()" name="${e.target.selectedOptions[0].text}" ><option>Seleccione la comuna</option>`
+                    `<select class="form-select valores" onchange="showQuery(${i})" name="${e.target.selectedOptions[0].text}" ><option>Seleccione la comuna</option>`
                 for (let i in objComunas) {
                     selectComuna += `<option value="${objComunas[i]}">${objComunas[i]}</option>`
                 }
@@ -725,7 +736,7 @@
                 nuevoInput.name = e.target.selectedOptions[0].text
                 nuevoInput.className = 'form-control form-control-sm valores limite-input'
                 nuevoInput.setAttribute("data-limite", matches[1]);
-                nuevoInput.setAttribute("onkeyup", 'showQuery()');
+                nuevoInput.setAttribute("onkeyup", 'showQuery(' + i + ')');
                 if (document.getElementById('td2_' + i)) {
                     document.getElementById('td2_' + i).innerHTML = ''
                     document.getElementById('td2_' + i).appendChild(nuevoInput)

@@ -108,11 +108,15 @@ class EstrategiaController extends Controller
         }
 
 
+        // rut = '1' and tipo_cobranza = '1' or tipo_cobranza = '3' and boletas = 1 and tipo_cobranza > '1' or
+
+        $criterio = preg_replace('/\s+(AND|OR)$/i', '', $request['query']);
+
 
         $param = [
             "idCliente" => $request->id_cliente,
             "cartera" => $request->table_name,
-            "criterio" => $request['query'],
+            "criterio" => $criterio,
             "template" => $request->template,
             'canal' => $request->channel,
         ];
@@ -140,7 +144,6 @@ class EstrategiaController extends Controller
 
         $coleccion = $result_query->collect()[0];
 
-        // return $coleccion[0];
 
         if ($coleccion[0]['total_records'] !== 0) {
             $response_ruts = array_values(json_decode($coleccion[0]['detail_records'], true));
@@ -148,7 +151,6 @@ class EstrategiaController extends Controller
             return response()->json(['error' => 'No existen registros con ese criterio de busqueda'], 404);
         }
 
-        // return $response_ruts;
 
         $full_merge = [];
 

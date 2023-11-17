@@ -160,7 +160,7 @@
                     if (!confirmacion) {
                         event.preventDefault();
                     } else {
-                        fetch(`http://apiest.konecsys.com:8080/estrategia/detener/${enlaceElement.dataset.identificador}`, {
+                        fetch(`http://apiest.konecsys.com:8080/estrategia/detener/proceso/${enlaceElement.dataset.identificador}`, {
                                 method: 'PUT',
                             })
                             .then(response => {
