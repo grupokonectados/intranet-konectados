@@ -25,6 +25,8 @@ Route::get('/', function () {
 
 Auth::routes();
 
+Route::post('/resetpw', [UserController::class, 'resetpw'])->name('resetpw');
+
 Route::get('/home', [HomeController::class, 'index'])->name('home');
 
 Route::group(['middleware' => ['auth']], function () {

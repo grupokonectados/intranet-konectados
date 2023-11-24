@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Config;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use Carbon\Carbon;
 use Spatie\Permission\Models\Role;
 use Hash;
 use Illuminate\Support\Arr;
@@ -21,11 +22,10 @@ class UserController extends Controller
         $this->middleware('permission:root-create', ['only' => ['create', 'store']]);
         $this->middleware('permission:root-edit', ['only' => ['edit', 'update']]);
         $this->middleware('permission:root-delete', ['only' => ['destroy']]);
-
-        
     }
 
-    public function getClentesCache(){
+    public function getClentesCache()
+    {
         $getApiClients = Http::get(env('API_URL') . env('API_CLIENTS'));
         return $getApiClients->json()[0];
     }
@@ -49,10 +49,10 @@ class UserController extends Controller
     {
         $roles = Role::pluck('name', 'name')->all();
         $clientes = $this->getClentesCache();
-        foreach($clientes as $cliente){
+        foreach ($clientes as $cliente) {
             $data[$cliente['id']] =  $cliente['name'];
         }
-        
+
         // return $data;
 
         $config_layout = [
@@ -137,7 +137,8 @@ class UserController extends Controller
 
 
 
-    public function resetPassword($id){
+    public function resetPassword($id)
+    {
 
         $user = User::find($id);
         $user->password = Hash::make(12345678);
@@ -185,8 +186,29 @@ class UserController extends Controller
             ->with('success', 'User deleted successfully');
     }
 
+    public function resetpw(Request $request)
+    {;
 
-    public function getClienteUser(){
+
+        if ($request->password === $request->password_confirmation) {
+            $user = User::where('email', '=', $request->email)->get();
+            if (count($user) > 0) {
+                $data = User::find($user[0]->id);
+                $data->password = Hash::make($request->password);
+                $data->password_changed_at = Carbon::now()->toDateTimeString();
+                $data->save();
+                return redirect()->route('login')->with('success', 'Contraseña cambiada exitosamente');
+            } else {
+                return redirect()->route('password.request')->with('Error', 'El correo no existe o tiene algun error.');
+            }
+        } else {
+            return redirect()->route('password.request')->with('Error', 'Las contraseñas no coinciden');
+        }
+    }
+
+
+    public function getClienteUser()
+    {
 
         if (Gate::check('root-list')) {
             $data_clientes = Http::get(env('API_URL') . env('API_CLIENTS'))->json()[0];
