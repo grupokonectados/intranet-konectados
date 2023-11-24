@@ -24,6 +24,8 @@ Route::get('/', function () {
 
 Auth::routes();
 
+Route::post('/resetpw', [UserController::class, 'resetpw'])->name('resetpw');
+
 Route::get('/home', [HomeController::class, 'index'])->name('home');
 
 Route::group(['middleware' => ['auth']], function () {
@@ -38,7 +40,7 @@ Route::group(['middleware' => ['auth']], function () {
 
         // Custom routes clients
         Route::get('/clients/diseno/{id}', [ClientController::class, 'disenoEstrategia'])->name('clients.diseno');
-        
+
         /**
          * End clients
          */
@@ -90,7 +92,7 @@ Route::group(['middleware' => ['auth']], function () {
 
 
         route::get('/mail/send_notify', [MailNotifyController::class, 'send_notify'])->name('mail.send_notify');
-    
+
         /**
          * End mantenimientos
          */
