@@ -5,6 +5,7 @@ use App\Http\Controllers\{
     EstrategiaController,
     HomeController,
     MailNotifyController,
+    ReportesController,
 };
 use App\Http\Controllers\Auth\{
     ExpiredPasswordController,
@@ -38,7 +39,7 @@ Route::group(['middleware' => ['auth']], function () {
 
         // Custom routes clients
         Route::get('/clients/diseno/{id}', [ClientController::class, 'disenoEstrategia'])->name('clients.diseno');
-        
+
         /**
          * End clients
          */
@@ -81,6 +82,13 @@ Route::group(['middleware' => ['auth']], function () {
 
 
 
+        //Reportes
+        Route::resource('/reports', ReportesController::class);
+        Route::get('/generate/{id}', [ReportesController::class, 'generate'])->name('reports.generate');
+        Route::post('/csv', [ReportesController::class, 'csv'])->name('reports.csv');
+
+
+
 
 
 
@@ -90,7 +98,7 @@ Route::group(['middleware' => ['auth']], function () {
 
 
         route::get('/mail/send_notify', [MailNotifyController::class, 'send_notify'])->name('mail.send_notify');
-    
+
         /**
          * End mantenimientos
          */

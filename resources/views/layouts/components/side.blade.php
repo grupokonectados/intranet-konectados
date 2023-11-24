@@ -17,6 +17,18 @@
                     </a>
                 @endcan
 
+                @can('clients-list')
+                    <div class="sb-sidenav-menu-heading">Reportes</div>
+
+
+
+                    <a class="nav-link" href="{{ route('reports.index') }}">
+                        <div class="sb-nav-link-icon"><i class="fas fa-users"></i></div>
+                        Reportes
+                    </a>
+                @endcan
+
+
                 @can('root-list')
                     {{-- <div class="sb-sidenav-menu-heading">Estrategias</div>
                 <a class="nav-link" href="{{ route('estrategia.index') }}">
@@ -40,9 +52,9 @@
                             <a class="nav-link" href="{{ route('users.index') }}">
                                 <div class="sb-nav-link-icon"><i class="fas fa-user"></i></div>Usuarios
                             </a>
-                            <a class="nav-link" href="{{ route('mail-config.index') }}">
+                            {{-- <a class="nav-link" href="{{ route('mail-config.index') }}">
                                 <div class="sb-nav-link-icon"><i class="fas fa-user"></i></div>Configuracion de email
-                            </a>
+                            </a> --}}
                         </nav>
                     </div>
                 @endcan
