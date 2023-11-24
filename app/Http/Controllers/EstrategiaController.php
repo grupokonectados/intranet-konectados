@@ -119,7 +119,7 @@ class EstrategiaController extends Controller
 
         // return $param;
 
-        return response()->json(['error' => 'Error de timeout', 'param' => $param, 'url' => env('API_URL') . env('API_ESTRATEGIA') . "/records"], 404);
+        response()->json(['error' => 'Error de timeout', 'param' => $param, 'url' => env('API_URL') . env('API_ESTRATEGIA') . "/records"], 404);
 
 
 
