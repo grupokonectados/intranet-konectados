@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Config\UserController;
+use GuzzleHttp\Psr7\Query;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -50,7 +51,7 @@ class ReportesController extends Controller
     public function csv(Request $request)
     {
 
-        // return $request;
+
         $result_rc = $this->getRegistroContacto($request->client_id, $request->ch, $request->fecha);
         $result_ac = $this->getAllContacts($request->client_id, $request->ch, $request->fecha);
 
@@ -105,46 +106,37 @@ class ReportesController extends Controller
     public function getRegistroContacto($client_id, $ch, $fecha)
     {
         $conn = DB::connection('mysql_' . $client_id);
+        $modo = "";
+        if (count($ch) > 1 && ($ch[0] == 'BOT' || $ch[0] == 'AGENTE') || $ch[0] != 'todos') {
+            $modo = "AND modo IN (";
+            foreach ($ch as $index => $value) {
+                if ($value == 'AGENTE') {
+                    if ($index < count($ch) - 1) {
+                        $modo .= ', ';
+                        $modo .= "'INBOUND', 'OUTBOUND', 'MANUAL'";
+                    } else {
+                        $modo .= "'INBOUND', 'OUTBOUND', 'MANUAL'";
+                    }
+                } elseif ($value == 'BOT') {
+                    if ($index < count($ch) - 1) {
 
-        $rst = $conn->select("SELECT
-                            rc.rut,
-                            rc.telefono,
-                            rc.nopago,
-                            rc.idrespuesta,
-                            rc.modo,
-                            rc.fecha,
-                            rc.feccomp,
-                            c.IDEmpresaCobranza,
-                            c.MesAsignacion,
-                            c.Segmento,
-                            c.IDCampana,
-                            c.IDGrupoControl,
-                            c.Contrato
-                        FROM
-	                        (
-                                SELECT
-                                    *
-                                FROM
-                                    registro_contacto
-                                WHERE
-                                    date(fecha) = '$fecha'
-                                AND telefono != 'MANUAL'
+                        $modo .= "'$value'";
+                        $modo .= ', ';
+                    } else {
+                        $modo .= "'$value'";
+                    }
+                }
+            }
+            $modo .= ')';
+        }
 
-                            ) rc
-            INNER JOIN (
-                SELECT
-                    c1.rutsd,
-                    MAX(c1.IDEmpresaCobranza) AS IDEmpresaCobranza,
-                    MAX(c1.MesAsignacion) AS MesAsignacion,
-                    MAX(c1.Segmento) AS Segmento,
-                    MAX(c1.IDCampana) AS IDCampana,
-                    MAX(c1.IDGrupoControl) AS IDGrupoControl,
-                    MAX(c1.Contrato) AS Contrato
-                FROM
-                    bdcl$client_id.cartera_primer_dia c1
-                GROUP BY
-                    c1.RUTSD
-            ) AS c ON rc.rut = c.rutsd");
+        $query = "SELECT rc.rut, rc.telefono, rc.nopago, rc.idrespuesta, rc.modo, rc.fecha, rc.feccomp, c.IDEmpresaCobranza, c.MesAsignacion, c.Segmento, c.IDCampana, c.IDGrupoControl, c.Contrato FROM (SELECT * FROM registro_contacto WHERE date(fecha) = '$fecha' AND telefono != 'MANUAL'";
+        $query .= $modo != '' ? $modo . ' ' : '';
+        $query .= ") rc INNER JOIN (SELECT c1.rutsd, MAX(c1.IDEmpresaCobranza) AS IDEmpresaCobranza, MAX(c1.MesAsignacion) AS MesAsignacion, MAX(c1.Segmento) AS Segmento, MAX(c1.IDCampana) AS IDCampana, MAX(c1.IDGrupoControl) AS IDGrupoControl, MAX(c1.Contrato) AS Contrato 
+                                    FROM bdcl$client_id.cartera_primer_dia c1 GROUP BY c1.RUTSD) AS c ON rc.rut = c.rutsd";
+        // return $query;
+
+        $rst = $conn->select($query);
 
         $arr_rc = [];
 
@@ -290,18 +282,63 @@ class ReportesController extends Controller
         }
 
         return $arr_rc;
-
-        return $rst;
     }
 
     public function getAllContacts($client_id, $ch, $fecha)
     {
         $conn = DB::connection('mysql_' . $client_id);
+        $modo = "";
+        // return $ch;
+        if (count($ch) > 1 && ($ch[0] == 'EM' || $ch[0] == 'AU' || $ch[0] == 'SM' || $ch[0] == 'AGENTE') || $ch[0] != 'todos') {
+            // return $ch;
+            $modo = "AND tipo IN (";
+            foreach ($ch as $index => $value) {
+                if ($value == 'EM') {
+                    if ($index < count($ch) - 1) {
 
-        $rst = $conn->select("SELECT
+                        $modo .= "'$value'";
+                        $modo .= ', ';
+                    } else {
+                        $modo .= "'$value'";
+                    }
+                } elseif ($value == 'AU') {
+                    if ($index < count($ch) - 1) {
+
+                        $modo .= "'$value'";
+                        $modo .= ', ';
+                    } else {
+                        $modo .= "'$value'";
+                    }
+                } elseif ($value == 'SM') {
+                    if ($index < count($ch) - 1) {
+
+                        $modo .= "'$value'";
+                        $modo .= ', ';
+                    } else {
+                        $modo .= "'$value'";
+                    }
+                } elseif ($value == 'AGENTE') {
+                    if ($index < count($ch) - 1) {
+
+                        $modo .= "'VI'";
+                        $modo .= ', ';
+                    } else {
+                        $modo .= "'VI'";
+                    }
+                }
+            }
+            $modo .= ')';
+        }
+
+
+        $query = "SELECT
                         ac.rut, ac.tipo, ac.respuesta, ac.fecha, ac.feccomp, ac.telefono, ac.glosa,
                         c.IDEmpresaCobranza, c.MesAsignacion, c.Segmento, c.IDCampana, c.IDGrupoControl, c.Contrato
-                        FROM (SELECT * FROM bdcl$client_id.all_contacts WHERE date(fecha)='$fecha' AND tipo IN ('AU', 'EM', 'SM', 'VI')) ac
+                        FROM (SELECT * FROM bdcl$client_id.all_contacts WHERE date(fecha)='$fecha'";
+
+        $query .= $modo != '' ? $modo : "AND tipo IN ('AU', 'EM', 'SM', 'VI')";
+
+        $query .= ") ac
                         INNER JOIN (
                             SELECT
                                 c1.rutsd,
@@ -314,9 +351,15 @@ class ReportesController extends Controller
                             FROM
                                 bdcl$client_id.cartera_primer_dia c1
                             GROUP BY c1.RUTSD
-                        ) AS c ON ac.rut = c.rutsd");
+                        ) AS c ON ac.rut = c.rutsd";
+
+        // return $query;
+
+        $rst = $conn->select($query);
 
         $arr = [];
+
+
 
 
 
@@ -409,7 +452,5 @@ class ReportesController extends Controller
             }
         }
         return $arr;
-
-        return $rst;
     }
 }

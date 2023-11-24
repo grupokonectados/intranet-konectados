@@ -67,6 +67,12 @@
                             IVR
                         </label>
                     </div>
+                    <div class="form-check">
+                        <input class="form-check-input ch" name='ch[]' type="checkbox" value="SM" id="AU">
+                        <label class="form-check-label" for="flexCheckDefault">
+                            SMS
+                        </label>
+                    </div>
                 </div>
 
                 <div class="my-3">
