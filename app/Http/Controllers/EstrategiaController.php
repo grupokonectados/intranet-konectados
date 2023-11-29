@@ -107,6 +107,8 @@ class EstrategiaController extends Controller
             }
         }
 
+        // return $;
+        // return response()->json(['error' => 'Error de timeout', 'param' => $estrategias_cache], 404);
 
 
         $param = [
@@ -129,16 +131,7 @@ class EstrategiaController extends Controller
             return response()->json(['error' => 'Error de timeout', 'param' => $param], 404);
         }
 
-        // return $result_query;
 
-        // try {
-        //     $coleccion = $result_query->collect()[0];
-        //     if ($coleccion[0]['total_records'] !== 0) {
-        //         $response_ruts = array_values(json_decode($coleccion[0]['detail_records'], true));
-        //     }
-        // } catch (\Throwable $th) {
-        //     return response()->json(['error' => 'Error en la consulta'], 404);
-        // }
 
         $coleccion = $result_query->collect()[0];
 
@@ -152,9 +145,19 @@ class EstrategiaController extends Controller
 
         // return $response_ruts;
 
+        $template_cache = [];
+
+        foreach ($estrategias_cache as $templa) {
+            if ($templa['inProcess'] == 1) {
+                $template_cache[] = $templa['idEmailTemplate'];
+            }
+        }
+
+
+
         $full_merge = [];
 
-        if (in_array($request->channel, $tipos_masivos)) {
+        if (in_array($request->channel, $tipos_masivos) && in_array($request->template, $template_cache)) {
             for ($i = 0; $i < count($estrategias_cache); $i++) {
                 if (in_array($estrategias_cache[$i]['channels'], $tipos_masivos)) {
                     $full_merge = array_merge($full_merge, json_decode($estrategias_cache[$i]['registros'], true));
@@ -180,7 +183,7 @@ class EstrategiaController extends Controller
             ];
         } else {
             for ($i = 0; $i < count($estrategias_cache); $i++) {
-                if (!in_array($estrategias_cache[$i]['channels'], $tipos_masivos)) {
+                if (!in_array($estrategias_cache[$i]['channels'], $tipos_masivos) && in_array($request->template, $template_cache)) {
                     $full_merge = array_merge($full_merge, json_decode($estrategias_cache[$i]['registros'], true));
                 }
             }
